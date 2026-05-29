@@ -1,6 +1,14 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import { InfoButton } from "./InfoButton";
 import { fieldCopy, fieldHelpCopy } from "../content/uiCopy";
+import {
+  evaluateSubmitAttempt,
+  initialSubmitGuardState,
+  inputLimits,
+  parseRentAmountInput,
+  sanitiseRentAmountInput,
+  sanitisePostcodeInput
+} from "../lib/inputHardening";
 import { isSupportedEnglandPostcode, isValidPostcode } from "../lib/postcode";
 import type {
   FurnishedStatus,
@@ -15,6 +23,7 @@ type RentCheckFormProps = {
   initialInput: RentSearchInput;
   isChecking: boolean;
   error: string | null;
+  onInputChange: () => void;
   onInvalidSubmit: () => void;
   onSubmit: (input: RentSearchInput) => void;
 };
@@ -25,16 +34,28 @@ export function RentCheckForm({
   initialInput,
   isChecking,
   error,
+  onInputChange,
   onInvalidSubmit,
   onSubmit
 }: RentCheckFormProps) {
   const [input, setInput] = useState<RentSearchInput>(initialInput);
+  const [rentAmountText, setRentAmountText] = useState(
+    String(initialInput.rentAmount)
+  );
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitGuardMessage, setSubmitGuardMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const formHintId = useId();
+  const submitGuardRef = useRef(initialSubmitGuardState);
 
   function update<K extends keyof RentSearchInput>(key: K, value: RentSearchInput[K]) {
     setInput((current) => ({ ...current, [key]: value }));
+    onInputChange();
+  }
+
+  function updateRentAmount(value: string) {
+    const sanitisedValue = sanitiseRentAmountInput(value);
+    setRentAmountText(sanitisedValue);
+    update("rentAmount", parseRentAmountInput(sanitisedValue));
   }
 
   function validate(): FormErrors {
@@ -54,6 +75,19 @@ export function RentCheckForm({
     if (input.bedrooms < 0 || input.bedrooms > 10) {
       nextErrors.bedrooms = "Enter a bedroom count between 0 and 10.";
     }
+    if (
+      input.bathrooms !== undefined &&
+      (input.bathrooms < 0 || input.bathrooms > 10)
+    ) {
+      nextErrors.bathrooms = "Enter a bathroom count between 0 and 10.";
+    }
+    if (!isValidOptionalDate(input.noticeReceivedAt)) {
+      nextErrors.noticeReceivedAt = "Enter a valid notice received date.";
+    }
+    if (!isValidOptionalDate(input.proposedIncreaseStartsAt)) {
+      nextErrors.proposedIncreaseStartsAt =
+        "Enter a valid proposed increase start date.";
+    }
     return nextErrors;
   }
 
@@ -61,18 +95,29 @@ export function RentCheckForm({
     event.preventDefault();
     const nextErrors = validate();
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) {
-      onSubmit(input);
+    if (Object.keys(nextErrors).length > 0) {
+      setSubmitGuardMessage(null);
+      onInvalidSubmit();
+      requestAnimationFrame(() => {
+        const firstInvalid = formRef.current?.querySelector<HTMLElement>(
+          "[aria-invalid='true']"
+        );
+        firstInvalid?.focus();
+      });
       return;
     }
 
-    onInvalidSubmit();
-    requestAnimationFrame(() => {
-      const firstInvalid = formRef.current?.querySelector<HTMLElement>(
-        "[aria-invalid='true']"
-      );
-      firstInvalid?.focus();
-    });
+    const submitAttempt = evaluateSubmitAttempt(submitGuardRef.current);
+    submitGuardRef.current = submitAttempt.state;
+
+    if (!submitAttempt.allowed) {
+      setSubmitGuardMessage(submitAttempt.message);
+      onInvalidSubmit();
+      return;
+    }
+
+    setSubmitGuardMessage(null);
+    onSubmit(input);
   }
 
   return (
@@ -81,14 +126,17 @@ export function RentCheckForm({
       className="form-panel"
       noValidate
       onSubmit={handleSubmit}
-      aria-describedby={formHintId}
     >
       <div className="section-heading">
         <h2>Rent check details</h2>
-        <p id={formHintId}>Required fields are marked with “required”.</p>
       </div>
 
       {error && <p className="form-error" role="alert">{error}</p>}
+      {submitGuardMessage && (
+        <p className="form-error" role="alert">
+          {submitGuardMessage}
+        </p>
+      )}
 
       <div className="field-grid">
         <TextField
@@ -97,36 +145,40 @@ export function RentCheckForm({
           required
           hint={fieldCopy.postcodeHint}
           error={errors.postcode}
-          onChange={(value) => update("postcode", value)}
+          maxLength={inputLimits.postcodeMaxLength}
+          autoComplete="postal-code"
+          inputMode="text"
+          pattern="[A-Za-z0-9 ]{5,8}"
+          onChange={(value) => update("postcode", sanitisePostcodeInput(value))}
         />
         <SelectField
-          label="Tenancy context"
+          label="Situation"
           help={fieldHelpCopy.tenancyContext}
           value={input.tenancyContext}
-          required
           options={[
             ["current-rent-only", "Current rent only"],
             ["informal-proposed-increase", "Landlord proposed an increase informally"],
-            ["formal-form-4a-section-13", "Form 4A / section 13 notice"],
-            ["not-sure", "Not sure"]
+            ["formal-form-4a-section-13", "Form 4A / section 13 notice"]
           ]}
           onChange={(value) => update("tenancyContext", value as TenancyContext)}
         />
       </div>
 
       <div className="field-grid">
-        <NumberField
+        <TextField
           label="Rent amount"
-          value={input.rentAmount}
+          value={rentAmountText}
           required
           hint={fieldCopy.rentHint}
           error={errors.rentAmount}
-          onChange={(value) => update("rentAmount", value)}
+          maxLength={10}
+          inputMode="decimal"
+          pattern="[0-9]*[.]?[0-9]{0,2}"
+          onChange={updateRentAmount}
         />
         <SelectField
           label="Rent period"
           value={input.rentPeriod}
-          required
           options={[
             ["week", "Weekly"],
             ["month", "Monthly"],
@@ -140,7 +192,6 @@ export function RentCheckForm({
         <SelectField
           label="Property type"
           value={input.propertyType}
-          required
           options={[
             ["flat", "Flat"],
             ["house", "House"],
@@ -155,8 +206,10 @@ export function RentCheckForm({
         <NumberField
           label="Bedrooms"
           value={input.bedrooms}
-          required
           error={errors.bedrooms}
+          min={inputLimits.bedroomMin}
+          max={inputLimits.bedroomMax}
+          inputMode="numeric"
           onChange={(value) => update("bedrooms", value)}
         />
       </div>
@@ -165,6 +218,10 @@ export function RentCheckForm({
         <NumberField
           label="Bathrooms"
           value={input.bathrooms ?? 1}
+          error={errors.bathrooms}
+          min={inputLimits.bathroomMin}
+          max={inputLimits.bathroomMax}
+          inputMode="numeric"
           onChange={(value) => update("bathrooms", value)}
         />
         <SelectField
@@ -219,12 +276,18 @@ export function RentCheckForm({
             label="Date notice was received"
             type="date"
             value={input.noticeReceivedAt ?? ""}
+            error={errors.noticeReceivedAt}
+            min={inputLimits.dateMin}
+            max={inputLimits.dateMax}
             onChange={(value) => update("noticeReceivedAt", value)}
           />
           <TextField
             label="Date proposed increase would start"
             type="date"
             value={input.proposedIncreaseStartsAt ?? ""}
+            error={errors.proposedIncreaseStartsAt}
+            min={inputLimits.dateMin}
+            max={inputLimits.dateMax}
             onChange={(value) => update("proposedIncreaseStartsAt", value)}
           />
           <label className="checkbox-row">
@@ -260,8 +323,20 @@ type TextFieldProps = {
   required?: boolean;
   hint?: string;
   error?: string;
+  maxLength?: number;
+  min?: string;
+  max?: string;
+  autoComplete?: string;
+  inputMode?: "decimal" | "email" | "numeric" | "search" | "tel" | "text" | "url";
+  pattern?: string;
   onChange: (value: string) => void;
 };
+
+function isValidOptionalDate(value: string | undefined): boolean {
+  if (!value) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return value >= inputLimits.dateMin && value <= inputLimits.dateMax;
+}
 
 function TextField({
   label,
@@ -270,6 +345,12 @@ function TextField({
   required,
   hint,
   error,
+  maxLength,
+  min,
+  max,
+  autoComplete,
+  inputMode,
+  pattern,
   onChange
 }: TextFieldProps) {
   const id = useId();
@@ -278,13 +359,19 @@ function TextField({
   return (
     <div className="field">
       <label htmlFor={id}>
-        {label} {required && <span>required</span>}
+        {label} {required && <RequiredIndicator />}
       </label>
       <input
         id={id}
         type={type}
         value={value}
         required={required}
+        maxLength={maxLength}
+        min={min}
+        max={max}
+        autoComplete={autoComplete}
+        inputMode={inputMode}
+        pattern={pattern}
         aria-describedby={[hint ? hintId : "", error ? errorId : ""]
           .filter(Boolean)
           .join(" ")}
@@ -303,6 +390,9 @@ type NumberFieldProps = {
   required?: boolean;
   hint?: string;
   error?: string;
+  min?: number;
+  max?: number;
+  inputMode?: "decimal" | "numeric";
   onChange: (value: number) => void;
 };
 
@@ -312,6 +402,9 @@ function NumberField({
   required,
   hint,
   error,
+  min = 0,
+  max,
+  inputMode,
   onChange
 }: NumberFieldProps) {
   const id = useId();
@@ -320,15 +413,17 @@ function NumberField({
   return (
     <div className="field">
       <label htmlFor={id}>
-        {label} {required && <span>required</span>}
+        {label} {required && <RequiredIndicator />}
       </label>
       <input
         id={id}
         type="number"
-        min="0"
+        min={min}
+        max={max}
         step="1"
         value={value}
         required={required}
+        inputMode={inputMode}
         aria-describedby={[hint ? hintId : "", error ? errorId : ""]
           .filter(Boolean)
           .join(" ")}
@@ -363,7 +458,7 @@ function SelectField({
     <div className="field">
       <div className="label-row">
         <label htmlFor={id}>
-          {label} {required && <span>required</span>}
+          {label} {required && <RequiredIndicator />}
         </label>
         {help && <InfoButton label={label}>{help}</InfoButton>}
       </div>
@@ -380,5 +475,16 @@ function SelectField({
         ))}
       </select>
     </div>
+  );
+}
+
+function RequiredIndicator() {
+  return (
+    <>
+      <span className="required-indicator" aria-hidden="true">
+        *
+      </span>
+      <span className="sr-only">required</span>
+    </>
   );
 }

@@ -45,10 +45,35 @@ describe("CopyableMessage", () => {
 
     render(<CopyableMessage message="Message to copy" />);
 
-    await user.click(screen.getByRole("button", { name: /copy landlord message/i }));
+    await user.click(screen.getByRole("button", { name: /copy message/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /could not be copied/i
     );
+  });
+
+  it("uses the copy button itself for short-lived success feedback", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      configurable: true
+    });
+
+    render(<CopyableMessage message="Message to copy" />);
+
+    await user.click(screen.getByRole("button", { name: /copy message/i }));
+
+    expect(
+      await screen.findByRole("button", { name: /message copied/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    expect(
+      await screen.findByRole(
+        "button",
+        { name: /copy message/i },
+        { timeout: 2500 }
+      )
+    ).toBeInTheDocument();
   });
 });

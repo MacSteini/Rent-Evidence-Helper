@@ -6,7 +6,7 @@ import type {
 
 export const fieldCopy = {
   postcodeHint:
-    "Use the rental property's UK postcode. Results and guidance are intended for England only.",
+    "Use the rental property's UK postcode.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
     "Use this as a market-evidence check, not a decision. Compare it with evidence you collect and check official guidance before acting."

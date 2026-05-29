@@ -3,6 +3,11 @@ import type { RentSearchInput } from "../types/rent";
 
 const storageKey = "market-rent-check-last-check";
 const storageVersion = 1;
+const tenancyContexts: Array<RentSearchInput["tenancyContext"]> = [
+  "current-rent-only",
+  "informal-proposed-increase",
+  "formal-form-4a-section-13"
+];
 
 type StoredCheck = {
   version: typeof storageVersion;
@@ -67,7 +72,8 @@ function isRentSearchInput(value: unknown): value is RentSearchInput {
     typeof input.rentPeriod === "string" &&
     typeof input.propertyType === "string" &&
     typeof input.bedrooms === "number" &&
-    typeof input.tenancyContext === "string"
+    typeof input.tenancyContext === "string" &&
+    tenancyContexts.includes(input.tenancyContext as RentSearchInput["tenancyContext"])
   );
 }
 

@@ -25,8 +25,7 @@ export type PropertyCondition =
 export type TenancyContext =
   | "current-rent-only"
   | "informal-proposed-increase"
-  | "formal-form-4a-section-13"
-  | "not-sure";
+  | "formal-form-4a-section-13";
 
 export type RentAssessmentStatus =
   | "insufficient_evidence"

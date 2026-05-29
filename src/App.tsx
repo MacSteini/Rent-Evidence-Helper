@@ -16,17 +16,22 @@ import type { RentSearchInput } from "./types/rent";
 
 const provider = new MockComparableRentProvider();
 
+const messageEligibleContexts = new Set<RentSearchInput["tenancyContext"]>([
+  "informal-proposed-increase",
+  "formal-form-4a-section-13"
+]);
+
 const initialInput: RentSearchInput = {
   postcode: "SW12 8AA",
   rentAmount: 2450,
   rentPeriod: "month",
-  propertyType: "flat",
-  bedrooms: 2,
+  propertyType: "unknown",
+  bedrooms: 1,
   bathrooms: 1,
   furnished: "unknown",
   billsIncluded: "unknown",
   condition: "unknown",
-  tenancyContext: "informal-proposed-increase"
+  tenancyContext: "current-rent-only"
 };
 
 export default function App() {
@@ -44,6 +49,7 @@ export default function App() {
 
   const landlordMessage = useMemo(() => {
     if (!result) return "";
+    if (!messageEligibleContexts.has(result.input.tenancyContext)) return "";
     return buildLandlordMessage(result.input, result.estimate);
   }, [result]);
 
@@ -72,6 +78,7 @@ export default function App() {
     setHasStartedCheck(true);
     setIsChecking(true);
     setError(null);
+    setResult(null);
     try {
       const assessment = await assessRent(input, provider);
       setResult(assessment);
@@ -85,6 +92,12 @@ export default function App() {
   }
 
   function handleInvalidSubmit() {
+    setHasStartedCheck(false);
+    setResult(null);
+    setError(null);
+  }
+
+  function handleInputChange() {
     setHasStartedCheck(false);
     setResult(null);
     setError(null);
@@ -177,7 +190,7 @@ export default function App() {
                     context={result.input.tenancyContext}
                     status={result.estimate.status}
                   />
-                  <CopyableMessage message={landlordMessage} />
+                  {landlordMessage && <CopyableMessage message={landlordMessage} />}
                 </div>
               ) : (
                 <div className="empty-state">
@@ -196,6 +209,7 @@ export default function App() {
             initialInput={storedCheck?.input ?? initialInput}
             isChecking={isChecking}
             error={error}
+            onInputChange={handleInputChange}
             onInvalidSubmit={handleInvalidSubmit}
             onSubmit={handleSubmit}
           />

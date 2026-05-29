@@ -15,7 +15,6 @@ export function NextStepsPanel({ context, status }: NextStepsPanelProps) {
   return (
     <section className="panel" aria-labelledby="next-steps-title">
       <div className="section-heading">
-        <p className="label">Next steps</p>
         <h2 id="next-steps-title">What to consider next</h2>
         <p>{resultCopy[status].nextStepIntro}</p>
       </div>
@@ -83,15 +82,6 @@ function stepsForContext(context: TenancyContext): string[] {
       "Look for whether a formal Form 4A or section 13 notice has been served.",
       "Collect comparable listings or other evidence for similar homes nearby.",
       "Check official guidance before assuming the tribunal route applies."
-    ];
-  }
-
-  if (context === "not-sure") {
-    return [
-      "Check whether your landlord has served a formal notice.",
-      "Keep copies of any letters, emails, text messages and rent records.",
-      "Use official guidance to understand which process may apply.",
-      "Seek independent advice if you are unsure about your tenancy type."
     ];
   }
 

@@ -6,12 +6,10 @@ export function buildLandlordMessage(
   estimate: RentEstimate
 ): string {
   const rentLabel = `${formatCurrency(input.rentAmount)} per ${input.rentPeriod}`;
-  const area = input.postcodeSector
-    ? `postcode sector ${input.postcodeSector}`
-    : "my local area";
+  const area = `postcode ${input.postcode.trim().toUpperCase()}`;
 
   if (input.tenancyContext === "current-rent-only") {
-    return `Dear Landlord/Agent,
+    return `Dear Landlord/Landlady/Agent,
 
 I am writing about the current rent of ${rentLabel}.
 
@@ -24,7 +22,7 @@ I would like to resolve this informally if possible.
 Kind regards,`;
   }
 
-  return `Dear Landlord/Agent,
+  return `Dear Landlord/Landlady/Agent,
 
 I am writing about the proposed rent of ${rentLabel}.
 

@@ -22,6 +22,16 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [draft]);
 
+  useEffect(() => {
+    if (copyStatus !== "copied") return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setCopyStatus("idle");
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [copyStatus]);
+
   async function copyMessage() {
     try {
       await navigator.clipboard.writeText(draft);
@@ -34,9 +44,8 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
   return (
     <section className="panel" aria-labelledby="message-title">
       <div className="section-heading">
-        <p className="label">Optional template</p>
-        <h2 id="message-title">Landlord or agent message</h2>
-        <p>Edit this before using it. Contacting your landlord does not pause or extend any tribunal deadline.</p>
+        <h2 id="message-title">Optional message template</h2>
+        <p>Edit this before using it. Sending a message does not pause or extend any tribunal deadline.</p>
       </div>
       <label className="field">
         <span>Editable message</span>
@@ -50,12 +59,14 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
           }}
         />
       </label>
-      <button className="secondary-button" type="button" onClick={copyMessage}>
-        Copy landlord message
+      <button
+        className="secondary-button"
+        type="button"
+        aria-live="polite"
+        onClick={copyMessage}
+      >
+        {copyStatus === "copied" ? "Message copied." : "Copy message"}
       </button>
-      {copyStatus === "copied" && (
-        <p className="success-message" role="status">Message copied.</p>
-      )}
       {copyStatus === "failed" && (
         <p className="form-error" role="alert">
           The message could not be copied. Select the text and copy it manually.
