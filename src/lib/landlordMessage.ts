@@ -6,7 +6,9 @@ export function buildLandlordMessage(
   estimate: RentEstimate
 ): string {
   const rentLabel = `${formatCurrency(input.rentAmount)} per ${input.rentPeriod}`;
-  const area = input.postcodeSector ?? "my local area";
+  const area = input.postcodeSector
+    ? `postcode sector ${input.postcodeSector}`
+    : "my local area";
 
   if (input.tenancyContext === "current-rent-only") {
     return `Dear Landlord/Agent,
