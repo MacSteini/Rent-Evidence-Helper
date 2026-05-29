@@ -1,5 +1,19 @@
 export type OfficialRentBenchmarkEvidenceKind = "official-area-benchmark";
 
+export type OfficialBenchmarkField =
+  | "monthlyRentAll"
+  | "monthlyRentOneBed"
+  | "monthlyRentTwoBed"
+  | "monthlyRentThreeBed"
+  | "monthlyRentFourOrMoreBed"
+  | "monthlyRentFlatMaisonette";
+
+export type OfficialBenchmarkStatus =
+  | "below_benchmark"
+  | "near_benchmark"
+  | "above_benchmark"
+  | "substantially_above_benchmark";
+
 export type OfficialRentBenchmark = {
   areaCode: string;
   areaName: string;
@@ -25,4 +39,19 @@ export type OfficialRentBenchmarkDataset = {
   lastIngestedAt: string;
   sourceSha256: string;
   benchmarks: OfficialRentBenchmark[];
+};
+
+export type OfficialBenchmarkSelection = {
+  field: OfficialBenchmarkField;
+  label: string;
+  monthlyRent: number;
+};
+
+export type OfficialBenchmarkComparison = {
+  benchmark: OfficialRentBenchmark;
+  selection: OfficialBenchmarkSelection;
+  userRentMonthly: number;
+  differenceMonthly: number;
+  percentageDifference: number;
+  status: OfficialBenchmarkStatus;
 };
