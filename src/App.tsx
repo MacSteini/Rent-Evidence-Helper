@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EvidenceTable } from "./components/EvidenceTable";
 import { InfoDialog } from "./components/InfoDialog";
 import { NextStepsPanel } from "./components/NextStepsPanel";
 import { OfficialBenchmarkPanel } from "./components/OfficialBenchmarkPanel";
@@ -10,7 +9,6 @@ import { ThemeToggle } from "./components/ThemeToggle";
 import { appConfig } from "./config/appConfig";
 import { jurisdictionCopy, methodologyCopy, privacyCopy } from "./content/uiCopy";
 import officialBenchmarkDatasetJson from "./data/official-rent-benchmarks.json";
-import { assessRent, type AssessmentResult } from "./lib/assessment";
 import { buildLandlordMessage } from "./lib/landlordMessage";
 import {
   compareRentWithOfficialBenchmark,
@@ -19,11 +17,12 @@ import {
   validateOfficialRentBenchmarkDataset
 } from "./lib/officialRentBenchmarks";
 import { readStoredCheck, writeStoredCheck } from "./lib/persistedCheck";
-import { MockComparableRentProvider } from "./providers/MockComparableRentProvider";
-import type { OfficialRentBenchmarkDataset } from "./types/officialRentBenchmark";
+import type {
+  OfficialBenchmarkCheckResult,
+  OfficialRentBenchmarkDataset
+} from "./types/officialRentBenchmark";
 import type { RentSearchInput } from "./types/rent";
 
-const provider = new MockComparableRentProvider();
 const officialBenchmarkDataset =
   officialBenchmarkDatasetJson as OfficialRentBenchmarkDataset;
 validateOfficialRentBenchmarkDataset(officialBenchmarkDataset);
@@ -49,9 +48,16 @@ const initialInput: RentSearchInput = {
 };
 
 export default function App() {
-  const [storedCheck] = useState(() => readStoredCheck());
-  const [result, setResult] = useState<AssessmentResult | null>(
-    storedCheck?.result ?? null
+  const [storedCheck] = useState(() =>
+    readStoredCheck(officialBenchmarkDataset.sourceSha256)
+  );
+  const [result, setResult] = useState<OfficialBenchmarkCheckResult | null>(
+    storedCheck
+      ? {
+          input: storedCheck.input,
+          officialBenchmarkComparison: storedCheck.officialBenchmarkComparison
+        }
+      : null
   );
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -64,17 +70,10 @@ export default function App() {
   const landlordMessage = useMemo(() => {
     if (!result) return "";
     if (!messageEligibleContexts.has(result.input.tenancyContext)) return "";
-    return buildLandlordMessage(result.input, result.estimate);
-  }, [result]);
-
-  const officialBenchmarkComparison = useMemo(() => {
-    if (!result) return null;
-    const benchmark = findOfficialBenchmarkByAreaCode(
-      officialBenchmarkDataset,
-      result.input.localAuthorityCode
+    return buildLandlordMessage(
+      result.input,
+      result.officialBenchmarkComparison
     );
-    if (!benchmark) return null;
-    return compareRentWithOfficialBenchmark(result.input, benchmark);
   }, [result]);
 
   useEffect(() => {
@@ -104,9 +103,30 @@ export default function App() {
     setError(null);
     setResult(null);
     try {
-      const assessment = await assessRent(input, provider);
-      setResult(assessment);
-      writeStoredCheck(assessment.input, assessment);
+      const benchmark = findOfficialBenchmarkByAreaCode(
+        officialBenchmarkDataset,
+        input.localAuthorityCode
+      );
+
+      if (!benchmark) {
+        throw new Error("Select a valid Local Authority from the list.");
+      }
+
+      const officialBenchmarkComparison = compareRentWithOfficialBenchmark(
+        input,
+        benchmark
+      );
+      const nextResult: OfficialBenchmarkCheckResult = {
+        input,
+        officialBenchmarkComparison
+      };
+
+      setResult(nextResult);
+      writeStoredCheck(
+        nextResult.input,
+        nextResult.officialBenchmarkComparison,
+        officialBenchmarkDataset.sourceSha256
+      );
     } catch (caught) {
       setResult(null);
       setError(caught instanceof Error ? caught.message : "The rent check failed.");
@@ -168,11 +188,12 @@ export default function App() {
       <main id="main-content">
         <section className="intro-band" aria-labelledby="page-title">
           <div>
-            <h1 id="page-title">Check your rent against local market evidence</h1>
+            <h1 id="page-title">Check your rent against the official area benchmark</h1>
             <p>
-              Enter your rent and property details to see how your rent compares
-              with similar homes nearby. This tool is for rental properties in
-              England and gives general information, not legal advice.
+              Enter your rent and property details to compare your rent with the
+              ONS monthly private rent estimate for your selected Local Authority.
+              This tool is for rental properties in England and gives general
+              information, not legal advice.
             </p>
             <aside className="jurisdiction-note" aria-label="Scope and legal note">
               <strong>{jurisdictionCopy.intro}</strong>
@@ -206,21 +227,15 @@ export default function App() {
               {result ? (
                 <div className="result-stack">
                   <ResultSummary result={result} />
-                  {officialBenchmarkComparison && (
-                    <OfficialBenchmarkPanel
-                      comparison={officialBenchmarkComparison}
-                      sourceUrl={officialBenchmarkDataset.sourceUrl}
-                      releaseDate={officialBenchmarkDataset.releaseDate}
-                      period={officialBenchmarkDataset.period}
-                    />
-                  )}
-                  <EvidenceTable
-                    comparables={result.searchResult.comparables}
-                    searchAreaDescription={result.searchResult.searchAreaDescription}
+                  <OfficialBenchmarkPanel
+                    comparison={result.officialBenchmarkComparison}
+                    sourceUrl={officialBenchmarkDataset.sourceUrl}
+                    releaseDate={officialBenchmarkDataset.releaseDate}
+                    period={officialBenchmarkDataset.period}
                   />
                   <NextStepsPanel
                     context={result.input.tenancyContext}
-                    status={result.estimate.status}
+                    status={result.officialBenchmarkComparison.status}
                   />
                   {landlordMessage && <CopyableMessage message={landlordMessage} />}
                 </div>
@@ -312,7 +327,7 @@ export default function App() {
 
       <footer className="site-footer">
         <span>{appConfig.productName}</span>
-        <span>England market-rent comparison</span>
+        <span>England official rent benchmark</span>
       </footer>
     </div>
   );

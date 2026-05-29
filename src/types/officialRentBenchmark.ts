@@ -1,3 +1,5 @@
+import type { RentSearchInput } from "./rent";
+
 export type OfficialRentBenchmarkEvidenceKind = "official-area-benchmark";
 
 export type OfficialBenchmarkField =
@@ -54,4 +56,9 @@ export type OfficialBenchmarkComparison = {
   differenceMonthly: number;
   percentageDifference: number;
   status: OfficialBenchmarkStatus;
+};
+
+export type OfficialBenchmarkCheckResult = {
+  input: RentSearchInput;
+  officialBenchmarkComparison: OfficialBenchmarkComparison;
 };

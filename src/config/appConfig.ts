@@ -2,9 +2,9 @@ import type { DataProviderMode } from "../types/rent";
 
 export const appConfig = {
   productName: "Market Rent Check",
-  tagline: "Compare your rent with local market evidence.",
+  tagline: "Compare your rent with an official local benchmark.",
   jurisdictionName: "England",
-  dataProviderMode: "fixture" as DataProviderMode,
+  dataProviderMode: "official-statistics" as DataProviderMode,
   legalLastCheckedAt: "2026-05-29",
   minComparableCount: 5,
   freshnessDays: 730

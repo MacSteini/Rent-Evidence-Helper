@@ -1,10 +1,11 @@
 import { getLegalContent } from "../content/legalGuidance";
 import { resultCopy } from "../content/uiCopy";
-import type { RentAssessmentStatus, TenancyContext } from "../types/rent";
+import type { OfficialBenchmarkStatus } from "../types/officialRentBenchmark";
+import type { TenancyContext } from "../types/rent";
 
 type NextStepsPanelProps = {
   context: TenancyContext;
-  status: RentAssessmentStatus;
+  status: OfficialBenchmarkStatus;
 };
 
 export function NextStepsPanel({ context, status }: NextStepsPanelProps) {
@@ -71,7 +72,7 @@ function stepsForContext(context: TenancyContext): string[] {
       "Keep a copy of the notice and any emails or messages about it.",
       "Check whether the notice identifies the proposed rent and uses the correct form.",
       "Check official guidance on notice periods and tribunal deadlines.",
-      "Collect comparable evidence before contacting the landlord or letting agent.",
+      "Collect your own rental evidence before contacting the landlord, landlady or letting agent.",
       "Consider independent housing advice if the deadline or tenancy status is unclear."
     ];
   }
@@ -80,13 +81,13 @@ function stepsForContext(context: TenancyContext): string[] {
     return [
       "Ask how the proposed rent was calculated.",
       "Look for whether a formal Form 4A or section 13 notice has been served.",
-      "Collect comparable listings or other evidence for similar homes nearby.",
+      "Collect listings or other rental evidence for similar homes nearby.",
       "Check official guidance before assuming the tribunal route applies."
     ];
   }
 
   return [
-    "Compare the result with evidence you collect yourself.",
+    "Compare the official benchmark with evidence you collect yourself.",
     "Collect examples of similar properties in your area.",
     "Check official guidance if a rent increase is proposed later.",
     "Avoid missing any formal deadline if you receive a notice."

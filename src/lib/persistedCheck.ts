@@ -1,22 +1,42 @@
-import type { AssessmentResult } from "./assessment";
+import type {
+  OfficialBenchmarkComparison,
+  OfficialBenchmarkField,
+  OfficialBenchmarkStatus,
+  OfficialRentBenchmark
+} from "../types/officialRentBenchmark";
 import type { RentSearchInput } from "../types/rent";
 
 const storageKey = "market-rent-check-last-check";
-const storageVersion = 2;
+const storageVersion = 3;
 const tenancyContexts: Array<RentSearchInput["tenancyContext"]> = [
   "current-rent-only",
   "informal-proposed-increase",
   "formal-form-4a-section-13"
 ];
+const benchmarkStatuses: OfficialBenchmarkStatus[] = [
+  "below_benchmark",
+  "near_benchmark",
+  "above_benchmark",
+  "substantially_above_benchmark"
+];
+const benchmarkFields: OfficialBenchmarkField[] = [
+  "monthlyRentAll",
+  "monthlyRentOneBed",
+  "monthlyRentTwoBed",
+  "monthlyRentThreeBed",
+  "monthlyRentFourOrMoreBed",
+  "monthlyRentFlatMaisonette"
+];
 
 type StoredCheck = {
   version: typeof storageVersion;
   input: RentSearchInput;
-  result: AssessmentResult;
+  officialBenchmarkComparison: OfficialBenchmarkComparison;
+  sourceSha256: string;
   savedAt: string;
 };
 
-export function readStoredCheck(): StoredCheck | null {
+export function readStoredCheck(currentSourceSha256: string): StoredCheck | null {
   const storage = getLocalStorage();
   if (!storage) return null;
 
@@ -25,7 +45,7 @@ export function readStoredCheck(): StoredCheck | null {
 
   try {
     const parsed = JSON.parse(storedValue) as Partial<StoredCheck>;
-    if (!isStoredCheck(parsed)) {
+    if (!isStoredCheck(parsed) || parsed.sourceSha256 !== currentSourceSha256) {
       storage.removeItem(storageKey);
       return null;
     }
@@ -36,14 +56,19 @@ export function readStoredCheck(): StoredCheck | null {
   }
 }
 
-export function writeStoredCheck(input: RentSearchInput, result: AssessmentResult) {
+export function writeStoredCheck(
+  input: RentSearchInput,
+  officialBenchmarkComparison: OfficialBenchmarkComparison,
+  sourceSha256: string
+) {
   const storage = getLocalStorage();
   if (!storage) return;
 
   const storedCheck: StoredCheck = {
     version: storageVersion,
     input,
-    result,
+    officialBenchmarkComparison,
+    sourceSha256,
     savedAt: new Date().toISOString()
   };
 
@@ -58,7 +83,10 @@ function isStoredCheck(value: Partial<StoredCheck>): value is StoredCheck {
   return (
     value.version === storageVersion &&
     isRentSearchInput(value.input) &&
-    isAssessmentResult(value.result)
+    isOfficialBenchmarkComparison(value.officialBenchmarkComparison) &&
+    typeof value.sourceSha256 === "string" &&
+    value.sourceSha256.trim() !== "" &&
+    typeof value.savedAt === "string"
   );
 }
 
@@ -79,48 +107,62 @@ function isRentSearchInput(value: unknown): value is RentSearchInput {
   );
 }
 
-function isAssessmentResult(value: unknown): value is AssessmentResult {
-  if (!value || typeof value !== "object") return false;
-
-  const result = value as Partial<AssessmentResult>;
-  return (
-    isRentSearchInput(result.input) &&
-    isComparableRentSearchResult(result.searchResult) &&
-    isRentEstimate(result.estimate)
-  );
-}
-
-function isComparableRentSearchResult(
+function isOfficialBenchmarkComparison(
   value: unknown
-): value is AssessmentResult["searchResult"] {
+): value is OfficialBenchmarkComparison {
   if (!value || typeof value !== "object") return false;
 
-  const searchResult = value as Partial<AssessmentResult["searchResult"]>;
+  const comparison = value as Partial<OfficialBenchmarkComparison>;
   return (
-    Array.isArray(searchResult.comparables) &&
-    typeof searchResult.providerName === "string" &&
-    typeof searchResult.searchedAt === "string" &&
-    typeof searchResult.searchAreaDescription === "string" &&
-    Array.isArray(searchResult.warnings) &&
-    Array.isArray(searchResult.errors)
+    isOfficialBenchmark(comparison.benchmark) &&
+    isBenchmarkSelection(comparison.selection) &&
+    isFiniteNumber(comparison.userRentMonthly) &&
+    comparison.userRentMonthly > 0 &&
+    isFiniteNumber(comparison.differenceMonthly) &&
+    isFiniteNumber(comparison.percentageDifference) &&
+    typeof comparison.status === "string" &&
+    benchmarkStatuses.includes(comparison.status as OfficialBenchmarkStatus)
   );
 }
 
-function isRentEstimate(value: unknown): value is AssessmentResult["estimate"] {
+function isOfficialBenchmark(value: unknown): value is OfficialRentBenchmark {
   if (!value || typeof value !== "object") return false;
 
-  const estimate = value as Partial<AssessmentResult["estimate"]>;
+  const benchmark = value as Partial<OfficialRentBenchmark>;
   return (
-    typeof estimate.userRentMonthly === "number" &&
-    typeof estimate.userRentAnnual === "number" &&
-    typeof estimate.estimatedRangeLabel === "string" &&
-    typeof estimate.comparableCount === "number" &&
-    typeof estimate.status === "string" &&
-    typeof estimate.confidence === "string" &&
-    typeof estimate.confidenceScore === "number" &&
-    Array.isArray(estimate.warnings) &&
-    Array.isArray(estimate.methodologyNotes)
+    typeof benchmark.areaCode === "string" &&
+    benchmark.areaCode.trim() !== "" &&
+    typeof benchmark.areaName === "string" &&
+    benchmark.areaName.trim() !== "" &&
+    typeof benchmark.regionOrCountryName === "string" &&
+    benchmark.regionOrCountryName.trim() !== "" &&
+    typeof benchmark.period === "string" &&
+    benchmark.period.trim() !== "" &&
+    benchmarkFields.every((field) => {
+      const valueForField = benchmark[field];
+      return isFiniteNumber(valueForField) && valueForField > 0;
+    })
   );
+}
+
+function isBenchmarkSelection(
+  value: unknown
+): value is OfficialBenchmarkComparison["selection"] {
+  if (!value || typeof value !== "object") return false;
+
+  const selection = value as Partial<OfficialBenchmarkComparison["selection"]>;
+  return (
+    typeof selection.field === "string" &&
+    benchmarkFields.includes(selection.field as OfficialBenchmarkField) &&
+    typeof selection.label === "string" &&
+    selection.label.trim() !== "" &&
+    isFiniteNumber(selection.monthlyRent) &&
+    selection.monthlyRent > 0
+  );
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
 }
 
 function getLocalStorage(): Storage | null {

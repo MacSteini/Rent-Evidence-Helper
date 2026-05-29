@@ -2,7 +2,6 @@ import {
   officialBenchmarkCopy,
   officialBenchmarkStatusCopy
 } from "../content/uiCopy";
-import { formatCurrency } from "../lib/rentMath";
 import type { OfficialBenchmarkComparison } from "../types/officialRentBenchmark";
 
 type OfficialBenchmarkPanelProps = {
@@ -46,21 +45,6 @@ export function OfficialBenchmarkPanel({
           <dt>Selected benchmark</dt>
           <dd>{comparison.selection.label}</dd>
         </div>
-        <div>
-          <dt>Official benchmark rent</dt>
-          <dd>{formatCurrency(comparison.selection.monthlyRent)}</dd>
-        </div>
-        <div>
-          <dt>Your monthly rent</dt>
-          <dd>{formatCurrency(comparison.userRentMonthly)}</dd>
-        </div>
-        <div>
-          <dt>Difference</dt>
-          <dd>
-            {formatSignedCurrency(comparison.differenceMonthly)} (
-            {formatSignedPercent(comparison.percentageDifference)})
-          </dd>
-        </div>
       </dl>
 
       <p className="benchmark-threshold-note">{officialBenchmarkCopy.threshold}</p>
@@ -72,17 +56,6 @@ export function OfficialBenchmarkPanel({
       </p>
     </section>
   );
-}
-
-function formatSignedCurrency(value: number): string {
-  if (value === 0) return formatCurrency(0);
-  return `${value > 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
-}
-
-function formatSignedPercent(value: number): string {
-  const rounded = Math.abs(value).toFixed(1);
-  if (value === 0) return "0.0%";
-  return `${value > 0 ? "+" : "-"}${rounded}%`;
 }
 
 function formatMonth(value: string): string {

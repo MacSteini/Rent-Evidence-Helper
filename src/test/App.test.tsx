@@ -131,12 +131,22 @@ describe("App", () => {
       "href",
       "https://www.gov.uk/guidance/apply-for-an-open-market-rent-determination"
     );
-    expect(screen.getByText(/evidence confidence score/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /official area benchmark/i })
+      screen.getByRole("heading", {
+        name: /^official area benchmark$/i,
+        level: 2
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /your rent is .*official area benchmark/i
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^official area benchmark$/i })
     ).toBeInTheDocument();
     const officialBenchmarkPanel = screen.getByRole("region", {
-      name: /official area benchmark/i
+      name: /^official area benchmark$/i
     });
     expect(
       within(officialBenchmarkPanel).getByText(/ONS monthly private rent estimate/i)
@@ -162,9 +172,15 @@ describe("App", () => {
       "href",
       "https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics"
     );
-    expect(screen.getByText(/how this score is calculated/i)).toBeInTheDocument();
-    expect(screen.getByText(/comparable count up to 10 homes/i)).toBeInTheDocument();
-    expect(screen.getByRole("table", { name: /comparable rents/i })).toBeInTheDocument();
+    expect(screen.queryByText(/evidence confidence score/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/how this score is calculated/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/comparable count up to 10 homes/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: /comparable rents/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /comparable homes/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/median comparable/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Comparables$/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /message template/i })
     ).not.toBeInTheDocument();
@@ -244,6 +260,15 @@ describe("App", () => {
     expect(
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
     ).toContain("Dear Landlord/Landlady/Agent");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("ONS monthly private rent estimate");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("postcode SW12 8AA");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).not.toContain("comparable data points");
 
     await user.click(
       screen.getByRole("button", { name: /copy message/i })
@@ -277,7 +302,7 @@ describe("App", () => {
       screen.getByLabelText(/local authority/i, { selector: "input" })
     ).toHaveValue("Lambeth (London)");
     expect(
-      screen.getByRole("heading", { name: /official area benchmark/i })
+      screen.getByRole("heading", { name: /^official area benchmark$/i })
     ).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /situation/i })).toHaveValue(
       "current-rent-only"

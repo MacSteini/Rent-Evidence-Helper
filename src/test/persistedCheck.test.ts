@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { readStoredCheck, writeStoredCheck } from "../lib/persistedCheck";
-import type { AssessmentResult } from "../lib/assessment";
+import type {
+  OfficialBenchmarkComparison,
+  OfficialRentBenchmark
+} from "../types/officialRentBenchmark";
 import type { RentSearchInput } from "../types/rent";
+
+const sourceSha256 = "abc123";
 
 const input: RentSearchInput = {
   postcode: "SW12 8AA",
@@ -13,67 +18,83 @@ const input: RentSearchInput = {
   tenancyContext: "informal-proposed-increase"
 };
 
-const result: AssessmentResult = {
-  input,
-  searchResult: {
-    comparables: [],
-    providerName: "Local comparable evidence",
-    searchedAt: "2026-05-29T00:00:00Z",
-    searchAreaDescription: "SW12 8 and nearby sectors",
-    warnings: [],
-    errors: []
+const benchmark: OfficialRentBenchmark = {
+  areaCode: "E09000022",
+  areaName: "Lambeth",
+  regionOrCountryName: "London",
+  period: "2026-04",
+  monthlyRentAll: 1750,
+  monthlyRentOneBed: 1600,
+  monthlyRentTwoBed: 2050,
+  monthlyRentThreeBed: 2550,
+  monthlyRentFourOrMoreBed: 3200,
+  monthlyRentFlatMaisonette: 1900
+};
+
+const comparison: OfficialBenchmarkComparison = {
+  benchmark,
+  selection: {
+    field: "monthlyRentTwoBed",
+    label: "two bedrooms",
+    monthlyRent: 2050
   },
-  estimate: {
-    userRentMonthly: 2450,
-    userRentAnnual: 29400,
-    estimatedRangeLabel: "Unavailable",
-    comparableCount: 0,
-    status: "insufficient_evidence",
-    confidence: "low",
-    confidenceScore: 0,
-    warnings: [],
-    methodologyNotes: []
-  }
+  userRentMonthly: 2450,
+  differenceMonthly: 400,
+  percentageDifference: 19.5,
+  status: "above_benchmark"
 };
 
 describe("persisted check", () => {
-  it("round-trips a completed check", () => {
-    writeStoredCheck(input, result);
+  it("round-trips a completed benchmark check", () => {
+    writeStoredCheck(input, comparison, sourceSha256);
 
-    expect(readStoredCheck()?.result.estimate.userRentMonthly).toBe(2450);
+    const storedCheck = readStoredCheck(sourceSha256);
+
+    expect(storedCheck?.version).toBe(3);
+    expect(storedCheck?.officialBenchmarkComparison.userRentMonthly).toBe(2450);
+    expect(storedCheck?.sourceSha256).toBe(sourceSha256);
   });
 
   it("clears malformed stored checks instead of restoring them", () => {
     window.localStorage.setItem(
       "market-rent-check-last-check",
       JSON.stringify({
-        version: 1,
+        version: 3,
         input,
-        result: {
-          input,
-          searchResult: {},
-          estimate: { userRentMonthly: 2450 }
+        officialBenchmarkComparison: {
+          ...comparison,
+          selection: { ...comparison.selection, monthlyRent: 0 }
         },
+        sourceSha256,
         savedAt: "2026-05-29T00:00:00Z"
       })
     );
 
-    expect(readStoredCheck()).toBeNull();
+    expect(readStoredCheck(sourceSha256)).toBeNull();
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
   });
 
-  it("clears old version 1 checks instead of restoring them", () => {
-    window.localStorage.setItem(
-      "market-rent-check-last-check",
-      JSON.stringify({
-        version: 1,
-        input,
-        result,
-        savedAt: "2026-05-29T00:00:00Z"
-      })
-    );
+  it("clears old version 1 and version 2 checks instead of restoring them", () => {
+    for (const version of [1, 2]) {
+      window.localStorage.setItem(
+        "market-rent-check-last-check",
+        JSON.stringify({
+          version,
+          input,
+          result: {},
+          savedAt: "2026-05-29T00:00:00Z"
+        })
+      );
 
-    expect(readStoredCheck()).toBeNull();
+      expect(readStoredCheck(sourceSha256)).toBeNull();
+      expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+    }
+  });
+
+  it("clears version 3 checks when the ONS source hash changes", () => {
+    writeStoredCheck(input, comparison, sourceSha256);
+
+    expect(readStoredCheck("different-source-hash")).toBeNull();
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
   });
 });

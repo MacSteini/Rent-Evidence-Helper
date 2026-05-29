@@ -1,8 +1,5 @@
-import type {
-  ConfidenceLevel,
-  RentAssessmentStatus,
-  ResultCopy
-} from "../types/rent";
+import type { OfficialBenchmarkStatus } from "../types/officialRentBenchmark";
+import type { ResultCopy } from "../types/rent";
 
 export const fieldCopy = {
   postcodeHint:
@@ -11,16 +8,16 @@ export const fieldCopy = {
     "This is used only for the official ONS area benchmark.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
-    "Use this as a market-evidence check, not a decision. Compare it with evidence you collect and check official guidance before acting."
+    "Use this as an official benchmark check, not a decision. Compare it with evidence you collect and check official guidance before acting."
 };
 
 export const jurisdictionCopy = {
   intro:
     "For rental properties in England only. Rent-increase rules and tribunal routes differ in Scotland, Wales and Northern Ireland.",
   disclaimer:
-    "This tool is for rental properties in England only. It gives a market-evidence indication, not legal advice, and it does not decide the legal market rent.",
+    "This tool is for rental properties in England only. It gives an official area-benchmark indication, not legal advice, and it does not decide the legal market rent.",
   privacy:
-    "The postcode is used to derive a comparison sector and to block postcode areas that are clearly outside the supported England scope.",
+    "The postcode stays in the browser. It is used for local validation and to block postcode areas that are clearly outside the supported England scope.",
   scopeTitle: "Why this is England only",
   scopeSummary:
     "The rent-increase and First-tier Tribunal guidance used here belongs to the England assured-tenancy framework. Wales, Scotland and Northern Ireland have different rented-housing regimes and different rent-increase routes.",
@@ -65,75 +62,46 @@ export const officialBenchmarkStatusCopy = {
 
 export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
-  "Comparable homes are matched first by postcode sector, property type and bedrooms, then widened to nearby evidence if needed.",
-  "The estimated range uses the lower quartile, median and upper quartile of monthly comparable rents.",
-  "Evidence confidence reflects comparable count, match quality and freshness; it is not a legal reliability score.",
-  "If the evidence is too limited or too broad, the result is marked as insufficient or low confidence."
+  "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",
+  "Bedroom count is used first to select the ONS benchmark field. If bedrooms are not usable, flats and maisonettes use the flat or maisonette benchmark; other cases use the all-property benchmark.",
+  "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%.",
+  "The ONS benchmark is an area-level estimate, not individual rental listings, a tribunal decision or legal advice."
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. It uses the postcode to derive a comparison sector and to block postcode areas that are clearly outside the supported England scope.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. It uses the postcode to block postcode areas that are clearly outside the supported England scope. Local Authority is selected manually and is used only for the official ONS area benchmark.";
 
-export const confidenceCopy = {
-  description:
-    "This reflects the amount, match quality and freshness of the comparable evidence. It is not a legal reliability score or a tribunal prediction.",
-  calculation:
-    "The score combines comparable count up to 10 homes (40%), match quality for location, property type and bedrooms (40%), and evidence freshness (20%). Provider warnings and errors reduce the score. High starts at 72%, medium at 48%, and lower scores are shown as low confidence."
-};
-
-export const resultCopy: Record<RentAssessmentStatus, ResultCopy> = {
-  insufficient_evidence: {
-    headline: "There is not enough evidence to give a reliable estimate.",
+export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
+  below_benchmark: {
+    headline: "Your rent is below the official area benchmark.",
     summary:
-      "The available comparable evidence is too limited, too broad, or not closely matched enough for a firm market-rent indication.",
+      "Your monthly rent is more than 10% below the selected ONS Local Authority benchmark.",
     nextStepIntro:
-      "You can still collect examples of similar properties and check official guidance before deciding what to do next.",
+      "Use the official benchmark as one evidence point and keep your own records if rent is reviewed later.",
     severity: "neutral"
   },
-  within_range: {
-    headline: "Your rent appears within the typical range.",
+  near_benchmark: {
+    headline: "Your rent is near the official area benchmark.",
     summary:
-      "Based on the available comparable evidence, the rent sits at or below the upper quartile for similar properties.",
+      "Your monthly rent is within 10% of the selected ONS Local Authority benchmark.",
     nextStepIntro:
-      "Keep a copy of your evidence and check official guidance if your landlord proposes a formal increase.",
+      "Use the official benchmark as one evidence point and compare it with any evidence you collect yourself.",
     severity: "neutral"
   },
-  above_median: {
-    headline: "Your rent is above the median but still within the observed range.",
+  above_benchmark: {
+    headline: "Your rent is above the official area benchmark.",
     summary:
-      "The rent is higher than the midpoint of the comparable evidence, but not above the upper quartile.",
+      "Your monthly rent is more than 10% above the selected ONS Local Authority benchmark.",
     nextStepIntro:
-      "You may want to collect more comparable examples before raising the issue.",
+      "Use the official benchmark as one evidence point, ask how the rent was calculated, and collect your own evidence before acting.",
     severity: "notice"
   },
-  potentially_high: {
-    headline: "Your rent appears higher than much of the comparable evidence.",
+  substantially_above_benchmark: {
+    headline: "Your rent is well above the official area benchmark.",
     summary:
-      "The rent is above the upper quartile, or the available evidence is less certain but still points higher.",
+      "Your monthly rent is more than 20% above the selected ONS Local Authority benchmark.",
     nextStepIntro:
-      "Consider asking how the rent was calculated and collect comparable evidence.",
-    severity: "warning"
-  },
-  likely_above_market: {
-    headline: "Your rent appears above comparable market evidence.",
-    summary:
-      "The rent is more than 10% above the comparable median, with enough evidence to review it carefully.",
-    nextStepIntro:
-      "You may want to ask for supporting evidence and check whether the formal process applies.",
-    severity: "warning"
-  },
-  strongly_above_market: {
-    headline: "Your rent appears well above comparable market evidence.",
-    summary:
-      "The rent is more than 20% above the comparable median, with enough close evidence to review it urgently.",
-    nextStepIntro:
-      "Collect evidence, keep copies of any notice, and check official guidance promptly.",
+      "Use the official benchmark as one evidence point, collect supporting evidence, and check official guidance promptly.",
     severity: "warning"
   }
 };
-
-export function confidenceLabel(confidence: ConfidenceLevel): string {
-  if (confidence === "high") return "High evidence confidence";
-  if (confidence === "medium") return "Medium evidence confidence";
-  return "Low evidence confidence";
-}
