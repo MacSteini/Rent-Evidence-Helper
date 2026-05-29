@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   buildPmiListingsUrl,
+  normalisePmiApiKey,
   normalisePmiListingsResponse,
   PmiEvidenceError,
   searchPmiLiveRentalListings
@@ -106,6 +107,15 @@ describe("Property Market Intel provider", () => {
     ).toThrow(PmiEvidenceError);
   });
 
+  it("accepts a raw key, bearer value or copied authorization header", () => {
+    expect(normalisePmiApiKey(" pmi_live_test ")).toBe("pmi_live_test");
+    expect(normalisePmiApiKey("Bearer pmi_live_test")).toBe("pmi_live_test");
+    expect(normalisePmiApiKey("Authorization: Bearer pmi_live_test")).toBe(
+      "pmi_live_test"
+    );
+    expect(normalisePmiApiKey('"Bearer pmi_live_test"')).toBe("pmi_live_test");
+  });
+
   it("calls PMI with a bearer token and accepts a valid response", async () => {
     const fetchMock = responseFetch(200, pmiResponse);
 
@@ -135,4 +145,3 @@ function responseFetch(status: number, body: unknown) {
     })
   );
 }
-

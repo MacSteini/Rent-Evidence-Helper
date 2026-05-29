@@ -61,7 +61,7 @@ export async function searchPmiLiveRentalListings(
   apiKey: string,
   fetchImpl: FetchLike = fetch
 ): Promise<LiveRentalEvidenceResult> {
-  const trimmedKey = apiKey.trim();
+  const trimmedKey = normalisePmiApiKey(apiKey);
   if (!trimmedKey) {
     throw new PmiEvidenceError("missing-key", "Enter a Property Market Intel API key.");
   }
@@ -104,6 +104,16 @@ export async function searchPmiLiveRentalListings(
 
   const value = await response.json();
   return normalisePmiListingsResponse(value, input, new Date().toISOString());
+}
+
+export function normalisePmiApiKey(value: string): string {
+  return value
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .trim()
+    .replace(/^authorization\s*:\s*/i, "")
+    .replace(/^bearer\s+/i, "")
+    .trim();
 }
 
 export function normalisePmiListingsResponse(
@@ -242,4 +252,3 @@ function toFiniteNumber(value: unknown): number | undefined {
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
-

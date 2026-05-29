@@ -45,6 +45,7 @@ export function ApiKeyPanel({
           onChange={(event) => onApiKeyChange(event.target.value)}
         />
         <p className="hint">
+          Paste the key itself, for example pmi_live_..., or the full Bearer header.
           The key stays in this tab unless you choose to remember it on this device.
         </p>
       </div>
@@ -69,4 +70,3 @@ export function ApiKeyPanel({
     </section>
   );
 }
-
