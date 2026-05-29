@@ -21,6 +21,16 @@ describe("App", () => {
       screen.getByText(/does not adjust the estimate/i)
     ).toBeInTheDocument();
 
+    await user.click(screen.getByRole("heading", { name: /rent check details/i }));
+
+    expect(billsHelp).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByText(/does not adjust the estimate/i)
+    ).not.toBeInTheDocument();
+
+    await user.click(billsHelp);
+    expect(billsHelp).toHaveAttribute("aria-expanded", "true");
+
     await user.keyboard("{Escape}");
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "false");
@@ -69,6 +79,11 @@ describe("App", () => {
 
     render(<App />);
 
+    expect(
+      screen.queryByRole("heading", { name: /your result will appear here/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     expect(
@@ -76,6 +91,9 @@ describe("App", () => {
         name: /your rent appears above comparable market evidence/i
       })
     ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByLabelText(/rent check result/i)).toHaveFocus()
+    );
     expect(screen.getByText(/fixture mode is active/i)).toBeInTheDocument();
     expect(
       screen.getByRole("table", { name: /fixture comparable rents/i })

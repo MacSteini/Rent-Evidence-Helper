@@ -163,6 +163,24 @@ h3 {
   align-items: start;
 }
 
+.workspace-grid-single {
+  max-width: 46rem;
+}
+
+.workspace-grid-has-result {
+  grid-template-areas:
+    "result"
+    "form";
+}
+
+.workspace-grid-has-result .form-panel {
+  grid-area: form;
+}
+
+.workspace-grid-has-result [aria-label="Rent check result"] {
+  grid-area: result;
+}
+
 .form-panel,
 .panel,
 .result-panel,
@@ -224,13 +242,13 @@ h3 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.6rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.6rem;
 }
 
 label,
 legend {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.6rem;
   font-weight: 700;
 }
 
@@ -244,7 +262,16 @@ label span {
   font-weight: 600;
 }
 
-.field:focus-within label {
+.field > span {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.field:focus-within label,
+.field:focus-within > span {
   color: var(--navy);
 }
 
@@ -881,8 +908,9 @@ th {
     font-size: 4.2rem;
   }
 
-  .workspace-grid {
+  .workspace-grid-has-result {
     grid-template-columns: minmax(20rem, 29rem) minmax(0, 1fr);
+    grid-template-areas: "form result";
     gap: 1.25rem;
   }
 

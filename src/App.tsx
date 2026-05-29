@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Disclaimer } from "./components/Disclaimer";
 import { EvidenceTable } from "./components/EvidenceTable";
 import { InfoDialog } from "./components/InfoDialog";
@@ -33,16 +33,36 @@ export default function App() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [hasStartedCheck, setHasStartedCheck] = useState(false);
   const [activeDialog, setActiveDialog] = useState<"methodology" | "privacy" | null>(
     null
   );
+  const resultSectionRef = useRef<HTMLElement>(null);
 
   const landlordMessage = useMemo(() => {
     if (!result) return "";
     return buildLandlordMessage(result.input, result.estimate);
   }, [result]);
 
+  useEffect(() => {
+    if (!result) return;
+
+    requestAnimationFrame(() => {
+      const resultSection = resultSectionRef.current;
+      if (!resultSection) return;
+
+      if (typeof resultSection.scrollIntoView === "function") {
+        resultSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+      resultSection.focus({ preventScroll: true });
+    });
+  }, [result]);
+
   async function handleSubmit(input: RentSearchInput) {
+    setHasStartedCheck(true);
     setIsChecking(true);
     setError(null);
     try {
@@ -97,38 +117,52 @@ export default function App() {
           <Disclaimer item={getLegalContent("general-disclaimer")} compact />
         </section>
 
-        <div className="workspace-grid">
+        <div
+          className={
+            hasStartedCheck
+              ? "workspace-grid workspace-grid-has-result"
+              : "workspace-grid workspace-grid-single"
+          }
+        >
+          {hasStartedCheck && (
+            <section
+              ref={resultSectionRef}
+              aria-live="polite"
+              aria-label="Rent check result"
+              tabIndex={-1}
+            >
+              {result ? (
+                <div className="result-stack">
+                  <ResultSummary result={result} />
+                  <EvidenceTable
+                    comparables={result.searchResult.comparables}
+                    searchAreaDescription={result.searchResult.searchAreaDescription}
+                  />
+                  <NextStepsPanel
+                    context={result.input.tenancyContext}
+                    status={result.estimate.status}
+                  />
+                  <CopyableMessage message={landlordMessage} />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <h2>{isChecking ? "Checking your rent" : "No result available"}</h2>
+                  <p>
+                    {isChecking
+                      ? "The result will appear here when the fixture comparison is ready."
+                      : "Check the form and try again."}
+                  </p>
+                </div>
+              )}
+            </section>
+          )}
+
           <RentCheckForm
             initialInput={initialInput}
             isChecking={isChecking}
             error={error}
             onSubmit={handleSubmit}
           />
-
-          <section aria-live="polite" aria-label="Rent check result">
-            {result ? (
-              <div className="result-stack">
-                <ResultSummary result={result} />
-                <EvidenceTable
-                  comparables={result.searchResult.comparables}
-                  searchAreaDescription={result.searchResult.searchAreaDescription}
-                />
-                <NextStepsPanel
-                  context={result.input.tenancyContext}
-                  status={result.estimate.status}
-                />
-                <CopyableMessage message={landlordMessage} />
-              </div>
-            ) : (
-              <div className="empty-state">
-                <h2>Your result will appear here</h2>
-                <p>
-                  The first result uses fixture data so you can inspect the
-                  workflow before any live data provider is selected.
-                </p>
-              </div>
-            )}
-          </section>
         </div>
       </main>
 

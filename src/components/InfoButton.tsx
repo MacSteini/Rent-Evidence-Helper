@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 type InfoButtonProps = {
   label: string;
@@ -7,7 +7,25 @@ type InfoButtonProps = {
 
 export function InfoButton({ label, children }: InfoButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLSpanElement>(null);
   const contentId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        wrapperRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setIsOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLSpanElement>) {
     if (event.key === "Escape") {
@@ -16,7 +34,7 @@ export function InfoButton({ label, children }: InfoButtonProps) {
   }
 
   return (
-    <span className="info-help" onKeyDown={handleKeyDown}>
+    <span ref={wrapperRef} className="info-help" onKeyDown={handleKeyDown}>
       <button
         type="button"
         className="info-button"
