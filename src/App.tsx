@@ -84,8 +84,17 @@ export default function App() {
     }
   }
 
+  function handleInvalidSubmit() {
+    setHasStartedCheck(false);
+    setResult(null);
+    setError(null);
+  }
+
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <header className="site-header">
         <a className="brand" href="./" aria-label={`${appConfig.productName} home`}>
           <span className="brand-mark" aria-hidden="true">M</span>
@@ -109,6 +118,9 @@ export default function App() {
           <a
             className="nav-link"
             href="https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases"
+            aria-label="GOV.UK rent increase guidance (opens in a new tab)"
+            rel="noreferrer"
+            target="_blank"
           >
             GOV.UK guidance
           </a>
@@ -116,7 +128,7 @@ export default function App() {
         </nav>
       </header>
 
-      <main id="top">
+      <main id="main-content">
         <section className="intro-band" aria-labelledby="page-title">
           <div>
             <h1 id="page-title">Check your rent against local market evidence</h1>
@@ -184,6 +196,7 @@ export default function App() {
             initialInput={storedCheck?.input ?? initialInput}
             isChecking={isChecking}
             error={error}
+            onInvalidSubmit={handleInvalidSubmit}
             onSubmit={handleSubmit}
           />
         </div>
@@ -225,6 +238,7 @@ export default function App() {
         <nav className="official-source-links" aria-label="Official scope sources">
           <a
             href="https://www.gov.uk/government/publications/the-renters-rights-act-information-sheet-2026"
+            aria-label="GOV.UK Renters' Rights Act information sheet (opens in a new tab)"
             rel="noreferrer"
             target="_blank"
           >
@@ -232,6 +246,7 @@ export default function App() {
           </a>
           <a
             href="https://rentsmart.gov.wales/en/rentersrights/"
+            aria-label="Rent Smart Wales: Renters' Rights Act (opens in a new tab)"
             rel="noreferrer"
             target="_blank"
           >
@@ -239,6 +254,7 @@ export default function App() {
           </a>
           <a
             href="https://www.gov.scot/publications/rental-discrimination-guidance-for-scotland/"
+            aria-label="Scottish Government rental discrimination guidance (opens in a new tab)"
             rel="noreferrer"
             target="_blank"
           >

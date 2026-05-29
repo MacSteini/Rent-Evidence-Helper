@@ -18,14 +18,14 @@ describe("App", () => {
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "true");
     expect(
-      screen.getByText(/bills can make homes less directly comparable/i)
+      screen.getByText(/bills can make rents harder to compare directly/i)
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("heading", { name: /rent check details/i }));
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "false");
     expect(
-      screen.queryByText(/bills can make homes less directly comparable/i)
+      screen.queryByText(/bills can make rents harder to compare directly/i)
     ).not.toBeInTheDocument();
 
     await user.click(billsHelp);
@@ -35,7 +35,7 @@ describe("App", () => {
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "false");
     expect(
-      screen.queryByText(/bills can make homes less directly comparable/i)
+      screen.queryByText(/bills can make rents harder to compare directly/i)
     ).not.toBeInTheDocument();
   });
 
@@ -117,7 +117,7 @@ describe("App", () => {
       screen.getByRole("link", { name: /apply for an open market rent determination/i })
     ).toHaveAttribute(
       "href",
-      "https://www.gov.uk/guidance/apply-for-a-market-rent-determination"
+      "https://www.gov.uk/guidance/apply-for-an-open-market-rent-determination"
     );
     expect(screen.getByText(/evidence confidence score/i)).toBeInTheDocument();
     expect(screen.getByText(/how this score is calculated/i)).toBeInTheDocument();
@@ -165,5 +165,28 @@ describe("App", () => {
     expect(screen.getByRole("combobox", { name: /tenancy context/i })).toHaveValue(
       "informal-proposed-increase"
     );
+  });
+
+  it("blocks clearly unsupported non-England postcode areas", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    expect(
+      await screen.findByRole("heading", {
+        name: /your rent appears above comparable market evidence/i
+      })
+    ).toBeInTheDocument();
+
+    const postcode = screen.getByLabelText(/postcode/i);
+    await user.clear(postcode);
+    await user.type(postcode, "CF10 1EP");
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/outside the England scope/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    await waitFor(() => expect(postcode).toHaveFocus());
   });
 });

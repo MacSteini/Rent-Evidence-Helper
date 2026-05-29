@@ -1,4 +1,9 @@
-import { fieldCopy, confidenceLabel, resultCopy } from "../content/uiCopy";
+import {
+  confidenceCopy,
+  fieldCopy,
+  confidenceLabel,
+  resultCopy
+} from "../content/uiCopy";
 import { formatCurrency } from "../lib/rentMath";
 import type { AssessmentResult } from "../lib/assessment";
 
@@ -66,17 +71,11 @@ export function ResultSummary({ result }: ResultSummaryProps) {
           {confidencePercent}%
         </meter>
         <p>
-          This reflects the amount, match quality and freshness of the comparable
-          evidence. It is not a legal reliability score.
+          {confidenceCopy.description}
         </p>
         <details className="confidence-details">
           <summary>How this score is calculated</summary>
-          <p>
-            The score combines comparable count up to 10 homes (40%), match quality
-            for location, property type and bedrooms (40%), and evidence freshness
-            (20%). Provider warnings and errors reduce the score. High starts at
-            72%, medium at 48%, and lower scores are shown as low confidence.
-          </p>
+          <p>{confidenceCopy.calculation}</p>
         </details>
       </div>
 

@@ -52,8 +52,14 @@ function OfficialLinks({ item }: OfficialLinksProps) {
   return (
     <nav className="official-link-list" aria-label={`Official sources for ${item.title}`}>
       {item.sourceUrls.map((url, index) => (
-        <a key={url} href={url} rel="noreferrer" target="_blank">
-          {item.sourceTitles?.[index] ?? "Official GOV.UK guidance"}
+        <a
+          key={url}
+          href={url}
+          rel="noreferrer"
+          target="_blank"
+          aria-label={`${item.sourceTitles?.[index] ?? "Official guidance"} (opens in a new tab)`}
+        >
+          {item.sourceTitles?.[index] ?? "Official guidance"}
         </a>
       ))}
     </nav>

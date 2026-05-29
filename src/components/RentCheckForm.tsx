@@ -1,7 +1,7 @@
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { InfoButton } from "./InfoButton";
 import { fieldCopy, fieldHelpCopy } from "../content/uiCopy";
-import { isValidPostcode } from "../lib/postcode";
+import { isSupportedEnglandPostcode, isValidPostcode } from "../lib/postcode";
 import type {
   FurnishedStatus,
   PropertyCondition,
@@ -15,6 +15,7 @@ type RentCheckFormProps = {
   initialInput: RentSearchInput;
   isChecking: boolean;
   error: string | null;
+  onInvalidSubmit: () => void;
   onSubmit: (input: RentSearchInput) => void;
 };
 
@@ -24,10 +25,12 @@ export function RentCheckForm({
   initialInput,
   isChecking,
   error,
+  onInvalidSubmit,
   onSubmit
 }: RentCheckFormProps) {
   const [input, setInput] = useState<RentSearchInput>(initialInput);
   const [errors, setErrors] = useState<FormErrors>({});
+  const formRef = useRef<HTMLFormElement>(null);
   const formHintId = useId();
 
   function update<K extends keyof RentSearchInput>(key: K, value: RentSearchInput[K]) {
@@ -38,6 +41,9 @@ export function RentCheckForm({
     const nextErrors: FormErrors = {};
     if (!isValidPostcode(input.postcode)) {
       nextErrors.postcode = "Enter a valid UK postcode.";
+    } else if (!isSupportedEnglandPostcode(input.postcode)) {
+      nextErrors.postcode =
+        "This postcode area is outside the England scope this check supports.";
     }
     if (!Number.isFinite(input.rentAmount) || input.rentAmount <= 0) {
       nextErrors.rentAmount = "Enter a rent amount greater than zero.";
@@ -57,11 +63,26 @@ export function RentCheckForm({
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length === 0) {
       onSubmit(input);
+      return;
     }
+
+    onInvalidSubmit();
+    requestAnimationFrame(() => {
+      const firstInvalid = formRef.current?.querySelector<HTMLElement>(
+        "[aria-invalid='true']"
+      );
+      firstInvalid?.focus();
+    });
   }
 
   return (
-    <form className="form-panel" onSubmit={handleSubmit} aria-describedby={formHintId}>
+    <form
+      ref={formRef}
+      className="form-panel"
+      noValidate
+      onSubmit={handleSubmit}
+      aria-describedby={formHintId}
+    >
       <div className="section-heading">
         <h2>Rent check details</h2>
         <p id={formHintId}>Required fields are marked with “required”.</p>

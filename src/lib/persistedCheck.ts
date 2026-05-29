@@ -53,9 +53,7 @@ function isStoredCheck(value: Partial<StoredCheck>): value is StoredCheck {
   return (
     value.version === storageVersion &&
     isRentSearchInput(value.input) &&
-    Boolean(value.result?.input) &&
-    Boolean(value.result?.searchResult) &&
-    Boolean(value.result?.estimate)
+    isAssessmentResult(value.result)
   );
 }
 
@@ -70,6 +68,50 @@ function isRentSearchInput(value: unknown): value is RentSearchInput {
     typeof input.propertyType === "string" &&
     typeof input.bedrooms === "number" &&
     typeof input.tenancyContext === "string"
+  );
+}
+
+function isAssessmentResult(value: unknown): value is AssessmentResult {
+  if (!value || typeof value !== "object") return false;
+
+  const result = value as Partial<AssessmentResult>;
+  return (
+    isRentSearchInput(result.input) &&
+    isComparableRentSearchResult(result.searchResult) &&
+    isRentEstimate(result.estimate)
+  );
+}
+
+function isComparableRentSearchResult(
+  value: unknown
+): value is AssessmentResult["searchResult"] {
+  if (!value || typeof value !== "object") return false;
+
+  const searchResult = value as Partial<AssessmentResult["searchResult"]>;
+  return (
+    Array.isArray(searchResult.comparables) &&
+    typeof searchResult.providerName === "string" &&
+    typeof searchResult.searchedAt === "string" &&
+    typeof searchResult.searchAreaDescription === "string" &&
+    Array.isArray(searchResult.warnings) &&
+    Array.isArray(searchResult.errors)
+  );
+}
+
+function isRentEstimate(value: unknown): value is AssessmentResult["estimate"] {
+  if (!value || typeof value !== "object") return false;
+
+  const estimate = value as Partial<AssessmentResult["estimate"]>;
+  return (
+    typeof estimate.userRentMonthly === "number" &&
+    typeof estimate.userRentAnnual === "number" &&
+    typeof estimate.estimatedRangeLabel === "string" &&
+    typeof estimate.comparableCount === "number" &&
+    typeof estimate.status === "string" &&
+    typeof estimate.confidence === "string" &&
+    typeof estimate.confidenceScore === "number" &&
+    Array.isArray(estimate.warnings) &&
+    Array.isArray(estimate.methodologyNotes)
   );
 }
 

@@ -60,6 +60,22 @@ function installLocalStorage() {
   });
 }
 
+function installFailingLocalStorage() {
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(() => {
+        throw new Error("storage unavailable");
+      }),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      key: vi.fn(() => null),
+      length: 0
+    } as unknown as Storage
+  });
+}
+
 describe("ThemeToggle", () => {
   afterEach(() => {
     window.localStorage?.clear();
@@ -108,5 +124,17 @@ describe("ThemeToggle", () => {
 
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(window.localStorage.getItem("market-rent-check-theme")).toBeNull();
+  });
+
+  it("still changes theme when storage rejects the override", async () => {
+    const user = userEvent.setup();
+    installFailingLocalStorage();
+    installMatchMedia(false);
+
+    render(<ThemeToggle />);
+
+    await user.click(screen.getByRole("button", { name: /switch to dark mode/i }));
+
+    expect(document.documentElement.dataset.theme).toBe("dark");
   });
 });

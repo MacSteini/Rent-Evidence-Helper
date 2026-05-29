@@ -40,7 +40,11 @@ export function ThemeToggle() {
       systemThemeAtSet: systemTheme
     };
 
-    getStorage()?.setItem(storageKey, JSON.stringify(override));
+    try {
+      getStorage()?.setItem(storageKey, JSON.stringify(override));
+    } catch {
+      // Keep the visual theme change even when browser storage is unavailable.
+    }
     setTheme(nextTheme);
   }
 

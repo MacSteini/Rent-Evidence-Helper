@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CopyableMessage } from "../components/CopyableMessage";
 
 describe("CopyableMessage", () => {
@@ -34,5 +34,21 @@ describe("CopyableMessage", () => {
         originalScrollHeight
       );
     }
+  });
+
+  it("shows feedback when clipboard copy fails", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) },
+      configurable: true
+    });
+
+    render(<CopyableMessage message="Message to copy" />);
+
+    await user.click(screen.getByRole("button", { name: /copy landlord message/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /could not be copied/i
+    );
   });
 });

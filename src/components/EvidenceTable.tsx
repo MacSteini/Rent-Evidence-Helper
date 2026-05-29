@@ -35,12 +35,30 @@ export function EvidenceTable({
           <tbody>
             {comparables.map((comparable) => (
               <tr key={comparable.id}>
-                <td data-label="Area">{comparable.postcodeSector ?? "Unknown"}</td>
-                <td data-label="Property">{comparable.propertyType ?? "Unknown"}</td>
-                <td data-label="Bedrooms">{comparable.bedrooms ?? "Unknown"}</td>
-                <td data-label="Monthly rent">{formatCurrency(comparable.rentMonthly)}</td>
-                <td data-label="Observed">{formatDate(comparable.observedAt)}</td>
-                <td data-label="Match">{comparable.matchType ?? "unknown"}</td>
+                <td>
+                  <span className="cell-label" aria-hidden="true">Area</span>
+                  {comparable.postcodeSector ?? "Unknown"}
+                </td>
+                <td>
+                  <span className="cell-label" aria-hidden="true">Property</span>
+                  {comparable.propertyType ?? "Unknown"}
+                </td>
+                <td>
+                  <span className="cell-label" aria-hidden="true">Bedrooms</span>
+                  {comparable.bedrooms ?? "Unknown"}
+                </td>
+                <td>
+                  <span className="cell-label" aria-hidden="true">Monthly rent</span>
+                  {formatCurrency(comparable.rentMonthly)}
+                </td>
+                <td>
+                  <span className="cell-label" aria-hidden="true">Observed</span>
+                  {formatDate(comparable.observedAt)}
+                </td>
+                <td>
+                  <span className="cell-label" aria-hidden="true">Match</span>
+                  {comparable.matchType ?? "unknown"}
+                </td>
               </tr>
             ))}
           </tbody>

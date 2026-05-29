@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isValidPostcode, normalisePostcode, parsePostcode } from "../lib/postcode";
+import {
+  isSupportedEnglandPostcode,
+  isValidPostcode,
+  normalisePostcode,
+  parsePostcode
+} from "../lib/postcode";
 
 describe("postcode", () => {
   it("normalises UK postcodes", () => {
@@ -16,5 +21,12 @@ describe("postcode", () => {
 
   it("rejects malformed postcodes", () => {
     expect(isValidPostcode("not a postcode")).toBe(false);
+  });
+
+  it("flags postcode areas outside the supported England scope", () => {
+    expect(isSupportedEnglandPostcode("SW12 8AA")).toBe(true);
+    expect(isSupportedEnglandPostcode("CF10 1EP")).toBe(false);
+    expect(isSupportedEnglandPostcode("BT1 5GS")).toBe(false);
+    expect(isSupportedEnglandPostcode("EH1 1YZ")).toBe(false);
   });
 });

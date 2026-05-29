@@ -6,12 +6,12 @@ type CopyableMessageProps = {
 
 export function CopyableMessage({ message }: CopyableMessageProps) {
   const [draft, setDraft] = useState(message);
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setDraft(message);
-    setCopied(false);
+    setCopyStatus("idle");
   }, [message]);
 
   useLayoutEffect(() => {
@@ -23,8 +23,12 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
   }, [draft]);
 
   async function copyMessage() {
-    await navigator.clipboard.writeText(draft);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(draft);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
   }
 
   return (
@@ -42,14 +46,21 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
           rows={1}
           onChange={(event) => {
             setDraft(event.target.value);
-            setCopied(false);
+            setCopyStatus("idle");
           }}
         />
       </label>
       <button className="secondary-button" type="button" onClick={copyMessage}>
         Copy landlord message
       </button>
-      {copied && <p className="success-message" role="status">Message copied.</p>}
+      {copyStatus === "copied" && (
+        <p className="success-message" role="status">Message copied.</p>
+      )}
+      {copyStatus === "failed" && (
+        <p className="form-error" role="alert">
+          The message could not be copied. Select the text and copy it manually.
+        </p>
+      )}
     </section>
   );
 }

@@ -109,6 +109,24 @@ body {
   line-height: 1.5;
 }
 
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-180%);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  background: var(--navy);
+  color: var(--on-accent);
+  box-shadow: 0 10px 24px var(--strong-shadow);
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 a {
   color: var(--teal);
   font-weight: 800;
@@ -980,7 +998,13 @@ td {
 }
 
 thead {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 tbody {
@@ -1005,8 +1029,7 @@ td {
   padding: 0;
 }
 
-td::before {
-  content: attr(data-label);
+.cell-label {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 800;
@@ -1190,7 +1213,14 @@ th {
   }
 
   thead {
+    position: static;
     display: table-header-group;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
   }
 
   tbody {
@@ -1212,8 +1242,8 @@ th {
     padding: 0.7rem 0.55rem;
   }
 
-  td::before {
-    content: none;
+  .cell-label {
+    display: none;
   }
 }
 
