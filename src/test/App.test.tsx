@@ -276,9 +276,8 @@ describe("App", () => {
     await selectLocalAuthority(user);
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
-    expect(
-      await screen.findByText(/property market intel api key was rejected/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/property market intel rejected the api key/i))
+      .toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /^official area benchmark$/i })
     ).toBeInTheDocument();

@@ -114,6 +114,26 @@ describe("Property Market Intel provider", () => {
       "pmi_live_test"
     );
     expect(normalisePmiApiKey('"Bearer pmi_live_test"')).toBe("pmi_live_test");
+    expect(normalisePmiApiKey('-H "Authorization: Bearer pmi_live_test"')).toBe(
+      "pmi_live_test"
+    );
+  });
+
+  it("includes PMI problem details in rejected-key errors", async () => {
+    await expect(
+      searchPmiLiveRentalListings(
+        input,
+        "bad-key",
+        responseFetch(401, {
+          title: "Invalid API key",
+          detail: "The provided API key is not recognised."
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "invalid-key",
+      message:
+        "Property Market Intel rejected the API key: Invalid API key - The provided API key is not recognised."
+    });
   });
 
   it("calls PMI with a bearer token and accepts a valid response", async () => {

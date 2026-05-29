@@ -82,23 +82,32 @@ export async function searchPmiLiveRentalListings(
   }
 
   if (response.status === 401 || response.status === 403) {
+    const providerMessage = await readProviderErrorMessage(response);
     throw new PmiEvidenceError(
       "invalid-key",
-      "The Property Market Intel API key was rejected."
+      providerMessage
+        ? `Property Market Intel rejected the API key: ${providerMessage}`
+        : "The Property Market Intel API key was rejected."
     );
   }
 
   if (response.status === 402 || response.status === 429) {
+    const providerMessage = await readProviderErrorMessage(response);
     throw new PmiEvidenceError(
       "quota-or-rate-limit",
-      "The Property Market Intel key has reached its quota or rate limit."
+      providerMessage
+        ? `Property Market Intel quota or rate limit: ${providerMessage}`
+        : "The Property Market Intel key has reached its quota or rate limit."
     );
   }
 
   if (!response.ok) {
+    const providerMessage = await readProviderErrorMessage(response);
     throw new PmiEvidenceError(
       "network-or-cors",
-      "Property Market Intel could not return live listing evidence."
+      providerMessage
+        ? `Property Market Intel could not return live listing evidence: ${providerMessage}`
+        : "Property Market Intel could not return live listing evidence."
     );
   }
 
@@ -109,11 +118,24 @@ export async function searchPmiLiveRentalListings(
 export function normalisePmiApiKey(value: string): string {
   return value
     .trim()
+    .replace(/^-H\s+/i, "")
     .replace(/^["']|["']$/g, "")
     .trim()
     .replace(/^authorization\s*:\s*/i, "")
     .replace(/^bearer\s+/i, "")
     .trim();
+}
+
+async function readProviderErrorMessage(response: Response): Promise<string | null> {
+  try {
+    const value = (await response.clone().json()) as unknown;
+    if (!isObject(value)) return null;
+    const title = typeof value.title === "string" ? value.title.trim() : "";
+    const detail = typeof value.detail === "string" ? value.detail.trim() : "";
+    return [title, detail].filter(Boolean).join(" - ") || null;
+  } catch {
+    return null;
+  }
 }
 
 export function normalisePmiListingsResponse(
