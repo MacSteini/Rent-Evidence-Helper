@@ -3,14 +3,22 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import App from "../App";
 
+const localAuthorityLabels: Record<string, string> = {
+  E06000023: "Bristol, City of (South West)",
+  E07000178: "Oxford (South East)",
+  E08000003: "Manchester (North West)",
+  E09000022: "Lambeth (London)"
+};
+
 async function selectLocalAuthority(
   user: ReturnType<typeof userEvent.setup>,
   areaCode = "E09000022"
 ) {
-  await user.selectOptions(
-    screen.getByRole("combobox", { name: /local authority/i }),
-    areaCode
-  );
+  const localAuthority = screen.getByLabelText(/local authority/i, {
+    selector: "input"
+  });
+  await user.clear(localAuthority);
+  await user.type(localAuthority, localAuthorityLabels[areaCode]);
 }
 
 describe("App", () => {
@@ -167,15 +175,21 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const localAuthority = screen.getByRole("combobox", {
-      name: /local authority/i
+    const localAuthority = screen.getByLabelText(/local authority/i, {
+      selector: "input"
     });
     expect(localAuthority).toHaveValue("");
-    expect(screen.getByRole("option", { name: /lambeth/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /manchester/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /bristol, city of/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("option", { name: /^Oxford \(South East\)$/i })
+      document.querySelector('datalist option[value="Lambeth (London)"]')
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('datalist option[value="Manchester (North West)"]')
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('datalist option[value="Bristol, City of (South West)"]')
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('datalist option[value="Oxford (South East)"]')
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /start check/i }));
@@ -185,6 +199,26 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
     await waitFor(() => expect(localAuthority).toHaveFocus());
+  });
+
+  it("keeps Situation at the end so formal notice questions follow it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const condition = screen.getByLabelText(/condition/i, { selector: "select" });
+    const situation = screen.getByLabelText(/situation/i, { selector: "select" });
+    expect(
+      Boolean(condition.compareDocumentPosition(situation) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+
+    await user.selectOptions(situation, "formal-form-4a-section-13");
+
+    expect(
+      Boolean(
+        situation.compareDocumentPosition(screen.getByText(/optional notice questions/i)) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
   });
 
   it("shows and copies a landlord message only for a rent-increase situation", async () => {
@@ -239,9 +273,9 @@ describe("App", () => {
 
     expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/postcode/i)).toHaveValue("SW12 8AA");
-    expect(screen.getByRole("combobox", { name: /local authority/i })).toHaveValue(
-      "E09000022"
-    );
+    expect(
+      screen.getByLabelText(/local authority/i, { selector: "input" })
+    ).toHaveValue("Lambeth (London)");
     expect(
       screen.getByRole("heading", { name: /official area benchmark/i })
     ).toBeInTheDocument();

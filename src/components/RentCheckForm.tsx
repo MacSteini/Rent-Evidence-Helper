@@ -50,6 +50,9 @@ export function RentCheckForm({
   const [rentAmountText, setRentAmountText] = useState(
     String(initialInput.rentAmount)
   );
+  const [localAuthorityText, setLocalAuthorityText] = useState(() =>
+    getLocalAuthorityLabel(initialInput.localAuthorityCode, localAuthorityOptions)
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitGuardMessage, setSubmitGuardMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -64,6 +67,26 @@ export function RentCheckForm({
     const sanitisedValue = sanitiseRentAmountInput(value);
     setRentAmountText(sanitisedValue);
     update("rentAmount", parseRentAmountInput(sanitisedValue));
+  }
+
+  function updateLocalAuthority(value: string) {
+    const selectedOption = findLocalAuthorityOption(value, localAuthorityOptions);
+    setLocalAuthorityText(value);
+    setInput((current) => ({
+      ...current,
+      localAuthorityCode: selectedOption?.areaCode ?? ""
+    }));
+    onInputChange();
+  }
+
+  function normaliseLocalAuthority() {
+    const selectedOption = findLocalAuthorityOption(
+      localAuthorityText,
+      localAuthorityOptions
+    );
+    if (selectedOption) {
+      setLocalAuthorityText(formatLocalAuthorityOption(selectedOption));
+    }
   }
 
   function validate(): FormErrors {
@@ -167,35 +190,16 @@ export function RentCheckForm({
           pattern="[A-Za-z0-9 ]{5,8}"
           onChange={(value) => update("postcode", sanitisePostcodeInput(value))}
         />
-        <SelectField
+        <LocalAuthorityField
           label="Local authority"
           help={fieldHelpCopy.localAuthority}
-          value={input.localAuthorityCode}
+          value={localAuthorityText}
           required
           hint={fieldCopy.localAuthorityHint}
           error={errors.localAuthorityCode}
-          options={[
-            ["", "Select local authority"],
-            ...localAuthorityOptions.map((option) => [
-              option.areaCode,
-              `${option.areaName} (${option.regionOrCountryName})`
-            ] as [string, string])
-          ]}
-          onChange={(value) => update("localAuthorityCode", value)}
-        />
-      </div>
-
-      <div className="field-grid">
-        <SelectField
-          label="Situation"
-          help={fieldHelpCopy.tenancyContext}
-          value={input.tenancyContext}
-          options={[
-            ["current-rent-only", "Current rent only"],
-            ["informal-proposed-increase", "Landlord proposed an increase informally"],
-            ["formal-form-4a-section-13", "Form 4A / section 13 notice"]
-          ]}
-          onChange={(value) => update("tenancyContext", value as TenancyContext)}
+          options={localAuthorityOptions}
+          onChange={updateLocalAuthority}
+          onBlur={normaliseLocalAuthority}
         />
       </div>
 
@@ -304,6 +308,20 @@ export function RentCheckForm({
         />
       </div>
 
+      <div className="field-grid">
+        <SelectField
+          label="Situation"
+          help={fieldHelpCopy.tenancyContext}
+          value={input.tenancyContext}
+          options={[
+            ["current-rent-only", "Current rent only"],
+            ["informal-proposed-increase", "Landlord proposed an increase informally"],
+            ["formal-form-4a-section-13", "Form 4A / section 13 notice"]
+          ]}
+          onChange={(value) => update("tenancyContext", value as TenancyContext)}
+        />
+      </div>
+
       {input.tenancyContext === "formal-form-4a-section-13" && (
         <fieldset className="fieldset">
           <legend>Optional notice questions</legend>
@@ -349,6 +367,31 @@ export function RentCheckForm({
       </button>
     </form>
   );
+}
+
+function formatLocalAuthorityOption(option: LocalAuthorityOption): string {
+  return `${option.areaName} (${option.regionOrCountryName})`;
+}
+
+function findLocalAuthorityOption(
+  value: string,
+  options: LocalAuthorityOption[]
+): LocalAuthorityOption | undefined {
+  const normalisedValue = value.trim().toLowerCase();
+  return options.find(
+    (option) =>
+      formatLocalAuthorityOption(option).toLowerCase() === normalisedValue ||
+      option.areaName.toLowerCase() === normalisedValue ||
+      option.areaCode.toLowerCase() === normalisedValue
+  );
+}
+
+function getLocalAuthorityLabel(
+  areaCode: string,
+  options: LocalAuthorityOption[]
+): string {
+  const selectedOption = options.find((option) => option.areaCode === areaCode);
+  return selectedOption ? formatLocalAuthorityOption(selectedOption) : "";
 }
 
 type TextFieldProps = {
@@ -519,6 +562,67 @@ function SelectField({
           </option>
         ))}
       </select>
+      {hint && <p id={hintId} className="hint">{hint}</p>}
+      {error && <p id={errorId} className="field-error">{error}</p>}
+    </div>
+  );
+}
+
+type LocalAuthorityFieldProps = {
+  label: string;
+  help?: string;
+  value: string;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  options: LocalAuthorityOption[];
+  onChange: (value: string) => void;
+  onBlur: () => void;
+};
+
+function LocalAuthorityField({
+  label,
+  help,
+  value,
+  required,
+  hint,
+  error,
+  options,
+  onChange,
+  onBlur
+}: LocalAuthorityFieldProps) {
+  const id = useId();
+  const listId = `${id}-options`;
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+  return (
+    <div className="field">
+      <div className="label-row">
+        <label htmlFor={id}>
+          {label} {required && <RequiredIndicator />}
+        </label>
+        {help && <InfoButton label={label}>{help}</InfoButton>}
+      </div>
+      <input
+        id={id}
+        type="search"
+        list={listId}
+        value={value}
+        required={required}
+        autoComplete="off"
+        inputMode="search"
+        aria-describedby={[hint ? hintId : "", error ? errorId : ""]
+          .filter(Boolean)
+          .join(" ")}
+        aria-invalid={Boolean(error)}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
+      />
+      <datalist id={listId}>
+        {options.map((option) => (
+          <option key={option.areaCode} value={formatLocalAuthorityOption(option)} />
+        ))}
+      </datalist>
       {hint && <p id={hintId} className="hint">{hint}</p>}
       {error && <p id={errorId} className="field-error">{error}</p>}
     </div>
