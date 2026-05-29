@@ -42,7 +42,7 @@ export class PmiEvidenceError extends Error {
 
 export function buildPmiListingsUrl(input: RentSearchInput): URL {
   const url = new URL(`${baseUrl}/listings`);
-  url.searchParams.set("type", "rent");
+  url.searchParams.set("type", "lettings");
   url.searchParams.set("postcode", normalisePostcode(input.postcode));
   url.searchParams.set("bedrooms", String(input.bedrooms));
   url.searchParams.set("sort", "distance");

@@ -53,7 +53,7 @@ describe("Property Market Intel provider", () => {
 
     expect(url.origin).toBe("https://api.propertymarketintel.com");
     expect(url.pathname).toBe("/v1/listings");
-    expect(url.searchParams.get("type")).toBe("rent");
+    expect(url.searchParams.get("type")).toBe("lettings");
     expect(url.searchParams.get("postcode")).toBe("SW12 8AA");
     expect(url.searchParams.get("bedrooms")).toBe("2");
     expect(url.searchParams.get("property_type")).toBe("Flat");
