@@ -1,5 +1,5 @@
 import { median, sortNumbers } from "../lib/statistics";
-import { normalisePostcode, parsePostcode } from "../lib/postcode";
+import { parsePostcode } from "../lib/postcode";
 import type {
   LiveEvidenceFailureCode,
   LiveRentalEvidenceResult,
@@ -18,9 +18,13 @@ type PmiListingRow = {
   address?: unknown;
   postcode?: unknown;
   price?: unknown;
+  price_pcm?: unknown;
   bedrooms?: unknown;
   property_type?: unknown;
   listed_date?: unknown;
+  date_crawled?: unknown;
+  created_at?: unknown;
+  updated_at?: unknown;
   distance_m?: unknown;
   url?: unknown;
 };
@@ -43,15 +47,10 @@ export class PmiEvidenceError extends Error {
 export function buildPmiListingsUrl(input: RentSearchInput): URL {
   const url = new URL(`${baseUrl}/listings`);
   url.searchParams.set("type", "lettings");
-  url.searchParams.set("postcode", normalisePostcode(input.postcode));
+  url.searchParams.set("outcode", getSearchOutcode(input));
   url.searchParams.set("bedrooms", String(input.bedrooms));
   url.searchParams.set("sort", "distance");
   url.searchParams.set("per_page", String(perPage));
-
-  const propertyType = mapPropertyTypeToPmi(input.propertyType);
-  if (propertyType) {
-    url.searchParams.set("property_type", propertyType);
-  }
 
   return url;
 }
@@ -160,9 +159,12 @@ export function normalisePmiListingsResponse(
     .filter((listing): listing is LiveRentalListing => listing !== null);
 
   if (listings.length === 0) {
+    const returnedCount = response.listings.length;
     throw new PmiEvidenceError(
       "no-listings",
-      "Property Market Intel returned no usable rental listings for this search."
+      returnedCount > 0
+        ? `Property Market Intel returned ${returnedCount} listing records, but none included a usable monthly asking rent.`
+        : "Property Market Intel returned no rental listings for this outcode search."
     );
   }
 
@@ -176,7 +178,7 @@ export function normalisePmiListingsResponse(
     evidenceKind: "licensed-live",
     provider: "property-market-intel",
     searchedAt,
-    searchAreaDescription: normalisePostcode(input.postcode),
+    searchAreaDescription: `${getSearchOutcode(input)} outcode`,
     totalCount,
     displayedCount: listings.length,
     medianMonthly: median(rents),
@@ -187,6 +189,10 @@ export function normalisePmiListingsResponse(
       "Property Market Intel listing prices are treated as live asking rents, not achieved rents."
     ]
   };
+}
+
+function getSearchOutcode(input: RentSearchInput): string {
+  return parsePostcode(input.postcode)?.outwardCode ?? input.postcode.trim().toUpperCase();
 }
 
 export function liveEvidenceErrorMessage(error: unknown): string {
@@ -202,7 +208,7 @@ function normaliseListing(
 ): LiveRentalListing | null {
   if (!isObject(value)) return null;
   const row = value as PmiListingRow;
-  const rentAmount = toPositiveNumber(row.price);
+  const rentAmount = toPositiveNumber(row.price_pcm) ?? toPositiveNumber(row.price);
   if (!rentAmount) return null;
 
   const postcodeSector =
@@ -222,26 +228,18 @@ function normaliseListing(
     rentMonthly: rentAmount,
     bedrooms: toFiniteNumber(row.bedrooms),
     propertyType: mapPmiPropertyType(row.property_type) ?? input.propertyType,
-    listedDate: typeof row.listed_date === "string" ? row.listed_date : undefined,
+    listedDate: firstString(row.listed_date, row.date_crawled, row.created_at, row.updated_at),
     distanceMeters: toFiniteNumber(row.distance_m)
   };
-}
-
-function mapPropertyTypeToPmi(propertyType: PropertyType): string | null {
-  if (
-    propertyType === "flat" ||
-    propertyType === "maisonette" ||
-    propertyType === "studio"
-  ) {
-    return "Flat";
-  }
-
-  return null;
 }
 
 function mapPmiPropertyType(value: unknown): PropertyType | undefined {
   if (typeof value !== "string") return undefined;
   const normalised = value.trim().toLowerCase();
+  if (normalised === "f") return "flat";
+  if (normalised === "s") return "studio";
+  if (normalised === "r") return "room";
+  if (normalised === "h" || normalised === "d" || normalised === "t") return "house";
   if (normalised.includes("flat") || normalised.includes("apartment")) return "flat";
   if (normalised.includes("maisonette")) return "maisonette";
   if (normalised.includes("studio")) return "studio";
@@ -255,6 +253,13 @@ function mapPmiPropertyType(value: unknown): PropertyType | undefined {
     return "house";
   }
   return "other";
+}
+
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim() !== "") return value;
+  }
+  return undefined;
 }
 
 function toPositiveNumber(value: unknown): number | null {

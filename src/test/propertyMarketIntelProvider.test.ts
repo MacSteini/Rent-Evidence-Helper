@@ -54,15 +54,16 @@ describe("Property Market Intel provider", () => {
     expect(url.origin).toBe("https://api.propertymarketintel.com");
     expect(url.pathname).toBe("/v1/listings");
     expect(url.searchParams.get("type")).toBe("lettings");
-    expect(url.searchParams.get("postcode")).toBe("SW12 8AA");
+    expect(url.searchParams.get("outcode")).toBe("SW12");
+    expect(url.searchParams.has("postcode")).toBe(false);
     expect(url.searchParams.get("bedrooms")).toBe("2");
-    expect(url.searchParams.get("property_type")).toBe("Flat");
+    expect(url.searchParams.has("property_type")).toBe(false);
     expect(url.searchParams.get("sort")).toBe("distance");
     expect(url.searchParams.get("per_page")).toBe("10");
     expect(url.searchParams.has("uprn")).toBe(false);
   });
 
-  it("omits unsupported property type params", () => {
+  it("does not send a property type filter that can over-narrow PMI listings", () => {
     const url = buildPmiListingsUrl({ ...input, propertyType: "house" });
 
     expect(url.searchParams.has("property_type")).toBe(false);
@@ -87,6 +88,40 @@ describe("Property Market Intel provider", () => {
       sourceUrl: "https://provider.example/listing/1"
     });
     expect(JSON.stringify(evidence)).not.toContain("Private Street");
+    expect(JSON.stringify(evidence)).not.toContain("secret-uprn");
+  });
+
+  it("normalises the stable PMI listings response shape", () => {
+    const evidence = normalisePmiListingsResponse(
+      {
+        total_count: 117,
+        listings: [
+          {
+            uprn: "secret-uprn",
+            full_address: "Hidden Address",
+            postcode: "SW12 9RF",
+            price_pcm: 2350,
+            bedrooms: 2,
+            property_type: "f",
+            date_crawled: "2026-05-29T12:00:00Z",
+            distance_m: 61,
+            url: "https://www.onthemarket.com/details/19587809/"
+          }
+        ]
+      },
+      input,
+      "2026-05-29T00:00:00Z"
+    );
+
+    expect(evidence.totalCount).toBe(117);
+    expect(evidence.searchAreaDescription).toBe("SW12 outcode");
+    expect(evidence.listings[0]).toMatchObject({
+      postcodeSector: "SW12 9",
+      rentMonthly: 2350,
+      propertyType: "flat",
+      listedDate: "2026-05-29T12:00:00Z"
+    });
+    expect(JSON.stringify(evidence)).not.toContain("Hidden Address");
     expect(JSON.stringify(evidence)).not.toContain("secret-uprn");
   });
 
