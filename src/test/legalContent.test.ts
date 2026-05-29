@@ -3,7 +3,7 @@ import { legalContent } from "../content/legalGuidance";
 
 describe("legalContent", () => {
   it("includes source metadata for legal guidance", () => {
-    const sourcedItems = legalContent.filter((item) => item.id !== "fixture-data");
+    const sourcedItems = legalContent.filter((item) => item.id !== "evidence-notice");
     expect(sourcedItems.length).toBeGreaterThan(0);
     for (const item of sourcedItems) {
       expect(item.jurisdiction).toBe("england");

@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Disclaimer } from "./components/Disclaimer";
 import { EvidenceTable } from "./components/EvidenceTable";
 import { InfoDialog } from "./components/InfoDialog";
 import { NextStepsPanel } from "./components/NextStepsPanel";
 import { RentCheckForm } from "./components/RentCheckForm";
 import { ResultSummary } from "./components/ResultSummary";
 import { CopyableMessage } from "./components/CopyableMessage";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { appConfig } from "./config/appConfig";
-import { getLegalContent } from "./content/legalGuidance";
-import { methodologyCopy, privacyCopy } from "./content/uiCopy";
+import { jurisdictionCopy, methodologyCopy, privacyCopy } from "./content/uiCopy";
 import { assessRent, type AssessmentResult } from "./lib/assessment";
 import { buildLandlordMessage } from "./lib/landlordMessage";
+import { readStoredCheck, writeStoredCheck } from "./lib/persistedCheck";
 import { MockComparableRentProvider } from "./providers/MockComparableRentProvider";
 import type { RentSearchInput } from "./types/rent";
 
@@ -30,13 +30,16 @@ const initialInput: RentSearchInput = {
 };
 
 export default function App() {
-  const [result, setResult] = useState<AssessmentResult | null>(null);
+  const [storedCheck] = useState(() => readStoredCheck());
+  const [result, setResult] = useState<AssessmentResult | null>(
+    storedCheck?.result ?? null
+  );
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
-  const [hasStartedCheck, setHasStartedCheck] = useState(false);
-  const [activeDialog, setActiveDialog] = useState<"methodology" | "privacy" | null>(
-    null
-  );
+  const [hasStartedCheck, setHasStartedCheck] = useState(Boolean(storedCheck));
+  const [activeDialog, setActiveDialog] = useState<
+    "methodology" | "privacy" | "scope" | null
+  >(null);
   const resultSectionRef = useRef<HTMLElement>(null);
 
   const landlordMessage = useMemo(() => {
@@ -52,8 +55,12 @@ export default function App() {
       if (!resultSection) return;
 
       if (typeof resultSection.scrollIntoView === "function") {
+        const prefersReducedMotion =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
         resultSection.scrollIntoView({
-          behavior: "smooth",
+          behavior: prefersReducedMotion ? "auto" : "smooth",
           block: "start"
         });
       }
@@ -68,6 +75,7 @@ export default function App() {
     try {
       const assessment = await assessRent(input, provider);
       setResult(assessment);
+      writeStoredCheck(assessment.input, assessment);
     } catch (caught) {
       setResult(null);
       setError(caught instanceof Error ? caught.message : "The rent check failed.");
@@ -79,7 +87,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="site-header">
-        <a className="brand" href="#top" aria-label={`${appConfig.productName} home`}>
+        <a className="brand" href="./" aria-label={`${appConfig.productName} home`}>
           <span className="brand-mark" aria-hidden="true">M</span>
           <span>{appConfig.productName}</span>
         </a>
@@ -98,9 +106,13 @@ export default function App() {
           >
             Privacy
           </button>
-          <a href="https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases">
+          <a
+            className="nav-link"
+            href="https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases"
+          >
             GOV.UK guidance
           </a>
+          <ThemeToggle />
         </nav>
       </header>
 
@@ -110,11 +122,21 @@ export default function App() {
             <h1 id="page-title">Check your rent against local market evidence</h1>
             <p>
               Enter your rent and property details to see how your rent compares
-              with similar homes nearby. This tool gives general information,
-              not legal advice.
+              with similar homes nearby. This tool is for rental properties in
+              England and gives general information, not legal advice.
             </p>
+            <aside className="jurisdiction-note" aria-label="Scope and legal note">
+              <strong>{jurisdictionCopy.intro}</strong>
+              <span>{jurisdictionCopy.disclaimer}</span>
+              <button
+                type="button"
+                className="scope-link"
+                onClick={() => setActiveDialog("scope")}
+              >
+                Why this scope?
+              </button>
+            </aside>
           </div>
-          <Disclaimer item={getLegalContent("general-disclaimer")} compact />
         </section>
 
         <div
@@ -127,6 +149,7 @@ export default function App() {
           {hasStartedCheck && (
             <section
               ref={resultSectionRef}
+              className="result-region"
               aria-live="polite"
               aria-label="Rent check result"
               tabIndex={-1}
@@ -149,7 +172,7 @@ export default function App() {
                   <h2>{isChecking ? "Checking your rent" : "No result available"}</h2>
                   <p>
                     {isChecking
-                      ? "The result will appear here when the fixture comparison is ready."
+                      ? "The result will appear here when the comparison is ready."
                       : "Check the form and try again."}
                   </p>
                 </div>
@@ -158,7 +181,7 @@ export default function App() {
           )}
 
           <RentCheckForm
-            initialInput={initialInput}
+            initialInput={storedCheck?.input ?? initialInput}
             isChecking={isChecking}
             error={error}
             onSubmit={handleSubmit}
@@ -171,11 +194,11 @@ export default function App() {
         title="How this works"
         onClose={() => setActiveDialog(null)}
       >
-        <ol className="method-list">
+        <div className="method-list">
           {methodologyCopy.map((item) => (
-            <li key={item}>{item}</li>
+            <p key={item}>{item}</p>
           ))}
-        </ol>
+        </div>
       </InfoDialog>
 
       <InfoDialog
@@ -184,11 +207,49 @@ export default function App() {
         onClose={() => setActiveDialog(null)}
       >
         <p>{privacyCopy}</p>
+        <p>{jurisdictionCopy.privacy}</p>
+      </InfoDialog>
+
+      <InfoDialog
+        isOpen={activeDialog === "scope"}
+        title={jurisdictionCopy.scopeTitle}
+        onClose={() => setActiveDialog(null)}
+      >
+        <p>{jurisdictionCopy.scopeSummary}</p>
+        <div className="scope-point-list">
+          {jurisdictionCopy.scopePoints.map((point) => (
+            <p key={point}>{point}</p>
+          ))}
+        </div>
+        <p>{jurisdictionCopy.scopeSourceIntro}</p>
+        <nav className="official-source-links" aria-label="Official scope sources">
+          <a
+            href="https://www.gov.uk/government/publications/the-renters-rights-act-information-sheet-2026"
+            rel="noreferrer"
+            target="_blank"
+          >
+            GOV.UK Renters' Rights Act information sheet
+          </a>
+          <a
+            href="https://rentsmart.gov.wales/en/rentersrights/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Rent Smart Wales: Renters' Rights Act
+          </a>
+          <a
+            href="https://www.gov.scot/publications/rental-discrimination-guidance-for-scotland/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Scottish Government rental discrimination guidance
+          </a>
+        </nav>
       </InfoDialog>
 
       <footer className="site-footer">
         <span>{appConfig.productName}</span>
-        <span>Prototype using fixture data only</span>
+        <span>England market-rent comparison</span>
       </footer>
     </div>
   );

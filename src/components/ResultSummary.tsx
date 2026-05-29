@@ -21,18 +21,18 @@ export function ResultSummary({ result }: ResultSummaryProps) {
       </div>
 
       <p>{copy.summary}</p>
-      <p className="fixture-warning">{fieldCopy.fixtureNotice}</p>
+      <p className="evidence-warning">{fieldCopy.evidenceNotice}</p>
 
       <dl className="metric-grid">
-        <div>
+        <div className="metric-card">
           <dt>Your monthly rent</dt>
           <dd>{formatCurrency(result.estimate.userRentMonthly)}</dd>
         </div>
-        <div>
+        <div className="metric-card metric-card-wide">
           <dt>Estimated range</dt>
           <dd>{result.estimate.estimatedRangeLabel}</dd>
         </div>
-        <div>
+        <div className="metric-card">
           <dt>Median comparable</dt>
           <dd>
             {result.estimate.estimatedMedianMonthly
@@ -40,8 +40,8 @@ export function ResultSummary({ result }: ResultSummaryProps) {
               : "Unavailable"}
           </dd>
         </div>
-        <div>
-          <dt>Comparable sample</dt>
+        <div className="metric-card metric-card-compact">
+          <dt>Comparables</dt>
           <dd>{result.estimate.comparableCount}</dd>
         </div>
       </dl>
@@ -59,22 +59,35 @@ export function ResultSummary({ result }: ResultSummaryProps) {
 
       <div className="confidence-block">
         <div>
-          <strong>Confidence score</strong>
+          <strong>Evidence confidence score</strong>
           <span>{confidencePercent}%</span>
         </div>
         <meter min="0" max="100" low={48} high={72} optimum={90} value={confidencePercent}>
           {confidencePercent}%
         </meter>
+        <p>
+          This reflects the amount, match quality and freshness of the comparable
+          evidence. It is not a legal reliability score.
+        </p>
+        <details className="confidence-details">
+          <summary>How this score is calculated</summary>
+          <p>
+            The score combines comparable count up to 10 homes (40%), match quality
+            for location, property type and bedrooms (40%), and evidence freshness
+            (20%). Provider warnings and errors reduce the score. High starts at
+            72%, medium at 48%, and lower scores are shown as low confidence.
+          </p>
+        </details>
       </div>
 
       {result.estimate.warnings.length > 0 && (
         <div className="warning-list">
           <h3>Evidence limitations</h3>
-          <ul>
+          <div>
             {result.estimate.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
+              <p key={warning}>{warning}</p>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </article>

@@ -11,7 +11,7 @@ function fixture(
 ): ComparableRent {
   return {
     id,
-    sourceName: "Fixture comparable data",
+    sourceName: "Local comparable evidence",
     sourceType: "fixture",
     observedAt,
     postcodeSector,

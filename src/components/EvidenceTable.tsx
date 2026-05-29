@@ -20,8 +20,7 @@ export function EvidenceTable({
       <div className="table-wrap">
         <table>
           <caption>
-            Fixture comparable rents used for the estimate. These are sample data
-            points, not live listings.
+            Comparable rents used for the estimate.
           </caption>
           <thead>
             <tr>

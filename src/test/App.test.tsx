@@ -18,14 +18,14 @@ describe("App", () => {
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "true");
     expect(
-      screen.getByText(/does not adjust the estimate/i)
+      screen.getByText(/bills can make homes less directly comparable/i)
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("heading", { name: /rent check details/i }));
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "false");
     expect(
-      screen.queryByText(/does not adjust the estimate/i)
+      screen.queryByText(/bills can make homes less directly comparable/i)
     ).not.toBeInTheDocument();
 
     await user.click(billsHelp);
@@ -35,11 +35,11 @@ describe("App", () => {
 
     expect(billsHelp).toHaveAttribute("aria-expanded", "false");
     expect(
-      screen.queryByText(/does not adjust the estimate/i)
+      screen.queryByText(/bills can make homes less directly comparable/i)
     ).not.toBeInTheDocument();
   });
 
-  it("opens and closes the methodology and privacy dialogs", async () => {
+  it("opens and closes the methodology, privacy and scope dialogs", async () => {
     const user = userEvent.setup();
 
     render(<App />);
@@ -67,9 +67,23 @@ describe("App", () => {
 
     await user.keyboard("{Escape}");
     expect(privacyButton).toHaveFocus();
+
+    const scopeButton = screen.getByRole("button", { name: /why this scope/i });
+    await user.click(scopeButton);
+
+    expect(
+      screen.getByRole("dialog", { name: /why this is england only/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/wales uses occupation contracts/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /rent smart wales/i })
+    ).toHaveAttribute("href", "https://rentsmart.gov.wales/en/rentersrights/");
+
+    await user.click(screen.getByRole("button", { name: /close/i }));
+    expect(scopeButton).toHaveFocus();
   });
 
-  it("lets a user complete the fixture rent check and copy a message", async () => {
+  it("lets a user complete the rent check and copy a message", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
@@ -78,6 +92,10 @@ describe("App", () => {
     });
 
     render(<App />);
+
+    expect(
+      screen.getByRole("complementary", { name: /scope and legal note/i })
+    ).toHaveTextContent(/for rental properties in england only/i);
 
     expect(
       screen.queryByRole("heading", { name: /your result will appear here/i })
@@ -94,10 +112,17 @@ describe("App", () => {
     await waitFor(() =>
       expect(screen.getByLabelText(/rent check result/i)).toHaveFocus()
     );
-    expect(screen.getByText(/fixture mode is active/i)).toBeInTheDocument();
+    expect(screen.getByText(/check official guidance before acting/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("table", { name: /fixture comparable rents/i })
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: /apply for an open market rent determination/i })
+    ).toHaveAttribute(
+      "href",
+      "https://www.gov.uk/guidance/apply-for-a-market-rent-determination"
+    );
+    expect(screen.getByText(/evidence confidence score/i)).toBeInTheDocument();
+    expect(screen.getByText(/how this score is calculated/i)).toBeInTheDocument();
+    expect(screen.getByText(/comparable count up to 10 homes/i)).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: /comparable rents/i })).toBeInTheDocument();
 
     await waitFor(() =>
       expect(screen.getByLabelText(/editable message/i)).toHaveValue()
@@ -112,5 +137,33 @@ describe("App", () => {
 
     expect(writeText).toHaveBeenCalled();
     expect(await screen.findByText(/message copied/i)).toBeInTheDocument();
+  });
+
+  it("restores a completed check after refresh", async () => {
+    const user = userEvent.setup();
+    const firstRender = render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /your rent appears above comparable market evidence/i
+      })
+    ).toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeTruthy();
+
+    firstRender.unmount();
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: /your rent appears above comparable market evidence/i
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/postcode/i)).toHaveValue("SW12 8AA");
+    expect(screen.getByRole("combobox", { name: /tenancy context/i })).toHaveValue(
+      "informal-proposed-increase"
+    );
   });
 });

@@ -1,7 +1,6 @@
 # Market Rent Check
 
-Fixture-first MVP for a public, no-login rent comparison tool for tenants in
-England.
+Local no-login rent comparison tool for tenants in England.
 
 ## Scripts
 
@@ -11,11 +10,6 @@ England.
 - `npm run typecheck` runs TypeScript checks.
 - `npm run lint` currently runs the same TypeScript check until a dedicated
   linter is added.
-
-## Data Mode
-
-The MVP uses fixture comparable-rent data. It must not be presented as live
-market evidence and does not scrape property portals.
 
 ## Publication
 

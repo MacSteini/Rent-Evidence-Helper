@@ -20,7 +20,7 @@ export function calculateConfidenceScore(
   const comparables = searchResult.comparables;
   if (comparables.length === 0) return 0;
 
-  const sampleScore = Math.min(comparables.length / 10, 1);
+  const comparableCountScore = Math.min(comparables.length / 10, 1);
   const matchScore =
     comparables.reduce((sum, comparable) => sum + scoreComparableMatch(comparable), 0) /
     comparables.length;
@@ -36,7 +36,11 @@ export function calculateConfidenceScore(
     0,
     Math.min(
       1,
-      sampleScore * 0.4 + matchScore * 0.4 + freshnessScore * 0.2 - warningPenalty - errorPenalty
+      comparableCountScore * 0.4 +
+        matchScore * 0.4 +
+        freshnessScore * 0.2 -
+        warningPenalty -
+        errorPenalty
     )
   );
 }

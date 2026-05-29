@@ -28,7 +28,7 @@ Kind regards,`;
 
 I am writing about the proposed rent of ${rentLabel}.
 
-Based on comparable rental evidence for similar properties in ${area}, this proposed rent appears to need further explanation. The current estimate is ${estimate.estimatedRangeLabel}, with ${estimate.comparableCount} comparable data points in the sample.
+Based on comparable rental evidence for similar properties in ${area}, this proposed rent appears to need further explanation. The current estimate is ${estimate.estimatedRangeLabel}, based on ${estimate.comparableCount} comparable data points.
 
 Please could you provide the evidence you used to calculate the proposed rent?
 

@@ -19,22 +19,44 @@ export function NextStepsPanel({ context, status }: NextStepsPanelProps) {
         <h2 id="next-steps-title">What to consider next</h2>
         <p>{resultCopy[status].nextStepIntro}</p>
       </div>
-      <ul className="check-list">
+      <div className="check-list">
         {steps.map((step) => (
-          <li key={step}>{step}</li>
+          <p key={step}>{step}</p>
         ))}
-      </ul>
+      </div>
       <div className="guidance-grid">
         <article>
           <h3>{form4a.title}</h3>
           <p>{form4a.body}</p>
+          <OfficialLinks item={form4a} />
         </article>
         <article>
           <h3>{tribunal.title}</h3>
           <p>{tribunal.body}</p>
+          <OfficialLinks item={tribunal} />
         </article>
       </div>
     </section>
+  );
+}
+
+type OfficialLinksProps = {
+  item: ReturnType<typeof getLegalContent>;
+};
+
+function OfficialLinks({ item }: OfficialLinksProps) {
+  if (item.sourceUrls.length === 0) {
+    return null;
+  }
+
+  return (
+    <nav className="official-link-list" aria-label={`Official sources for ${item.title}`}>
+      {item.sourceUrls.map((url, index) => (
+        <a key={url} href={url} rel="noreferrer" target="_blank">
+          {item.sourceTitles?.[index] ?? "Official GOV.UK guidance"}
+        </a>
+      ))}
+    </nav>
   );
 }
 
@@ -68,7 +90,7 @@ function stepsForContext(context: TenancyContext): string[] {
   }
 
   return [
-    "Use the result as a starting point, not a conclusion.",
+    "Compare the result with evidence you collect yourself.",
     "Collect examples of similar properties in your area.",
     "Check official guidance if a rent increase is proposed later.",
     "Avoid missing any formal deadline if you receive a notice."

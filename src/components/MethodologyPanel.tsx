@@ -7,11 +7,11 @@ export function MethodologyPanel() {
         <p className="label">Methodology</p>
         <h2 id="methodology-title">How this works</h2>
       </div>
-      <ol className="method-list">
+      <div className="method-list">
         {methodologyCopy.map((item) => (
-          <li key={item}>{item}</li>
+          <p key={item}>{item}</p>
         ))}
-      </ol>
+      </div>
     </section>
   );
 }

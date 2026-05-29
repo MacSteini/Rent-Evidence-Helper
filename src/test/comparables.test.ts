@@ -15,11 +15,11 @@ const input: RentSearchInput = {
 };
 
 describe("comparables", () => {
-  it("builds a high-rent estimate from fixture comparables", async () => {
+  it("builds a high-rent estimate from comparable evidence", async () => {
     const result = await assessRent(input, new MockComparableRentProvider());
     expect(result.estimate.comparableCount).toBeGreaterThanOrEqual(5);
     expect(result.estimate.status).toBe("likely_above_market");
-    expect(result.searchResult.warnings[0]).toContain("Fixture mode");
+    expect(result.searchResult.warnings).toEqual([]);
   });
 
   it("handles provider warnings without crashing", () => {

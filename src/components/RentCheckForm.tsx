@@ -69,14 +69,29 @@ export function RentCheckForm({
 
       {error && <p className="form-error" role="alert">{error}</p>}
 
-      <TextField
-        label="Postcode"
-        value={input.postcode}
-        required
-        hint={fieldCopy.postcodeHint}
-        error={errors.postcode}
-        onChange={(value) => update("postcode", value)}
-      />
+      <div className="field-grid">
+        <TextField
+          label="Postcode"
+          value={input.postcode}
+          required
+          hint={fieldCopy.postcodeHint}
+          error={errors.postcode}
+          onChange={(value) => update("postcode", value)}
+        />
+        <SelectField
+          label="Tenancy context"
+          help={fieldHelpCopy.tenancyContext}
+          value={input.tenancyContext}
+          required
+          options={[
+            ["current-rent-only", "Current rent only"],
+            ["informal-proposed-increase", "Landlord proposed an increase informally"],
+            ["formal-form-4a-section-13", "Form 4A / section 13 notice"],
+            ["not-sure", "Not sure"]
+          ]}
+          onChange={(value) => update("tenancyContext", value as TenancyContext)}
+        />
+      </div>
 
       <div className="field-grid">
         <NumberField
@@ -175,20 +190,6 @@ export function RentCheckForm({
           onChange={(value) => update("condition", value as PropertyCondition)}
         />
       </div>
-
-      <SelectField
-        label="Tenancy context"
-        help={fieldHelpCopy.tenancyContext}
-        value={input.tenancyContext}
-        required
-        options={[
-          ["current-rent-only", "Current rent only"],
-          ["informal-proposed-increase", "Landlord proposed an increase informally"],
-          ["formal-form-4a-section-13", "Form 4A / section 13 notice"],
-          ["not-sure", "Not sure"]
-        ]}
-        onChange={(value) => update("tenancyContext", value as TenancyContext)}
-      />
 
       {input.tenancyContext === "formal-form-4a-section-13" && (
         <fieldset className="fieldset">

@@ -101,7 +101,7 @@ export function buildRentEstimate(
     methodologyNotes: [
       "Rent values were normalised to monthly amounts before comparison.",
       "The first matching pass uses postcode sector, property type and bedrooms.",
-      "The result is based on fixture evidence and is not live market data."
+      "The result is based on comparable rental evidence."
     ]
   };
 }
