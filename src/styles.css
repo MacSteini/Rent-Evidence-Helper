@@ -496,7 +496,7 @@ legend {
 }
 
 .required-indicator {
-  color: var(--warning);
+  color: var(--amber);
   font-size: 1.25rem;
   font-weight: 850;
   line-height: 1;
@@ -644,6 +644,7 @@ input[type="number"] {
 
 textarea {
   overflow: hidden;
+  font-weight: 400;
   resize: none;
 }
 
