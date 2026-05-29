@@ -366,7 +366,8 @@ input[type="number"] {
 }
 
 textarea {
-  resize: vertical;
+  overflow: hidden;
+  resize: none;
 }
 
 .hint,
