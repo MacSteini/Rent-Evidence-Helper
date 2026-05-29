@@ -24,10 +24,13 @@ export function monthlyToAnnual(monthlyRent: number): number {
 }
 
 export function formatCurrency(value: number): string {
+  const hasPence = !Number.isInteger(value);
+
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "GBP",
-    maximumFractionDigits: 0
+    minimumFractionDigits: hasPence ? 2 : 0,
+    maximumFractionDigits: 2
   }).format(value);
 }
 
