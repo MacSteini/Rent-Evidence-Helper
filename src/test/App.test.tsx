@@ -4,6 +4,61 @@ import { describe, expect, it, vi } from "vitest";
 import App from "../App";
 
 describe("App", () => {
+  it("shows accessible contextual help for selected form fields", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const billsHelp = screen.getByRole("button", {
+      name: /more about bills included/i
+    });
+    expect(billsHelp).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(billsHelp);
+
+    expect(billsHelp).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByText(/does not adjust the estimate/i)
+    ).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    expect(billsHelp).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByText(/does not adjust the estimate/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens and closes the methodology and privacy dialogs", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const methodologyButton = screen.getByRole("button", {
+      name: /how this works/i
+    });
+    await user.click(methodologyButton);
+
+    expect(
+      screen.getByRole("dialog", { name: /how this works/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/weekly rent is converted/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /close/i }));
+    expect(methodologyButton).toHaveFocus();
+
+    const privacyButton = screen.getByRole("button", { name: /privacy/i });
+    await user.click(privacyButton);
+
+    expect(
+      screen.getByRole("dialog", { name: /privacy and data use/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/does not create an account/i)).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(privacyButton).toHaveFocus();
+  });
+
   it("lets a user complete the fixture rent check and copy a message", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);

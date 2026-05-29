@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { Disclaimer } from "./components/Disclaimer";
 import { EvidenceTable } from "./components/EvidenceTable";
-import { MethodologyPanel } from "./components/MethodologyPanel";
+import { InfoDialog } from "./components/InfoDialog";
 import { NextStepsPanel } from "./components/NextStepsPanel";
 import { RentCheckForm } from "./components/RentCheckForm";
 import { ResultSummary } from "./components/ResultSummary";
 import { CopyableMessage } from "./components/CopyableMessage";
 import { appConfig } from "./config/appConfig";
 import { getLegalContent } from "./content/legalGuidance";
+import { methodologyCopy, privacyCopy } from "./content/uiCopy";
 import { assessRent, type AssessmentResult } from "./lib/assessment";
 import { buildLandlordMessage } from "./lib/landlordMessage";
 import { MockComparableRentProvider } from "./providers/MockComparableRentProvider";
@@ -32,6 +33,9 @@ export default function App() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [activeDialog, setActiveDialog] = useState<"methodology" | "privacy" | null>(
+    null
+  );
 
   const landlordMessage = useMemo(() => {
     if (!result) return "";
@@ -60,8 +64,20 @@ export default function App() {
           <span>{appConfig.productName}</span>
         </a>
         <nav aria-label="Primary">
-          <a href="#methodology">How this works</a>
-          <a href="#privacy">Privacy</a>
+          <button
+            type="button"
+            className="nav-button"
+            onClick={() => setActiveDialog("methodology")}
+          >
+            How this works
+          </button>
+          <button
+            type="button"
+            className="nav-button"
+            onClick={() => setActiveDialog("privacy")}
+          >
+            Privacy
+          </button>
           <a href="https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases">
             GOV.UK guidance
           </a>
@@ -114,18 +130,27 @@ export default function App() {
             )}
           </section>
         </div>
-
-        <MethodologyPanel />
-
-        <section className="info-band" id="privacy" aria-labelledby="privacy-title">
-          <h2 id="privacy-title">Privacy and data use</h2>
-          <p>
-            This local prototype does not create an account, store submissions,
-            send inputs to third-party AI services, or use analytics. It uses
-            the postcode only to derive a sector for fixture comparison.
-          </p>
-        </section>
       </main>
+
+      <InfoDialog
+        isOpen={activeDialog === "methodology"}
+        title="How this works"
+        onClose={() => setActiveDialog(null)}
+      >
+        <ol className="method-list">
+          {methodologyCopy.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ol>
+      </InfoDialog>
+
+      <InfoDialog
+        isOpen={activeDialog === "privacy"}
+        title="Privacy and data use"
+        onClose={() => setActiveDialog(null)}
+      >
+        <p>{privacyCopy}</p>
+      </InfoDialog>
 
       <footer className="site-footer">
         <span>{appConfig.productName}</span>

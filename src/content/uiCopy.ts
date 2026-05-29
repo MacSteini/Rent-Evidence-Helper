@@ -12,6 +12,15 @@ export const fieldCopy = {
     "This prototype uses sample data, not live rental listings. Do not use this result as evidence."
 };
 
+export const fieldHelpCopy = {
+  billsIncluded:
+    "Choose Yes if the rent includes regular bills such as utilities or council tax. In this MVP the answer is recorded for context only and does not adjust the estimate.",
+  condition:
+    "Use Basic for tired or limited-condition homes, Average for typical lived-in homes, Good for well-kept homes, and Newly renovated for recently upgraded homes. In this MVP condition is recorded for context only and does not adjust the estimate.",
+  tenancyContext:
+    "This changes the next-step guidance and shows optional notice questions for Form 4A / section 13. The app does not decide your legal position or calculate deadlines."
+};
+
 export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "Comparable homes are matched first by postcode sector, property type and bedrooms, then widened to fixture fallback data if needed.",
@@ -19,6 +28,9 @@ export const methodologyCopy = [
   "Confidence reflects sample size, match quality, data freshness and source quality.",
   "If the evidence is too limited or too broad, the result is marked as insufficient or low confidence."
 ];
+
+export const privacyCopy =
+  "This local prototype does not create an account, store submissions, send inputs to third-party AI services, or use analytics. It uses the postcode only to derive a sector for fixture comparison.";
 
 export const resultCopy: Record<RentAssessmentStatus, ResultCopy> = {
   insufficient_evidence: {

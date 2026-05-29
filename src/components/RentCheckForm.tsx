@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
-import { fieldCopy } from "../content/uiCopy";
+import { InfoButton } from "./InfoButton";
+import { fieldCopy, fieldHelpCopy } from "../content/uiCopy";
 import { isValidPostcode } from "../lib/postcode";
 import type {
   FurnishedStatus,
@@ -146,6 +147,7 @@ export function RentCheckForm({
       <div className="field-grid">
         <SelectField
           label="Bills included"
+          help={fieldHelpCopy.billsIncluded}
           value={String(input.billsIncluded ?? "unknown")}
           options={[
             ["unknown", "Unknown"],
@@ -161,6 +163,7 @@ export function RentCheckForm({
         />
         <SelectField
           label="Condition"
+          help={fieldHelpCopy.condition}
           value={input.condition ?? "unknown"}
           options={[
             ["unknown", "Unknown"],
@@ -175,6 +178,7 @@ export function RentCheckForm({
 
       <SelectField
         label="Tenancy context"
+        help={fieldHelpCopy.tenancyContext}
         value={input.tenancyContext}
         required
         options={[
@@ -317,19 +321,30 @@ function NumberField({
 
 type SelectFieldProps = {
   label: string;
+  help?: string;
   value: string;
   required?: boolean;
   options: Array<[string, string]>;
   onChange: (value: string) => void;
 };
 
-function SelectField({ label, value, required, options, onChange }: SelectFieldProps) {
+function SelectField({
+  label,
+  help,
+  value,
+  required,
+  options,
+  onChange
+}: SelectFieldProps) {
   const id = useId();
   return (
     <div className="field">
-      <label htmlFor={id}>
-        {label} {required && <span>required</span>}
-      </label>
+      <div className="label-row">
+        <label htmlFor={id}>
+          {label} {required && <span>required</span>}
+        </label>
+        {help && <InfoButton label={label}>{help}</InfoButton>}
+      </div>
       <select
         id={id}
         value={value}
