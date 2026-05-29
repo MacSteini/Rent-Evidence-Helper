@@ -8,7 +8,7 @@ export const fieldCopy = {
   postcodeHint:
     "Use the rental property's UK postcode.",
   localAuthorityHint:
-    "Start typing and choose the rental property's Local Authority. This is used only for the official ONS area benchmark.",
+    "This is used only for the official ONS area benchmark.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
     "Use this as a market-evidence check, not a decision. Compare it with evidence you collect and check official guidance before acting."
