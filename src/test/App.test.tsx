@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
 
 const localAuthorityLabels: Record<string, string> = {
@@ -9,6 +9,38 @@ const localAuthorityLabels: Record<string, string> = {
   E08000003: "Manchester (North West)",
   E09000022: "Lambeth (London)"
 };
+
+const pmiListingsResponse = {
+  total_count: 2,
+  listings: [
+    {
+      uprn: "do-not-render",
+      address: "1 Hidden Address",
+      postcode: "SW12 8AA",
+      price: 2400,
+      bedrooms: 1,
+      property_type: "Flat",
+      listed_date: "2026-05-01",
+      distance_m: 210,
+      url: "https://provider.example/rental-a"
+    },
+    {
+      uprn: "do-not-render-2",
+      address: "2 Hidden Address",
+      postcode: "SW12 8AB",
+      price: 2600,
+      bedrooms: 1,
+      property_type: "Flat",
+      listed_date: "2026-05-02",
+      distance_m: 320,
+      url: "https://provider.example/rental-b"
+    }
+  ]
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 async function selectLocalAuthority(
   user: ReturnType<typeof userEvent.setup>,
@@ -103,6 +135,8 @@ describe("App", () => {
 
   it("lets a user complete the default current-rent check without showing the landlord message template", async () => {
     const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<App />);
 
@@ -185,6 +219,96 @@ describe("App", () => {
       screen.queryByRole("heading", { name: /message template/i })
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/editable message/i)).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("uses a user-owned PMI key for live listing evidence", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(pmiListingsResponse), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    const livePanel = await screen.findByRole("heading", {
+      name: /live rental listings/i
+    });
+    expect(livePanel).toBeInTheDocument();
+    expect(screen.getByText(/median asking rent is £2,500/i)).toBeInTheDocument();
+    expect(screen.getByText(/exact addresses and UPRNs are not shown/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Hidden Address/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/do-not-render/i)).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/v1/listings" }),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer pmi_live_test" })
+      })
+    );
+    expect(String(fetchMock.mock.calls[0][0])).not.toContain("/prices/comparables");
+  });
+
+  it("falls back to ONS when PMI rejects the key", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: "bad key" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" }
+        })
+      )
+    );
+
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/property market intel api key/i), "bad-key");
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/property market intel api key was rejected/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^official area benchmark$/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /live rental listings/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("stores a PMI key only when the user opts in and can clear it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const keyInput = screen.getByLabelText(/property market intel api key/i);
+    await user.type(keyInput, "pmi_live_test");
+
+    expect(window.sessionStorage.getItem("market-rent-check-pmi-api-key")).toBe(
+      "pmi_live_test"
+    );
+    expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBeNull();
+
+    await user.click(screen.getByLabelText(/remember on this device/i));
+    expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBe(
+      "pmi_live_test"
+    );
+
+    await user.click(screen.getByRole("button", { name: /clear key/i }));
+    expect(keyInput).toHaveValue("");
+    expect(window.sessionStorage.getItem("market-rent-check-pmi-api-key")).toBeNull();
+    expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBeNull();
   });
 
   it("requires a manually selected Local Authority before running a check", async () => {
@@ -447,6 +571,9 @@ describe("App", () => {
     expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /message template/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /manual evidence/i })
     ).not.toBeInTheDocument();
   });
 

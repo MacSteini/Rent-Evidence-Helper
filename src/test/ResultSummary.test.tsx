@@ -1,10 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ResultSummary } from "../components/ResultSummary";
-import type {
-  OfficialBenchmarkCheckResult,
-  OfficialBenchmarkStatus
-} from "../types/officialRentBenchmark";
+import type { OfficialBenchmarkStatus } from "../types/officialRentBenchmark";
+import type { RentCheckResult } from "../types/rentCheckResult";
 
 const expectedHeadlines: Record<OfficialBenchmarkStatus, RegExp> = {
   below_benchmark: /your rent is below the official area benchmark/i,
@@ -29,7 +27,7 @@ describe("ResultSummary", () => {
   );
 });
 
-function buildResult(status: OfficialBenchmarkStatus): OfficialBenchmarkCheckResult {
+function buildResult(status: OfficialBenchmarkStatus): RentCheckResult {
   return {
     input: {
       postcode: "SW12 8AA",
@@ -62,6 +60,8 @@ function buildResult(status: OfficialBenchmarkStatus): OfficialBenchmarkCheckRes
       differenceMonthly: 400,
       percentageDifference: 19.5,
       status
-    }
+    },
+    warnings: [],
+    evidenceMode: "official-only"
   };
 }

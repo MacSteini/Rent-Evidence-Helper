@@ -8,7 +8,7 @@ export const fieldCopy = {
     "This is used only for the official ONS area benchmark.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
-    "Use this as an official benchmark check, not a decision. Compare it with evidence you collect and check official guidance before acting."
+    "Use this as evidence, not a decision. ONS data is an official area benchmark; Property Market Intel data is live asking-rent evidence when you provide a key. Check official guidance before acting."
 };
 
 export const jurisdictionCopy = {
@@ -63,13 +63,14 @@ export const officialBenchmarkStatusCopy = {
 export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",
+  "If you provide a Property Market Intel API key, the app also requests live rental listings directly from Property Market Intel and treats those listing prices as asking rents.",
   "Bedroom count is used first to select the ONS benchmark field. If bedrooms are not usable, flats and maisonettes use the flat or maisonette benchmark; other cases use the all-property benchmark.",
-  "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%.",
-  "The ONS benchmark is an area-level estimate, not individual rental listings, a tribunal decision or legal advice."
+  "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add market context but do not change tribunal rules.",
+  "The ONS benchmark is an area-level estimate. Live listings are asking rents. Neither source is a tribunal decision or legal advice."
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. It uses the postcode to block postcode areas that are clearly outside the supported England scope. Local Authority is selected manually and is used only for the official ONS area benchmark.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. If you enter a Property Market Intel API key, the live listing request goes directly from this browser to Property Market Intel. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
 
 export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
   below_benchmark: {

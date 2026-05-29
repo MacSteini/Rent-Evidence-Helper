@@ -46,12 +46,18 @@ const comparison: OfficialBenchmarkComparison = {
 
 describe("persisted check", () => {
   it("round-trips a completed benchmark check", () => {
-    writeStoredCheck(input, comparison, sourceSha256);
+    writeStoredCheck(
+      input,
+      comparison,
+      { warnings: [], evidenceMode: "official-only" },
+      sourceSha256
+    );
 
     const storedCheck = readStoredCheck(sourceSha256);
 
-    expect(storedCheck?.version).toBe(3);
+    expect(storedCheck?.version).toBe(4);
     expect(storedCheck?.officialBenchmarkComparison.userRentMonthly).toBe(2450);
+    expect(storedCheck?.evidenceMode).toBe("official-only");
     expect(storedCheck?.sourceSha256).toBe(sourceSha256);
   });
 
@@ -74,8 +80,8 @@ describe("persisted check", () => {
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
   });
 
-  it("clears old version 1 and version 2 checks instead of restoring them", () => {
-    for (const version of [1, 2]) {
+  it("clears old version 1, 2 and 3 checks instead of restoring them", () => {
+    for (const version of [1, 2, 3]) {
       window.localStorage.setItem(
         "market-rent-check-last-check",
         JSON.stringify({
@@ -91,8 +97,13 @@ describe("persisted check", () => {
     }
   });
 
-  it("clears version 3 checks when the ONS source hash changes", () => {
-    writeStoredCheck(input, comparison, sourceSha256);
+  it("clears version 4 checks when the ONS source hash changes", () => {
+    writeStoredCheck(
+      input,
+      comparison,
+      { warnings: [], evidenceMode: "official-only" },
+      sourceSha256
+    );
 
     expect(readStoredCheck("different-source-hash")).toBeNull();
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();

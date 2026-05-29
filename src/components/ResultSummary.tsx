@@ -1,9 +1,9 @@
 import { fieldCopy, resultCopy } from "../content/uiCopy";
 import { formatCurrency } from "../lib/rentMath";
-import type { OfficialBenchmarkCheckResult } from "../types/officialRentBenchmark";
+import type { RentCheckResult } from "../types/rentCheckResult";
 
 type ResultSummaryProps = {
-  result: OfficialBenchmarkCheckResult;
+  result: RentCheckResult;
 };
 
 export function ResultSummary({ result }: ResultSummaryProps) {
@@ -21,6 +21,13 @@ export function ResultSummary({ result }: ResultSummaryProps) {
       </div>
 
       <p>{copy.summary}</p>
+      {result.liveEvidence && result.liveEvidence.medianMonthly !== undefined && (
+        <p>
+          Property Market Intel found {result.liveEvidence.displayedCount} live
+          asking-rent listings. Their median asking rent is{" "}
+          {formatCurrency(result.liveEvidence.medianMonthly)} per month.
+        </p>
+      )}
       <p className="evidence-warning">{fieldCopy.evidenceNotice}</p>
 
       <dl className="metric-grid">

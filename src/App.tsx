@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { InfoDialog } from "./components/InfoDialog";
+import { LiveEvidencePanel } from "./components/LiveEvidencePanel";
 import { NextStepsPanel } from "./components/NextStepsPanel";
 import { OfficialBenchmarkPanel } from "./components/OfficialBenchmarkPanel";
 import { RentCheckForm } from "./components/RentCheckForm";
@@ -17,10 +18,17 @@ import {
   validateOfficialRentBenchmarkDataset
 } from "./lib/officialRentBenchmarks";
 import { readStoredCheck, writeStoredCheck } from "./lib/persistedCheck";
-import type {
-  OfficialBenchmarkCheckResult,
-  OfficialRentBenchmarkDataset
-} from "./types/officialRentBenchmark";
+import {
+  clearStoredPmiApiKey,
+  readStoredPmiApiKey,
+  writeStoredPmiApiKey
+} from "./lib/pmiApiKey";
+import {
+  liveEvidenceErrorMessage,
+  searchPmiLiveRentalListings
+} from "./providers/propertyMarketIntelProvider";
+import type { OfficialRentBenchmarkDataset } from "./types/officialRentBenchmark";
+import type { RentCheckResult } from "./types/rentCheckResult";
 import type { RentSearchInput } from "./types/rent";
 
 const officialBenchmarkDataset =
@@ -51,11 +59,19 @@ export default function App() {
   const [storedCheck] = useState(() =>
     readStoredCheck(officialBenchmarkDataset.sourceSha256)
   );
-  const [result, setResult] = useState<OfficialBenchmarkCheckResult | null>(
+  const [storedPmiKey] = useState(() => readStoredPmiApiKey());
+  const [pmiApiKey, setPmiApiKey] = useState(storedPmiKey.key);
+  const [rememberPmiApiKey, setRememberPmiApiKey] = useState(
+    storedPmiKey.remember
+  );
+  const [result, setResult] = useState<RentCheckResult | null>(
     storedCheck
       ? {
           input: storedCheck.input,
-          officialBenchmarkComparison: storedCheck.officialBenchmarkComparison
+          officialBenchmarkComparison: storedCheck.officialBenchmarkComparison,
+          liveEvidence: storedCheck.liveEvidence,
+          warnings: storedCheck.warnings,
+          evidenceMode: storedCheck.evidenceMode
         }
       : null
   );
@@ -116,15 +132,38 @@ export default function App() {
         input,
         benchmark
       );
-      const nextResult: OfficialBenchmarkCheckResult = {
+      const warnings: string[] = [];
+      let liveEvidence;
+
+      if (pmiApiKey.trim()) {
+        try {
+          liveEvidence = await searchPmiLiveRentalListings(input, pmiApiKey);
+        } catch (liveEvidenceError) {
+          warnings.push(liveEvidenceErrorMessage(liveEvidenceError));
+        }
+      }
+
+      const nextResult: RentCheckResult = {
         input,
-        officialBenchmarkComparison
+        officialBenchmarkComparison,
+        liveEvidence,
+        warnings,
+        evidenceMode: liveEvidence
+          ? "official-with-pmi-live"
+          : warnings.length > 0
+            ? "official-with-pmi-warning"
+            : "official-only"
       };
 
       setResult(nextResult);
       writeStoredCheck(
         nextResult.input,
         nextResult.officialBenchmarkComparison,
+        {
+          liveEvidence: nextResult.liveEvidence,
+          warnings: nextResult.warnings,
+          evidenceMode: nextResult.evidenceMode
+        },
         officialBenchmarkDataset.sourceSha256
       );
     } catch (caught) {
@@ -145,6 +184,24 @@ export default function App() {
     setHasStartedCheck(false);
     setResult(null);
     setError(null);
+  }
+
+  function handlePmiApiKeyChange(nextKey: string) {
+    setPmiApiKey(nextKey);
+    writeStoredPmiApiKey(nextKey, rememberPmiApiKey);
+    handleInputChange();
+  }
+
+  function handlePmiRememberChange(remember: boolean) {
+    setRememberPmiApiKey(remember);
+    writeStoredPmiApiKey(pmiApiKey, remember);
+  }
+
+  function handleClearPmiApiKey() {
+    setPmiApiKey("");
+    setRememberPmiApiKey(false);
+    clearStoredPmiApiKey();
+    handleInputChange();
   }
 
   return (
@@ -233,6 +290,16 @@ export default function App() {
                     releaseDate={officialBenchmarkDataset.releaseDate}
                     period={officialBenchmarkDataset.period}
                   />
+                  {result.liveEvidence && (
+                    <LiveEvidencePanel evidence={result.liveEvidence} />
+                  )}
+                  {result.warnings.length > 0 && (
+                    <div className="notice notice-compact" role="status">
+                      {result.warnings.map((warning) => (
+                        <p key={warning}>{warning}</p>
+                      ))}
+                    </div>
+                  )}
                   <NextStepsPanel
                     context={result.input.tenancyContext}
                     status={result.officialBenchmarkComparison.status}
@@ -255,8 +322,13 @@ export default function App() {
           <RentCheckForm
             initialInput={storedCheck?.input ?? initialInput}
             localAuthorityOptions={localAuthorityOptions}
+            pmiApiKey={pmiApiKey}
+            rememberPmiApiKey={rememberPmiApiKey}
             isChecking={isChecking}
             error={error}
+            onPmiApiKeyChange={handlePmiApiKeyChange}
+            onPmiRememberChange={handlePmiRememberChange}
+            onClearPmiApiKey={handleClearPmiApiKey}
             onInputChange={handleInputChange}
             onInvalidSubmit={handleInvalidSubmit}
             onSubmit={handleSubmit}

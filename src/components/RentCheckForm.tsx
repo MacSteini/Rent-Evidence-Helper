@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type FormEvent } from "react";
+import { ApiKeyPanel } from "./ApiKeyPanel";
 import { InfoButton } from "./InfoButton";
 import { fieldCopy, fieldHelpCopy } from "../content/uiCopy";
 import {
@@ -28,8 +29,13 @@ type LocalAuthorityOption = {
 type RentCheckFormProps = {
   initialInput: RentSearchInput;
   localAuthorityOptions: LocalAuthorityOption[];
+  pmiApiKey: string;
+  rememberPmiApiKey: boolean;
   isChecking: boolean;
   error: string | null;
+  onPmiApiKeyChange: (apiKey: string) => void;
+  onPmiRememberChange: (remember: boolean) => void;
+  onClearPmiApiKey: () => void;
   onInputChange: () => void;
   onInvalidSubmit: () => void;
   onSubmit: (input: RentSearchInput) => void;
@@ -40,8 +46,13 @@ type FormErrors = Partial<Record<keyof RentSearchInput, string>>;
 export function RentCheckForm({
   initialInput,
   localAuthorityOptions,
+  pmiApiKey,
+  rememberPmiApiKey,
   isChecking,
   error,
+  onPmiApiKeyChange,
+  onPmiRememberChange,
+  onClearPmiApiKey,
   onInputChange,
   onInvalidSubmit,
   onSubmit
@@ -169,6 +180,14 @@ export function RentCheckForm({
       <div className="section-heading">
         <h2>Rent check details</h2>
       </div>
+
+      <ApiKeyPanel
+        apiKey={pmiApiKey}
+        rememberApiKey={rememberPmiApiKey}
+        onApiKeyChange={onPmiApiKeyChange}
+        onRememberChange={onPmiRememberChange}
+        onClear={onClearPmiApiKey}
+      />
 
       {error && <p className="form-error" role="alert">{error}</p>}
       {submitGuardMessage && (

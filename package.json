@@ -4,14 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host localhost --port 5173 --strictPort",
-    "dev:fresh": "vite --host localhost --port 5173 --strictPort --force",
+    "dev": "../node_modules/.bin/vite --host localhost --port 5173 --strictPort",
+    "dev:fresh": "../node_modules/.bin/vite --host localhost --port 5173 --strictPort --force",
     "ingest:ons:pipr": "python3 scripts/ingest_ons_pipr.py",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "typecheck": "tsc -b --pretty false",
-    "lint": "tsc -b --pretty false"
+    "build": "../node_modules/.bin/tsc -b && ../node_modules/.bin/vite build",
+    "preview": "../node_modules/.bin/vite preview",
+    "test": "../node_modules/.bin/vitest run",
+    "typecheck": "../node_modules/.bin/tsc -b --pretty false",
+    "lint": "../node_modules/.bin/tsc -b --pretty false"
   },
   "dependencies": {
     "react": "^18.3.1",
