@@ -7,7 +7,7 @@ import type {
 } from "../types/liveEvidence";
 import type { PropertyType, RentSearchInput } from "../types/rent";
 
-const baseUrl = "https://pmi-api-beta-7tvvt.ondigitalocean.app/v1";
+const baseUrl = "https://api.propertymarketintel.com/v1";
 const providerName = "Property Market Intel";
 const perPage = 10;
 

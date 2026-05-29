@@ -51,6 +51,7 @@ describe("Property Market Intel provider", () => {
   it("builds a credit-saving rental listings request", () => {
     const url = buildPmiListingsUrl(input);
 
+    expect(url.origin).toBe("https://api.propertymarketintel.com");
     expect(url.pathname).toBe("/v1/listings");
     expect(url.searchParams.get("type")).toBe("rent");
     expect(url.searchParams.get("postcode")).toBe("SW12 8AA");
