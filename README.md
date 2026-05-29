@@ -22,7 +22,11 @@ No-login rent comparison tool for rental properties in England.
 
 ## Scripts
 
-- `npm run dev` starts the local Vite server.
+- `npm run dev` starts the local Vite server at
+  `http://localhost:5173` and fails if that port is already in use.
+- `npm run dev:fresh` starts the same local server and forces Vite to rebuild
+  its dependency cache. Use this when the browser appears to show an old app
+  version.
 - `npm run build` type-checks and builds the static app.
 - `npm run test` runs unit tests.
 - `npm run typecheck` runs TypeScript checks.
