@@ -36,12 +36,12 @@ export function EvidenceTable({
           <tbody>
             {comparables.map((comparable) => (
               <tr key={comparable.id}>
-                <td>{comparable.postcodeSector ?? "Unknown"}</td>
-                <td>{comparable.propertyType ?? "Unknown"}</td>
-                <td>{comparable.bedrooms ?? "Unknown"}</td>
-                <td>{formatCurrency(comparable.rentMonthly)}</td>
-                <td>{formatDate(comparable.observedAt)}</td>
-                <td>{comparable.matchType ?? "unknown"}</td>
+                <td data-label="Area">{comparable.postcodeSector ?? "Unknown"}</td>
+                <td data-label="Property">{comparable.propertyType ?? "Unknown"}</td>
+                <td data-label="Bedrooms">{comparable.bedrooms ?? "Unknown"}</td>
+                <td data-label="Monthly rent">{formatCurrency(comparable.rentMonthly)}</td>
+                <td data-label="Observed">{formatDate(comparable.observedAt)}</td>
+                <td data-label="Match">{comparable.matchType ?? "unknown"}</td>
               </tr>
             ))}
           </tbody>
