@@ -1,7 +1,17 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import App from "../App";
+
+async function selectLocalAuthority(
+  user: ReturnType<typeof userEvent.setup>,
+  areaCode = "E09000022"
+) {
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: /local authority/i }),
+    areaCode
+  );
+}
 
 describe("App", () => {
   it("shows accessible contextual help for selected form fields", async () => {
@@ -97,6 +107,7 @@ describe("App", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
 
+    await selectLocalAuthority(user);
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     expect(
@@ -113,6 +124,36 @@ describe("App", () => {
       "https://www.gov.uk/guidance/apply-for-an-open-market-rent-determination"
     );
     expect(screen.getByText(/evidence confidence score/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /official area benchmark/i })
+    ).toBeInTheDocument();
+    const officialBenchmarkPanel = screen.getByRole("region", {
+      name: /official area benchmark/i
+    });
+    expect(
+      within(officialBenchmarkPanel).getByText(/ONS monthly private rent estimate/i)
+    ).toBeInTheDocument();
+    expect(within(officialBenchmarkPanel).getByText("Lambeth")).toBeInTheDocument();
+    expect(
+      within(officialBenchmarkPanel).getByText(/one bedroom/i)
+    ).toBeInTheDocument();
+    expect(
+      within(officialBenchmarkPanel).getByText(/not a list of individual rental listings/i)
+    ).toBeInTheDocument();
+    expect(
+      within(officialBenchmarkPanel).queryByText(/Comparable homes/i)
+    ).not.toBeInTheDocument();
+    expect(
+      within(officialBenchmarkPanel).queryByText(/matched listings/i)
+    ).not.toBeInTheDocument();
+    expect(
+      within(officialBenchmarkPanel).getByRole("link", {
+        name: /ONS PIPR monthly price statistics/i
+      })
+    ).toHaveAttribute(
+      "href",
+      "https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/priceindexofprivaterentsukmonthlypricestatistics"
+    );
     expect(screen.getByText(/how this score is calculated/i)).toBeInTheDocument();
     expect(screen.getByText(/comparable count up to 10 homes/i)).toBeInTheDocument();
     expect(screen.getByRole("table", { name: /comparable rents/i })).toBeInTheDocument();
@@ -120,6 +161,30 @@ describe("App", () => {
       screen.queryByRole("heading", { name: /message template/i })
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/editable message/i)).not.toBeInTheDocument();
+  });
+
+  it("requires a manually selected Local Authority before running a check", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const localAuthority = screen.getByRole("combobox", {
+      name: /local authority/i
+    });
+    expect(localAuthority).toHaveValue("");
+    expect(screen.getByRole("option", { name: /lambeth/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /manchester/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /bristol, city of/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: /^Oxford \(South East\)$/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/select the rental property's local authority/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    await waitFor(() => expect(localAuthority).toHaveFocus());
   });
 
   it("shows and copies a landlord message only for a rent-increase situation", async () => {
@@ -132,6 +197,7 @@ describe("App", () => {
 
     render(<App />);
 
+    await selectLocalAuthority(user);
     await user.selectOptions(
       screen.getByRole("combobox", { name: /situation/i }),
       "informal-proposed-increase"
@@ -160,6 +226,7 @@ describe("App", () => {
     const user = userEvent.setup();
     const firstRender = render(<App />);
 
+    await selectLocalAuthority(user);
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     expect(
@@ -172,15 +239,74 @@ describe("App", () => {
 
     expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/postcode/i)).toHaveValue("SW12 8AA");
+    expect(screen.getByRole("combobox", { name: /local authority/i })).toHaveValue(
+      "E09000022"
+    );
+    expect(
+      screen.getByRole("heading", { name: /official area benchmark/i })
+    ).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /situation/i })).toHaveValue(
       "current-rent-only"
     );
+  });
+
+  it("discards old stored checks that do not include a Local Authority", () => {
+    window.localStorage.setItem(
+      "market-rent-check-last-check",
+      JSON.stringify({
+        version: 1,
+        input: {
+          postcode: "SW12 8AA",
+          rentAmount: 2450,
+          rentPeriod: "month",
+          propertyType: "flat",
+          bedrooms: 2,
+          tenancyContext: "current-rent-only"
+        },
+        result: {
+          input: {
+            postcode: "SW12 8AA",
+            rentAmount: 2450,
+            rentPeriod: "month",
+            propertyType: "flat",
+            bedrooms: 2,
+            tenancyContext: "current-rent-only"
+          },
+          searchResult: {
+            comparables: [],
+            providerName: "Local comparable evidence",
+            searchedAt: "2026-05-29T00:00:00Z",
+            searchAreaDescription: "SW12 8 and nearby sectors",
+            warnings: [],
+            errors: []
+          },
+          estimate: {
+            userRentMonthly: 2450,
+            userRentAnnual: 29400,
+            estimatedRangeLabel: "Unavailable",
+            comparableCount: 0,
+            status: "insufficient_evidence",
+            confidence: "low",
+            confidenceScore: 0,
+            warnings: [],
+            methodologyNotes: []
+          }
+        },
+        savedAt: "2026-05-29T00:00:00Z"
+      })
+    );
+
+    render(<App />);
+
+    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
   });
 
   it("blocks clearly unsupported non-England postcode areas", async () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await selectLocalAuthority(user);
     await user.click(screen.getByRole("button", { name: /start check/i }));
     expect(
       await screen.findByLabelText(/rent check result/i)
@@ -210,13 +336,14 @@ describe("App", () => {
     expect(
       screen.queryByText(/^required$/i, { selector: ":not(.sr-only)" })
     ).not.toBeInTheDocument();
-    expect(screen.getAllByText("*")).toHaveLength(2);
+    expect(screen.getAllByText("*")).toHaveLength(3);
   });
 
   it("validates editable input correctness before running a check", async () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await selectLocalAuthority(user);
     const rentAmount = screen.getByLabelText(/rent amount/i);
     await user.clear(rentAmount);
     await user.type(rentAmount, "£0<script>");
@@ -242,6 +369,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await selectLocalAuthority(user);
     await user.selectOptions(
       screen.getByRole("combobox", { name: /situation/i }),
       "informal-proposed-increase"
@@ -267,6 +395,7 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await selectLocalAuthority(user);
     await user.selectOptions(
       screen.getByRole("combobox", { name: /situation/i }),
       "informal-proposed-increase"

@@ -19,6 +19,7 @@ const lambeth = findRequiredBenchmark("E09000022");
 function input(overrides: Partial<RentSearchInput> = {}): RentSearchInput {
   return {
     postcode: "SW12 8AA",
+    localAuthorityCode: "E09000022",
     rentAmount: 2345,
     rentPeriod: "month",
     propertyType: "house",

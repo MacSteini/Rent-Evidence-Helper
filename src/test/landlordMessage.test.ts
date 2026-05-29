@@ -5,6 +5,7 @@ import type { RentEstimate, RentSearchInput } from "../types/rent";
 const input: RentSearchInput = {
   postcode: "SW12 8AA",
   postcodeSector: "SW12 8",
+  localAuthorityCode: "E09000022",
   rentAmount: 2450,
   rentPeriod: "month",
   propertyType: "flat",

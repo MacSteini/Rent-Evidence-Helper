@@ -2,19 +2,32 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { EvidenceTable } from "./components/EvidenceTable";
 import { InfoDialog } from "./components/InfoDialog";
 import { NextStepsPanel } from "./components/NextStepsPanel";
+import { OfficialBenchmarkPanel } from "./components/OfficialBenchmarkPanel";
 import { RentCheckForm } from "./components/RentCheckForm";
 import { ResultSummary } from "./components/ResultSummary";
 import { CopyableMessage } from "./components/CopyableMessage";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { appConfig } from "./config/appConfig";
 import { jurisdictionCopy, methodologyCopy, privacyCopy } from "./content/uiCopy";
+import officialBenchmarkDatasetJson from "./data/official-rent-benchmarks.json";
 import { assessRent, type AssessmentResult } from "./lib/assessment";
 import { buildLandlordMessage } from "./lib/landlordMessage";
+import {
+  compareRentWithOfficialBenchmark,
+  findOfficialBenchmarkByAreaCode,
+  listOfficialBenchmarkAreas,
+  validateOfficialRentBenchmarkDataset
+} from "./lib/officialRentBenchmarks";
 import { readStoredCheck, writeStoredCheck } from "./lib/persistedCheck";
 import { MockComparableRentProvider } from "./providers/MockComparableRentProvider";
+import type { OfficialRentBenchmarkDataset } from "./types/officialRentBenchmark";
 import type { RentSearchInput } from "./types/rent";
 
 const provider = new MockComparableRentProvider();
+const officialBenchmarkDataset =
+  officialBenchmarkDatasetJson as OfficialRentBenchmarkDataset;
+validateOfficialRentBenchmarkDataset(officialBenchmarkDataset);
+const localAuthorityOptions = listOfficialBenchmarkAreas(officialBenchmarkDataset);
 
 const messageEligibleContexts = new Set<RentSearchInput["tenancyContext"]>([
   "informal-proposed-increase",
@@ -23,6 +36,7 @@ const messageEligibleContexts = new Set<RentSearchInput["tenancyContext"]>([
 
 const initialInput: RentSearchInput = {
   postcode: "SW12 8AA",
+  localAuthorityCode: "",
   rentAmount: 2450,
   rentPeriod: "month",
   propertyType: "unknown",
@@ -51,6 +65,16 @@ export default function App() {
     if (!result) return "";
     if (!messageEligibleContexts.has(result.input.tenancyContext)) return "";
     return buildLandlordMessage(result.input, result.estimate);
+  }, [result]);
+
+  const officialBenchmarkComparison = useMemo(() => {
+    if (!result) return null;
+    const benchmark = findOfficialBenchmarkByAreaCode(
+      officialBenchmarkDataset,
+      result.input.localAuthorityCode
+    );
+    if (!benchmark) return null;
+    return compareRentWithOfficialBenchmark(result.input, benchmark);
   }, [result]);
 
   useEffect(() => {
@@ -182,6 +206,14 @@ export default function App() {
               {result ? (
                 <div className="result-stack">
                   <ResultSummary result={result} />
+                  {officialBenchmarkComparison && (
+                    <OfficialBenchmarkPanel
+                      comparison={officialBenchmarkComparison}
+                      sourceUrl={officialBenchmarkDataset.sourceUrl}
+                      releaseDate={officialBenchmarkDataset.releaseDate}
+                      period={officialBenchmarkDataset.period}
+                    />
+                  )}
                   <EvidenceTable
                     comparables={result.searchResult.comparables}
                     searchAreaDescription={result.searchResult.searchAreaDescription}
@@ -207,6 +239,7 @@ export default function App() {
 
           <RentCheckForm
             initialInput={storedCheck?.input ?? initialInput}
+            localAuthorityOptions={localAuthorityOptions}
             isChecking={isChecking}
             error={error}
             onInputChange={handleInputChange}

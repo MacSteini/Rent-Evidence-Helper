@@ -5,6 +5,7 @@ import type { RentSearchInput } from "../types/rent";
 
 const input: RentSearchInput = {
   postcode: "SW12 8AA",
+  localAuthorityCode: "E09000022",
   rentAmount: 2450,
   rentPeriod: "month",
   propertyType: "flat",
@@ -53,6 +54,21 @@ describe("persisted check", () => {
           searchResult: {},
           estimate: { userRentMonthly: 2450 }
         },
+        savedAt: "2026-05-29T00:00:00Z"
+      })
+    );
+
+    expect(readStoredCheck()).toBeNull();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+  });
+
+  it("clears old version 1 checks instead of restoring them", () => {
+    window.localStorage.setItem(
+      "market-rent-check-last-check",
+      JSON.stringify({
+        version: 1,
+        input,
+        result,
         savedAt: "2026-05-29T00:00:00Z"
       })
     );

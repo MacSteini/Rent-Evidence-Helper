@@ -2,7 +2,7 @@ import type { AssessmentResult } from "./assessment";
 import type { RentSearchInput } from "../types/rent";
 
 const storageKey = "market-rent-check-last-check";
-const storageVersion = 1;
+const storageVersion = 2;
 const tenancyContexts: Array<RentSearchInput["tenancyContext"]> = [
   "current-rent-only",
   "informal-proposed-increase",
@@ -68,6 +68,8 @@ function isRentSearchInput(value: unknown): value is RentSearchInput {
   const input = value as Partial<RentSearchInput>;
   return (
     typeof input.postcode === "string" &&
+    typeof input.localAuthorityCode === "string" &&
+    input.localAuthorityCode.trim() !== "" &&
     typeof input.rentAmount === "number" &&
     typeof input.rentPeriod === "string" &&
     typeof input.propertyType === "string" &&

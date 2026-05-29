@@ -19,8 +19,15 @@ import type {
   TenancyContext
 } from "../types/rent";
 
+type LocalAuthorityOption = {
+  areaCode: string;
+  areaName: string;
+  regionOrCountryName: string;
+};
+
 type RentCheckFormProps = {
   initialInput: RentSearchInput;
+  localAuthorityOptions: LocalAuthorityOption[];
   isChecking: boolean;
   error: string | null;
   onInputChange: () => void;
@@ -32,6 +39,7 @@ type FormErrors = Partial<Record<keyof RentSearchInput, string>>;
 
 export function RentCheckForm({
   initialInput,
+  localAuthorityOptions,
   isChecking,
   error,
   onInputChange,
@@ -65,6 +73,14 @@ export function RentCheckForm({
     } else if (!isSupportedEnglandPostcode(input.postcode)) {
       nextErrors.postcode =
         "This postcode area is outside the England scope this check supports.";
+    }
+    if (
+      !input.localAuthorityCode ||
+      !localAuthorityOptions.some(
+        (option) => option.areaCode === input.localAuthorityCode
+      )
+    ) {
+      nextErrors.localAuthorityCode = "Select the rental property's Local Authority.";
     }
     if (!Number.isFinite(input.rentAmount) || input.rentAmount <= 0) {
       nextErrors.rentAmount = "Enter a rent amount greater than zero.";
@@ -151,6 +167,25 @@ export function RentCheckForm({
           pattern="[A-Za-z0-9 ]{5,8}"
           onChange={(value) => update("postcode", sanitisePostcodeInput(value))}
         />
+        <SelectField
+          label="Local authority"
+          help={fieldHelpCopy.localAuthority}
+          value={input.localAuthorityCode}
+          required
+          hint={fieldCopy.localAuthorityHint}
+          error={errors.localAuthorityCode}
+          options={[
+            ["", "Select local authority"],
+            ...localAuthorityOptions.map((option) => [
+              option.areaCode,
+              `${option.areaName} (${option.regionOrCountryName})`
+            ] as [string, string])
+          ]}
+          onChange={(value) => update("localAuthorityCode", value)}
+        />
+      </div>
+
+      <div className="field-grid">
         <SelectField
           label="Situation"
           help={fieldHelpCopy.tenancyContext}
@@ -441,6 +476,8 @@ type SelectFieldProps = {
   help?: string;
   value: string;
   required?: boolean;
+  hint?: string;
+  error?: string;
   options: Array<[string, string]>;
   onChange: (value: string) => void;
 };
@@ -450,10 +487,14 @@ function SelectField({
   help,
   value,
   required,
+  hint,
+  error,
   options,
   onChange
 }: SelectFieldProps) {
   const id = useId();
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
   return (
     <div className="field">
       <div className="label-row">
@@ -466,6 +507,10 @@ function SelectField({
         id={id}
         value={value}
         required={required}
+        aria-describedby={[hint ? hintId : "", error ? errorId : ""]
+          .filter(Boolean)
+          .join(" ")}
+        aria-invalid={Boolean(error)}
         onChange={(event) => onChange(event.target.value)}
       >
         {options.map(([optionValue, optionLabel]) => (
@@ -474,6 +519,8 @@ function SelectField({
           </option>
         ))}
       </select>
+      {hint && <p id={hintId} className="hint">{hint}</p>}
+      {error && <p id={errorId} className="field-error">{error}</p>}
     </div>
   );
 }

@@ -396,6 +396,7 @@ legend {
 .form-panel,
 .panel,
 .result-panel,
+.official-benchmark-panel,
 .empty-state,
 .notice {
   background: var(--surface);
@@ -410,6 +411,7 @@ legend {
 
 .panel,
 .result-panel,
+.official-benchmark-panel,
 .empty-state {
   padding: 1rem;
 }
@@ -433,6 +435,10 @@ legend {
 
 .result-stack > *:nth-child(4) {
   animation-delay: 135ms;
+}
+
+.result-stack > *:nth-child(5) {
+  animation-delay: 180ms;
 }
 
 .section-heading {
@@ -846,6 +852,10 @@ textarea {
   border-top: 5px solid var(--teal);
 }
 
+.official-benchmark-panel {
+  border-top: 5px solid var(--navy);
+}
+
 .severity-warning {
   border-top-color: var(--amber);
 }
@@ -883,6 +893,37 @@ textarea {
   align-items: stretch;
   gap: 0.65rem;
   margin: 1rem 0;
+}
+
+.benchmark-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  margin: 1rem 0;
+}
+
+.benchmark-detail-grid > div {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.benchmark-threshold-note,
+.benchmark-source-line {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.benchmark-source-line a {
+  color: var(--teal);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.benchmark-source-line a:hover {
+  color: var(--teal-dark);
 }
 
 .metric-card {
@@ -1177,6 +1218,10 @@ th {
     gap: 0.9rem;
   }
 
+  .benchmark-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .secondary-button {
     width: auto;
   }
@@ -1297,6 +1342,7 @@ th {
   .info-band,
   .panel,
   .result-panel,
+  .official-benchmark-panel,
   .empty-state,
   .form-panel {
     padding: 1.25rem;

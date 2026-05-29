@@ -7,6 +7,8 @@ import type {
 export const fieldCopy = {
   postcodeHint:
     "Use the rental property's UK postcode.",
+  localAuthorityHint:
+    "Choose the rental property's Local Authority. This is selected manually and is used only for the official ONS area benchmark.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
     "Use this as a market-evidence check, not a decision. Compare it with evidence you collect and check official guidance before acting."
@@ -37,8 +39,28 @@ export const fieldHelpCopy = {
     "Choose Yes if the rent includes regular bills such as utilities or council tax. Bills can make rents harder to compare directly; this check records the detail for context.",
   condition:
     "Use Basic for tired homes, Average for typical lived-in homes, Good for well-kept homes, and Newly renovated for recently upgraded homes. This check records condition for context.",
+  localAuthority:
+    "Choose the Local Authority yourself. The app does not send the full postcode to a lookup service, and this selection only controls the official ONS area benchmark.",
   tenancyContext:
     "Choose the situation closest to yours. This changes the next-step guidance and may show notice questions, but it does not decide your legal position or calculate deadlines."
+};
+
+export const officialBenchmarkCopy = {
+  title: "Official area benchmark",
+  summary:
+    "ONS monthly private rent estimate for the selected local authority.",
+  notice:
+    "This is an area-level benchmark, not a list of individual rental listings, a tribunal decision or legal advice.",
+  threshold:
+    "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%.",
+  sourceLabel: "ONS PIPR monthly price statistics"
+};
+
+export const officialBenchmarkStatusCopy = {
+  below_benchmark: "Below official area benchmark",
+  near_benchmark: "Near official area benchmark",
+  above_benchmark: "Above official area benchmark",
+  substantially_above_benchmark: "Well above official area benchmark"
 };
 
 export const methodologyCopy = [

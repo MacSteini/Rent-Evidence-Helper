@@ -55,6 +55,7 @@ export type DataProviderMode =
 export type RentSearchInput = {
   postcode: string;
   postcodeSector?: string;
+  localAuthorityCode: string;
   rentAmount: number;
   rentPeriod: RentPeriod;
   propertyType: PropertyType;
