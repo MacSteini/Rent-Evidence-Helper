@@ -88,12 +88,31 @@ export const liveEvidenceCopy = {
   }
 };
 
+export const deeperComparableCopy = {
+  title: "Optional deeper PMI comparable check",
+  summary:
+    "Property Market Intel can return rental comparable records for the postcode sector. This is additional context and does not replace the ONS benchmark result.",
+  creditWarning:
+    "This check may cost 5 PMI credits each time it is run.",
+  button: "Run deeper comparable check",
+  loading: "Running deeper comparable check...",
+  noKey:
+    "Enter a Property Market Intel API key to run the deeper comparable check.",
+  caption:
+    "Selected Property Market Intel comparable records. Exact addresses, UPRNs and full postcodes are not shown.",
+  sourceLabel: "Property Market Intel comparables",
+  available: "Deeper PMI comparables available",
+  status:
+    "Treat these records as rental evidence context, not achieved-rent certainty, legal advice or a tribunal decision."
+};
+
 export const evidenceSummaryCopy = {
   title: "Evidence summary",
   summary:
     "The official benchmark remains the main result. Live listings add context when available.",
   onsLabel: "ONS benchmark status",
   pmiLabel: "PMI context status",
+  deeperLabel: "Deeper PMI check",
   actionLabel: "Recommended action",
   pmiOnly: "ONS benchmark only",
   pmiWarning:
@@ -119,14 +138,15 @@ export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",
   "If you provide a Property Market Intel API key, the app also requests live rental listings directly from Property Market Intel and treats those listing prices as asking rents.",
+  "The optional deeper PMI comparable check is user-triggered, may cost 5 PMI credits, and uses only the postcode sector derived in the browser.",
   "Bedroom count is used first to select the ONS benchmark field. If bedrooms are not usable, flats and maisonettes use the flat or maisonette benchmark; other cases use the all-property benchmark.",
   "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add context but do not change the ONS-based status or tribunal rules.",
   "The live-listing quality label looks at usable listing count, asking-rent spread and whether listing dates are present. It helps you judge the context; it is not a reliability score.",
-  "The ONS benchmark is an area-level estimate. Live listings are asking rents. Neither source is a tribunal decision or legal advice."
+  "The ONS benchmark is an area-level estimate. Live listings and deeper PMI comparables are context only. None of these sources is a tribunal decision or legal advice."
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. If you enter a Property Market Intel API key, the live listing request goes directly from this browser to Property Market Intel. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel. The optional deeper comparable check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
 
 export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
   below_benchmark: {

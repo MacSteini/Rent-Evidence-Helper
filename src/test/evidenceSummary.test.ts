@@ -49,6 +49,40 @@ describe("evidence summary", () => {
 
     expect(summary.pmiStatus).toMatch(/PMI unavailable/i);
   });
+
+  it("summarises deeper comparable evidence without changing ONS status", () => {
+    const summary = buildEvidenceSummary(
+      buildResult({
+        deeperComparableEvidence: {
+          evidenceKind: "licensed-comparables",
+          provider: "property-market-intel",
+          searchedAt: "2026-05-30T00:00:00Z",
+          searchAreaDescription: "SW12 8 postcode sector",
+          totalCount: 1,
+          displayedCount: 1,
+          medianMonthly: 2300,
+          minimumMonthly: 2300,
+          maximumMonthly: 2300,
+          comparables: [
+            {
+              id: "pmi-comparable-1",
+              sourceName: "Property Market Intel",
+              sourceType: "licensed-dataset",
+              observedAt: "2026-05-30T00:00:00Z",
+              postcodeSector: "SW12 8",
+              rentAmount: 2300,
+              rentPeriod: "month",
+              rentMonthly: 2300
+            }
+          ],
+          warnings: []
+        }
+      })
+    );
+
+    expect(summary.onsStatus).toBe("Well above official area benchmark");
+    expect(summary.deeperStatus).toBe("Deeper PMI comparables available");
+  });
 });
 
 function buildResult(overrides: Partial<RentCheckResult> = {}): RentCheckResult {

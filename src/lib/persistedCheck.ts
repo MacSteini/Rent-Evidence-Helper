@@ -4,12 +4,15 @@ import type {
   OfficialBenchmarkStatus,
   OfficialRentBenchmark
 } from "../types/officialRentBenchmark";
-import type { LiveRentalEvidenceResult } from "../types/liveEvidence";
+import type {
+  DeeperComparableEvidenceResult,
+  LiveRentalEvidenceResult
+} from "../types/liveEvidence";
 import type { RentSearchInput } from "../types/rent";
 import type { EvidenceMode } from "../types/rentCheckResult";
 
 const storageKey = "market-rent-check-last-check";
-const storageVersion = 4;
+const storageVersion = 5;
 const tenancyContexts: Array<RentSearchInput["tenancyContext"]> = [
   "current-rent-only",
   "informal-proposed-increase",
@@ -35,6 +38,7 @@ type StoredCheck = {
   input: RentSearchInput;
   officialBenchmarkComparison: OfficialBenchmarkComparison;
   liveEvidence?: LiveRentalEvidenceResult;
+  deeperComparableEvidence?: DeeperComparableEvidenceResult;
   warnings: string[];
   evidenceMode: EvidenceMode;
   sourceSha256: string;
@@ -43,7 +47,7 @@ type StoredCheck = {
 
 type StoredCheckEvidence = Pick<
   StoredCheck,
-  "liveEvidence" | "warnings" | "evidenceMode"
+  "liveEvidence" | "deeperComparableEvidence" | "warnings" | "evidenceMode"
 >;
 
 export function readStoredCheck(currentSourceSha256: string): StoredCheck | null {
@@ -80,6 +84,7 @@ export function writeStoredCheck(
     input,
     officialBenchmarkComparison,
     liveEvidence: evidence.liveEvidence,
+    deeperComparableEvidence: evidence.deeperComparableEvidence,
     warnings: evidence.warnings,
     evidenceMode: evidence.evidenceMode,
     sourceSha256,
@@ -99,6 +104,8 @@ function isStoredCheck(value: Partial<StoredCheck>): value is StoredCheck {
     isRentSearchInput(value.input) &&
     isOfficialBenchmarkComparison(value.officialBenchmarkComparison) &&
     (value.liveEvidence === undefined || isLiveEvidence(value.liveEvidence)) &&
+    (value.deeperComparableEvidence === undefined ||
+      isDeeperComparableEvidence(value.deeperComparableEvidence)) &&
     Array.isArray(value.warnings) &&
     value.warnings.every((warning) => typeof warning === "string") &&
     isEvidenceMode(value.evidenceMode) &&
@@ -206,6 +213,40 @@ function isLiveEvidence(value: unknown): value is LiveRentalEvidenceResult {
     evidence.listings.every((listing) => {
       if (!listing || typeof listing !== "object") return false;
       const row = listing as LiveRentalEvidenceResult["listings"][number];
+      return (
+        typeof row.id === "string" &&
+        row.sourceName === "Property Market Intel" &&
+        row.sourceType === "licensed-dataset" &&
+        typeof row.observedAt === "string" &&
+        isFiniteNumber(row.rentAmount) &&
+        row.rentAmount > 0 &&
+        row.rentPeriod === "month" &&
+        isFiniteNumber(row.rentMonthly) &&
+        row.rentMonthly > 0
+      );
+    }) &&
+    Array.isArray(evidence.warnings) &&
+    evidence.warnings.every((warning) => typeof warning === "string")
+  );
+}
+
+function isDeeperComparableEvidence(
+  value: unknown
+): value is DeeperComparableEvidenceResult {
+  if (!value || typeof value !== "object") return false;
+
+  const evidence = value as Partial<DeeperComparableEvidenceResult>;
+  return (
+    evidence.evidenceKind === "licensed-comparables" &&
+    evidence.provider === "property-market-intel" &&
+    typeof evidence.searchedAt === "string" &&
+    typeof evidence.searchAreaDescription === "string" &&
+    isFiniteNumber(evidence.totalCount) &&
+    isFiniteNumber(evidence.displayedCount) &&
+    Array.isArray(evidence.comparables) &&
+    evidence.comparables.every((comparable) => {
+      if (!comparable || typeof comparable !== "object") return false;
+      const row = comparable as DeeperComparableEvidenceResult["comparables"][number];
       return (
         typeof row.id === "string" &&
         row.sourceName === "Property Market Intel" &&

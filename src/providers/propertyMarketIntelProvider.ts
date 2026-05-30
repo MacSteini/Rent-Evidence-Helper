@@ -1,6 +1,8 @@
 import { median, sortNumbers } from "../lib/statistics";
 import { parsePostcode } from "../lib/postcode";
 import type {
+  DeeperComparableEvidenceResult,
+  DeeperComparableRent,
   LiveEvidenceFailureCode,
   LiveRentalEvidenceResult,
   LiveRentalListing
@@ -34,6 +36,24 @@ type PmiListingsResponse = {
   listings?: unknown;
 };
 
+type PmiComparableRow = {
+  uprn?: unknown;
+  address?: unknown;
+  postcode?: unknown;
+  price?: unknown;
+  date?: unknown;
+  bedrooms?: unknown;
+  property_type?: unknown;
+  distance_m?: unknown;
+  url?: unknown;
+};
+
+type PmiComparablesResponse = {
+  total_count?: unknown;
+  count?: unknown;
+  comparables?: unknown;
+};
+
 export class PmiEvidenceError extends Error {
   constructor(
     public readonly code: LiveEvidenceFailureCode,
@@ -50,6 +70,24 @@ export function buildPmiListingsUrl(input: RentSearchInput): URL {
   url.searchParams.set("outcode", getSearchOutcode(input));
   url.searchParams.set("bedrooms", String(input.bedrooms));
   url.searchParams.set("sort", "distance");
+  url.searchParams.set("per_page", String(perPage));
+
+  return url;
+}
+
+export function buildPmiComparablesUrl(input: RentSearchInput): URL {
+  const postcodeSector = getSearchPostcodeSector(input);
+  if (!postcodeSector) {
+    throw new PmiEvidenceError(
+      "malformed-response",
+      "A valid postcode sector is required for the deeper comparable check."
+    );
+  }
+
+  const url = new URL(`${baseUrl}/prices/comparables`);
+  url.searchParams.set("type", "rented");
+  url.searchParams.set("postcode", postcodeSector);
+  url.searchParams.set("bedrooms", String(input.bedrooms));
   url.searchParams.set("per_page", String(perPage));
 
   return url;
@@ -112,6 +150,65 @@ export async function searchPmiLiveRentalListings(
 
   const value = await response.json();
   return normalisePmiListingsResponse(value, input, new Date().toISOString());
+}
+
+export async function searchPmiDeeperComparables(
+  input: RentSearchInput,
+  apiKey: string,
+  fetchImpl: FetchLike = fetch
+): Promise<DeeperComparableEvidenceResult> {
+  const trimmedKey = normalisePmiApiKey(apiKey);
+  if (!trimmedKey) {
+    throw new PmiEvidenceError("missing-key", "Enter a Property Market Intel API key.");
+  }
+
+  let response: Response;
+  try {
+    response = await fetchImpl(buildPmiComparablesUrl(input), {
+      headers: {
+        Authorization: `Bearer ${trimmedKey}`,
+        Accept: "application/json"
+      }
+    });
+  } catch {
+    throw new PmiEvidenceError(
+      "network-or-cors",
+      "The deeper comparable request could not reach Property Market Intel."
+    );
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    const providerMessage = await readProviderErrorMessage(response);
+    throw new PmiEvidenceError(
+      "invalid-key",
+      providerMessage
+        ? `Property Market Intel rejected the API key: ${providerMessage}`
+        : "The Property Market Intel API key was rejected."
+    );
+  }
+
+  if (response.status === 402 || response.status === 429) {
+    const providerMessage = await readProviderErrorMessage(response);
+    throw new PmiEvidenceError(
+      "quota-or-rate-limit",
+      providerMessage
+        ? `Property Market Intel quota or rate limit: ${providerMessage}`
+        : "The Property Market Intel key has reached its quota or rate limit."
+    );
+  }
+
+  if (!response.ok) {
+    const providerMessage = await readProviderErrorMessage(response);
+    throw new PmiEvidenceError(
+      "network-or-cors",
+      providerMessage
+        ? `Property Market Intel could not return deeper comparable evidence: ${providerMessage}`
+        : "Property Market Intel could not return deeper comparable evidence."
+    );
+  }
+
+  const value = await response.json();
+  return normalisePmiComparablesResponse(value, input, new Date().toISOString());
 }
 
 export function normalisePmiApiKey(value: string): string {
@@ -191,13 +288,84 @@ export function normalisePmiListingsResponse(
   };
 }
 
+export function normalisePmiComparablesResponse(
+  value: unknown,
+  input: RentSearchInput,
+  searchedAt: string
+): DeeperComparableEvidenceResult {
+  if (!isObject(value)) {
+    throw new PmiEvidenceError("malformed-response", "PMI response was not an object.");
+  }
+
+  const response = value as PmiComparablesResponse;
+  if (!Array.isArray(response.comparables)) {
+    throw new PmiEvidenceError(
+      "malformed-response",
+      "PMI response did not include a comparables array."
+    );
+  }
+
+  const postcodeSector = getSearchPostcodeSector(input);
+  const comparables = response.comparables
+    .map((comparable, index) =>
+      normaliseComparable(comparable, input, searchedAt, postcodeSector, index)
+    )
+    .filter((comparable): comparable is DeeperComparableRent => comparable !== null);
+
+  if (comparables.length === 0) {
+    const returnedCount = response.comparables.length;
+    throw new PmiEvidenceError(
+      "no-listings",
+      returnedCount > 0
+        ? `Property Market Intel returned ${returnedCount} comparable records, but none included a usable monthly rent.`
+        : "Property Market Intel returned no comparable rental records for this postcode sector."
+    );
+  }
+
+  const rents = sortNumbers(comparables.map((comparable) => comparable.rentMonthly));
+  const totalCount =
+    typeof response.total_count === "number" && Number.isFinite(response.total_count)
+      ? response.total_count
+      : typeof response.count === "number" && Number.isFinite(response.count)
+        ? response.count
+        : comparables.length;
+
+  return {
+    evidenceKind: "licensed-comparables",
+    provider: "property-market-intel",
+    searchedAt,
+    searchAreaDescription: postcodeSector
+      ? `${postcodeSector} postcode sector`
+      : "selected postcode sector",
+    totalCount,
+    displayedCount: comparables.length,
+    medianMonthly: median(rents),
+    minimumMonthly: rents[0],
+    maximumMonthly: rents[rents.length - 1],
+    comparables,
+    warnings: [
+      "Property Market Intel comparable prices are treated as rental evidence context, not a market-rent decision.",
+      "The deeper comparable check may cost 5 PMI credits each time it is run."
+    ]
+  };
+}
+
 function getSearchOutcode(input: RentSearchInput): string {
   return parsePostcode(input.postcode)?.outwardCode ?? input.postcode.trim().toUpperCase();
+}
+
+function getSearchPostcodeSector(input: RentSearchInput): string | undefined {
+  return parsePostcode(input.postcode)?.sector;
 }
 
 export function liveEvidenceErrorMessage(error: unknown): string {
   if (error instanceof PmiEvidenceError) return error.message;
   return "Live listing evidence is unavailable. The ONS benchmark still applies.";
+}
+
+export function deeperComparableErrorMessage(error: unknown): string {
+  if (error instanceof PmiEvidenceError) return error.message;
+  return "Deeper comparable evidence is unavailable. The ONS benchmark still applies.";
 }
 
 function normaliseListing(
@@ -229,6 +397,39 @@ function normaliseListing(
     bedrooms: toFiniteNumber(row.bedrooms),
     propertyType: mapPmiPropertyType(row.property_type) ?? input.propertyType,
     listedDate: firstString(row.listed_date, row.date_crawled, row.created_at, row.updated_at),
+    distanceMeters: toFiniteNumber(row.distance_m)
+  };
+}
+
+function normaliseComparable(
+  value: unknown,
+  input: RentSearchInput,
+  searchedAt: string,
+  fallbackPostcodeSector: string | undefined,
+  index: number
+): DeeperComparableRent | null {
+  if (!isObject(value)) return null;
+  const row = value as PmiComparableRow;
+  const rentAmount = toPositiveNumber(row.price);
+  if (!rentAmount) return null;
+
+  const postcodeSector =
+    typeof row.postcode === "string"
+      ? parsePostcode(row.postcode)?.sector
+      : fallbackPostcodeSector;
+
+  return {
+    id: `pmi-comparable-${index + 1}`,
+    sourceName: providerName,
+    sourceType: "licensed-dataset",
+    observedAt: searchedAt,
+    postcodeSector,
+    rentAmount,
+    rentPeriod: "month",
+    rentMonthly: rentAmount,
+    bedrooms: toFiniteNumber(row.bedrooms),
+    propertyType: mapPmiPropertyType(row.property_type) ?? input.propertyType,
+    evidenceDate: firstString(row.date),
     distanceMeters: toFiniteNumber(row.distance_m)
   };
 }

@@ -38,6 +38,33 @@ const pmiListingsResponse = {
   ]
 };
 
+const pmiComparablesResponse = {
+  total_count: 2,
+  count: 2,
+  comparables: [
+    {
+      uprn: "do-not-render-comparable",
+      address: "3 Hidden Comparable Address",
+      postcode: "SW12 8AA",
+      price: 2300,
+      date: "2026-04-01",
+      bedrooms: 1,
+      property_type: "Flat",
+      distance_m: 210
+    },
+    {
+      uprn: "do-not-render-comparable-2",
+      address: "4 Hidden Comparable Address",
+      postcode: "SW12 8AB",
+      price: 2500,
+      date: "2026-03-01",
+      bedrooms: 1,
+      property_type: "Flat",
+      distance_m: 320
+    }
+  ]
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -222,6 +249,9 @@ describe("App", () => {
     expect(
       screen.queryByRole("heading", { name: /comparable homes/i })
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /run deeper comparable check/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/median comparable/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Comparables$/i)).not.toBeInTheDocument();
     expect(
@@ -286,9 +316,122 @@ describe("App", () => {
       })
     );
     expect(String(fetchMock.mock.calls[0][0])).not.toContain("/prices/comparables");
-    expect(screen.queryByRole("button", { name: /deeper/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /run deeper comparable check/i })
+    ).toBeInTheDocument();
+    const deeperPanel = screen.getByRole("region", {
+      name: /optional deeper PMI comparable check/i
+    });
+    expect(within(deeperPanel).getByText(/may cost 5 PMI credits/i))
+      .toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /export/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/manual evidence/i)).not.toBeInTheDocument();
+  });
+
+  it("runs the optional deeper PMI comparable check only after explicit click", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockImplementation((url: URL) => {
+      if (String(url).includes("/prices/comparables")) {
+        return Promise.resolve(
+          new Response(JSON.stringify(pmiComparablesResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify(pmiListingsResponse), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    await screen.findByRole("heading", { name: /live rental listings/i });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await user.click(
+      screen.getByRole("button", { name: /run deeper comparable check/i })
+    );
+
+    expect(
+      await screen.findByText(/deeper PMI comparables available/i)
+    ).toBeInTheDocument();
+    const deeperPanel = screen.getByRole("region", {
+      name: /optional deeper PMI comparable check/i
+    });
+    expect(within(deeperPanel).getByText(/median comparable rent/i))
+      .toBeInTheDocument();
+    expect(within(deeperPanel).getAllByText(/^£2,400$/i).length)
+      .toBeGreaterThan(0);
+    expect(screen.queryByText(/Hidden Comparable Address/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/do-not-render-comparable/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /your rent is well above the official area benchmark/i
+      })
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const comparableUrl = String(fetchMock.mock.calls[1][0]);
+    expect(comparableUrl).toContain("/v1/prices/comparables");
+    expect(comparableUrl).toContain("type=rented");
+    expect(comparableUrl).toContain("postcode=SW12+8");
+    expect(comparableUrl).not.toContain("SW12+8AA");
+  });
+
+  it("shows a deeper comparable warning without breaking ONS and live evidence", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockImplementation((url: URL) => {
+      if (String(url).includes("/prices/comparables")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ detail: "credit limit reached" }), {
+            status: 402,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify(pmiListingsResponse), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await screen.findByRole("heading", { name: /live rental listings/i });
+
+    await user.click(
+      screen.getByRole("button", { name: /run deeper comparable check/i })
+    );
+
+    expect(await screen.findByText(/quota or rate limit/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^official area benchmark$/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /live rental listings/i })
+    ).toBeInTheDocument();
   });
 
   it("falls back to ONS when PMI rejects the key", async () => {
@@ -464,6 +607,60 @@ describe("App", () => {
     expect(screen.getByRole("combobox", { name: /situation/i })).toHaveValue(
       "current-rent-only"
     );
+  });
+
+  it("restores saved deeper comparable evidence after refresh without requiring a key", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockImplementation((url: URL) => {
+      if (String(url).includes("/prices/comparables")) {
+        return Promise.resolve(
+          new Response(JSON.stringify(pmiComparablesResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify(pmiListingsResponse), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const firstRender = render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await screen.findByRole("heading", { name: /live rental listings/i });
+    await user.click(
+      screen.getByRole("button", { name: /run deeper comparable check/i })
+    );
+    expect(
+      await screen.findByText(/deeper PMI comparables available/i)
+    ).toBeInTheDocument();
+
+    window.sessionStorage.clear();
+    firstRender.unmount();
+    render(<App />);
+
+    expect(
+      screen.getByText(/deeper PMI comparables available/i)
+    ).toBeInTheDocument();
+    const deeperPanel = screen.getByRole("region", {
+      name: /optional deeper PMI comparable check/i
+    });
+    expect(within(deeperPanel).getAllByText(/^£2,400$/i).length)
+      .toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("button", { name: /run deeper comparable check/i })
+    ).not.toBeInTheDocument();
   });
 
   it("discards old stored checks that do not include a Local Authority", () => {

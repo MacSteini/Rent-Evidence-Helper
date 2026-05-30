@@ -55,7 +55,7 @@ describe("persisted check", () => {
 
     const storedCheck = readStoredCheck(sourceSha256);
 
-    expect(storedCheck?.version).toBe(4);
+    expect(storedCheck?.version).toBe(5);
     expect(storedCheck?.officialBenchmarkComparison.userRentMonthly).toBe(2450);
     expect(storedCheck?.evidenceMode).toBe("official-only");
     expect(storedCheck?.sourceSha256).toBe(sourceSha256);
@@ -80,8 +80,8 @@ describe("persisted check", () => {
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
   });
 
-  it("clears old version 1, 2 and 3 checks instead of restoring them", () => {
-    for (const version of [1, 2, 3]) {
+  it("clears old version 1, 2, 3 and 4 checks instead of restoring them", () => {
+    for (const version of [1, 2, 3, 4]) {
       window.localStorage.setItem(
         "market-rent-check-last-check",
         JSON.stringify({
@@ -97,7 +97,53 @@ describe("persisted check", () => {
     }
   });
 
-  it("clears version 4 checks when the ONS source hash changes", () => {
+  it("round-trips redacted deeper comparable evidence", () => {
+    writeStoredCheck(
+      input,
+      comparison,
+      {
+        warnings: [],
+        evidenceMode: "official-only",
+        deeperComparableEvidence: {
+          evidenceKind: "licensed-comparables",
+          provider: "property-market-intel",
+          searchedAt: "2026-05-30T00:00:00Z",
+          searchAreaDescription: "SW12 8 postcode sector",
+          totalCount: 1,
+          displayedCount: 1,
+          medianMonthly: 2300,
+          minimumMonthly: 2300,
+          maximumMonthly: 2300,
+          comparables: [
+            {
+              id: "pmi-comparable-1",
+              sourceName: "Property Market Intel",
+              sourceType: "licensed-dataset",
+              observedAt: "2026-05-30T00:00:00Z",
+              postcodeSector: "SW12 8",
+              rentAmount: 2300,
+              rentPeriod: "month",
+              rentMonthly: 2300,
+              bedrooms: 2,
+              propertyType: "flat",
+              evidenceDate: "2026-04-01",
+              distanceMeters: 120
+            }
+          ],
+          warnings: ["Context only."]
+        }
+      },
+      sourceSha256
+    );
+
+    const storedCheck = readStoredCheck(sourceSha256);
+
+    expect(storedCheck?.deeperComparableEvidence?.displayedCount).toBe(1);
+    expect(JSON.stringify(storedCheck)).not.toContain("Hidden Address");
+    expect(JSON.stringify(storedCheck)).not.toContain("uprn");
+  });
+
+  it("clears version 5 checks when the ONS source hash changes", () => {
     writeStoredCheck(
       input,
       comparison,

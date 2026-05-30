@@ -1,5 +1,6 @@
 import {
   evidenceSummaryCopy,
+  deeperComparableCopy,
   officialBenchmarkStatusCopy
 } from "../content/uiCopy";
 import { calibrateLiveRentalEvidence } from "./liveEvidenceCalibration";
@@ -8,6 +9,7 @@ import type { RentCheckResult } from "../types/rentCheckResult";
 export type EvidenceSummary = {
   onsStatus: string;
   pmiStatus: string;
+  deeperStatus?: string;
   recommendedAction: string;
 };
 
@@ -26,6 +28,9 @@ export function buildEvidenceSummary(result: RentCheckResult): EvidenceSummary {
       pmiStatus: `${
         evidenceSummaryCopy.pmiQuality[calibration.qualityLevel]
       }; ${evidenceSummaryCopy.pmiPosition[calibration.rentPosition]}.`,
+      deeperStatus: result.deeperComparableEvidence
+        ? deeperComparableCopy.available
+        : undefined,
       recommendedAction: evidenceSummaryCopy.actionWithPmi
     };
   }
@@ -36,6 +41,9 @@ export function buildEvidenceSummary(result: RentCheckResult): EvidenceSummary {
       result.evidenceMode === "official-with-pmi-warning"
         ? evidenceSummaryCopy.pmiWarning
         : evidenceSummaryCopy.pmiOnly,
+    deeperStatus: result.deeperComparableEvidence
+      ? deeperComparableCopy.available
+      : undefined,
     recommendedAction: evidenceSummaryCopy.actionWithoutPmi
   };
 }

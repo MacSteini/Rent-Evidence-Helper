@@ -24,6 +24,12 @@ export function EvidenceSummaryPanel({ result }: EvidenceSummaryPanelProps) {
           <dt>{evidenceSummaryCopy.pmiLabel}</dt>
           <dd>{summary.pmiStatus}</dd>
         </div>
+        {summary.deeperStatus && (
+          <div>
+            <dt>{evidenceSummaryCopy.deeperLabel}</dt>
+            <dd>{summary.deeperStatus}</dd>
+          </div>
+        )}
         <div>
           <dt>{evidenceSummaryCopy.actionLabel}</dt>
           <dd>{summary.recommendedAction}</dd>

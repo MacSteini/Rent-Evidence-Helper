@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  buildPmiComparablesUrl,
   buildPmiListingsUrl,
   normalisePmiApiKey,
+  normalisePmiComparablesResponse,
   normalisePmiListingsResponse,
   PmiEvidenceError,
+  searchPmiDeeperComparables,
   searchPmiLiveRentalListings
 } from "../providers/propertyMarketIntelProvider";
 import type { RentSearchInput } from "../types/rent";
@@ -47,6 +50,33 @@ const pmiResponse = {
   ]
 };
 
+const pmiComparablesResponse = {
+  total_count: 2,
+  count: 2,
+  comparables: [
+    {
+      uprn: "secret-comparable-uprn",
+      address: "10 Hidden Comparable Street",
+      postcode: "SW12 8AA",
+      price: 2300,
+      date: "2026-04-01",
+      bedrooms: 2,
+      property_type: "Flat",
+      distance_m: 180
+    },
+    {
+      uprn: "secret-comparable-uprn-2",
+      address: "11 Hidden Comparable Street",
+      postcode: "SW12 8AB",
+      price: "2500",
+      date: "2026-03-01",
+      bedrooms: "2",
+      property_type: "f",
+      distance_m: "270"
+    }
+  ]
+};
+
 describe("Property Market Intel provider", () => {
   it("builds a credit-saving rental listings request", () => {
     const url = buildPmiListingsUrl(input);
@@ -67,6 +97,22 @@ describe("Property Market Intel provider", () => {
     const url = buildPmiListingsUrl({ ...input, propertyType: "house" });
 
     expect(url.searchParams.has("property_type")).toBe(false);
+  });
+
+  it("builds a deeper comparable request using postcode sector only", () => {
+    const url = buildPmiComparablesUrl(input);
+
+    expect(url.origin).toBe("https://api.propertymarketintel.com");
+    expect(url.pathname).toBe("/v1/prices/comparables");
+    expect(url.searchParams.get("type")).toBe("rented");
+    expect(url.searchParams.get("postcode")).toBe("SW12 8");
+    expect(url.searchParams.get("bedrooms")).toBe("2");
+    expect(url.searchParams.get("per_page")).toBe("10");
+    expect(String(url)).not.toContain("SW12+8AA");
+    expect(url.searchParams.has("outcode")).toBe(false);
+    expect(url.searchParams.has("property_type")).toBe(false);
+    expect(url.searchParams.has("address")).toBe(false);
+    expect(url.searchParams.has("uprn")).toBe(false);
   });
 
   it("normalises listings without exposing exact address or UPRN", () => {
@@ -141,6 +187,69 @@ describe("Property Market Intel provider", () => {
     await expect(() =>
       normalisePmiListingsResponse({ total_count: 0, listings: [] }, input, "now")
     ).toThrow(PmiEvidenceError);
+  });
+
+  it("normalises deeper comparables without exposing address, UPRN or full postcode", () => {
+    const evidence = normalisePmiComparablesResponse(
+      pmiComparablesResponse,
+      input,
+      "2026-05-30T00:00:00Z"
+    );
+
+    expect(evidence.evidenceKind).toBe("licensed-comparables");
+    expect(evidence.provider).toBe("property-market-intel");
+    expect(evidence.searchAreaDescription).toBe("SW12 8 postcode sector");
+    expect(evidence.displayedCount).toBe(2);
+    expect(evidence.medianMonthly).toBe(2400);
+    expect(evidence.comparables[0]).toMatchObject({
+      postcodeSector: "SW12 8",
+      rentMonthly: 2300,
+      bedrooms: 2,
+      propertyType: "flat",
+      evidenceDate: "2026-04-01"
+    });
+    expect(JSON.stringify(evidence)).not.toContain("Hidden Comparable Street");
+    expect(JSON.stringify(evidence)).not.toContain("secret-comparable-uprn");
+    expect(JSON.stringify(evidence)).not.toContain("SW12 8AA");
+  });
+
+  it("maps deeper comparable failures and calls PMI with a bearer token", async () => {
+    await expect(searchPmiDeeperComparables(input, "")).rejects.toMatchObject({
+      code: "missing-key"
+    });
+
+    await expect(
+      searchPmiDeeperComparables(input, "bad-key", responseFetch(401, {}))
+    ).rejects.toMatchObject({ code: "invalid-key" });
+
+    await expect(
+      searchPmiDeeperComparables(input, "rate-limited", responseFetch(402, {}))
+    ).rejects.toMatchObject({ code: "quota-or-rate-limit" });
+
+    await expect(() =>
+      normalisePmiComparablesResponse(
+        { total_count: 0, comparables: [] },
+        input,
+        "now"
+      )
+    ).toThrow(PmiEvidenceError);
+
+    const fetchMock = responseFetch(200, pmiComparablesResponse);
+    const evidence = await searchPmiDeeperComparables(
+      input,
+      "pmi_live_test",
+      fetchMock
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/v1/prices/comparables" }),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer pmi_live_test"
+        })
+      })
+    );
+    expect(evidence.displayedCount).toBe(2);
   });
 
   it("accepts a raw key, bearer value or copied authorization header", () => {

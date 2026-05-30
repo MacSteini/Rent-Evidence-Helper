@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DeeperComparablePanel } from "./components/DeeperComparablePanel";
 import { EvidenceSummaryPanel } from "./components/EvidenceSummaryPanel";
 import { InfoDialog } from "./components/InfoDialog";
 import { LiveEvidencePanel } from "./components/LiveEvidencePanel";
@@ -25,7 +26,9 @@ import {
   writeStoredPmiApiKey
 } from "./lib/pmiApiKey";
 import {
+  deeperComparableErrorMessage,
   liveEvidenceErrorMessage,
+  searchPmiDeeperComparables,
   searchPmiLiveRentalListings
 } from "./providers/propertyMarketIntelProvider";
 import type { OfficialRentBenchmarkDataset } from "./types/officialRentBenchmark";
@@ -71,6 +74,7 @@ export default function App() {
           input: storedCheck.input,
           officialBenchmarkComparison: storedCheck.officialBenchmarkComparison,
           liveEvidence: storedCheck.liveEvidence,
+          deeperComparableEvidence: storedCheck.deeperComparableEvidence,
           warnings: storedCheck.warnings,
           evidenceMode: storedCheck.evidenceMode
         }
@@ -78,6 +82,10 @@ export default function App() {
   );
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [isRunningDeeperCheck, setIsRunningDeeperCheck] = useState(false);
+  const [deeperComparableError, setDeeperComparableError] = useState<string | null>(
+    null
+  );
   const [hasStartedCheck, setHasStartedCheck] = useState(Boolean(storedCheck));
   const [activeDialog, setActiveDialog] = useState<
     "methodology" | "privacy" | "scope" | null
@@ -118,6 +126,7 @@ export default function App() {
     setHasStartedCheck(true);
     setIsChecking(true);
     setError(null);
+    setDeeperComparableError(null);
     setResult(null);
     try {
       const benchmark = findOfficialBenchmarkByAreaCode(
@@ -162,6 +171,7 @@ export default function App() {
         nextResult.officialBenchmarkComparison,
         {
           liveEvidence: nextResult.liveEvidence,
+          deeperComparableEvidence: nextResult.deeperComparableEvidence,
           warnings: nextResult.warnings,
           evidenceMode: nextResult.evidenceMode
         },
@@ -179,12 +189,14 @@ export default function App() {
     setHasStartedCheck(false);
     setResult(null);
     setError(null);
+    setDeeperComparableError(null);
   }
 
   function handleInputChange() {
     setHasStartedCheck(false);
     setResult(null);
     setError(null);
+    setDeeperComparableError(null);
   }
 
   function handlePmiApiKeyChange(nextKey: string) {
@@ -203,6 +215,40 @@ export default function App() {
     setRememberPmiApiKey(false);
     clearStoredPmiApiKey();
     handleInputChange();
+  }
+
+  async function handleRunDeeperComparables() {
+    if (!result) return;
+
+    setIsRunningDeeperCheck(true);
+    setDeeperComparableError(null);
+    try {
+      const deeperComparableEvidence = await searchPmiDeeperComparables(
+        result.input,
+        pmiApiKey
+      );
+      const nextResult: RentCheckResult = {
+        ...result,
+        deeperComparableEvidence
+      };
+
+      setResult(nextResult);
+      writeStoredCheck(
+        nextResult.input,
+        nextResult.officialBenchmarkComparison,
+        {
+          liveEvidence: nextResult.liveEvidence,
+          deeperComparableEvidence: nextResult.deeperComparableEvidence,
+          warnings: nextResult.warnings,
+          evidenceMode: nextResult.evidenceMode
+        },
+        officialBenchmarkDataset.sourceSha256
+      );
+    } catch (caught) {
+      setDeeperComparableError(deeperComparableErrorMessage(caught));
+    } finally {
+      setIsRunningDeeperCheck(false);
+    }
   }
 
   return (
@@ -298,6 +344,16 @@ export default function App() {
                       userRentMonthly={
                         result.officialBenchmarkComparison.userRentMonthly
                       }
+                    />
+                  )}
+                  {(pmiApiKey.trim() || result.deeperComparableEvidence) && (
+                    <DeeperComparablePanel
+                      input={result.input}
+                      evidence={result.deeperComparableEvidence}
+                      canRun={Boolean(pmiApiKey.trim())}
+                      isRunning={isRunningDeeperCheck}
+                      error={deeperComparableError}
+                      onRun={handleRunDeeperComparables}
                     />
                   )}
                   {result.warnings.length > 0 && (

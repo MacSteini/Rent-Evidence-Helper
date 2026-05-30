@@ -1,7 +1,10 @@
 import type {
   OfficialBenchmarkComparison
 } from "./officialRentBenchmark";
-import type { LiveRentalEvidenceResult } from "./liveEvidence";
+import type {
+  DeeperComparableEvidenceResult,
+  LiveRentalEvidenceResult
+} from "./liveEvidence";
 import type { RentSearchInput } from "./rent";
 
 export type EvidenceMode =
@@ -13,7 +16,7 @@ export type RentCheckResult = {
   input: RentSearchInput;
   officialBenchmarkComparison: OfficialBenchmarkComparison;
   liveEvidence?: LiveRentalEvidenceResult;
+  deeperComparableEvidence?: DeeperComparableEvidenceResult;
   warnings: string[];
   evidenceMode: EvidenceMode;
 };
-

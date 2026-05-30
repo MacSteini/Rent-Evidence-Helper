@@ -397,6 +397,7 @@ legend {
 .panel,
 .result-panel,
 .evidence-summary-panel,
+.deeper-comparable-panel,
 .live-evidence-panel,
 .official-benchmark-panel,
 .empty-state,
@@ -414,6 +415,7 @@ legend {
 .panel,
 .result-panel,
 .evidence-summary-panel,
+.deeper-comparable-panel,
 .live-evidence-panel,
 .official-benchmark-panel,
 .empty-state {
@@ -925,6 +927,10 @@ textarea {
 
 .live-evidence-panel {
   border-top: 5px solid var(--green);
+}
+
+.deeper-comparable-panel {
+  border-top: 5px solid var(--amber);
 }
 
 .severity-warning {
@@ -1448,6 +1454,7 @@ th {
   .panel,
   .result-panel,
   .live-evidence-panel,
+  .deeper-comparable-panel,
   .official-benchmark-panel,
   .empty-state,
   .form-panel {
