@@ -177,6 +177,15 @@ describe("App", () => {
       })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: /evidence summary/i })
+    ).toBeInTheDocument();
+    const evidenceSummaryPanel = screen.getByRole("region", {
+      name: /evidence summary/i
+    });
+    expect(
+      within(evidenceSummaryPanel).getByText(/^ONS benchmark only$/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("heading", { name: /^official area benchmark$/i })
     ).toBeInTheDocument();
     const officialBenchmarkPanel = screen.getByRole("region", {
@@ -246,15 +255,21 @@ describe("App", () => {
     });
     expect(livePanel).toBeInTheDocument();
     expect(
-      screen.getByText(/adds live asking-rent context/i)
+      screen.getByRole("heading", { name: /evidence summary/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/median asking rent of £2,500/i)
+      screen.getByText(/Limited PMI context; median sits near your rent/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Use the ONS benchmark as the main result, then compare PMI listings/i)
     ).toBeInTheDocument();
     expect(screen.getAllByText(/limited/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/small sample/i).length).toBeGreaterThan(0);
     expect(
       screen.getByText(/live asking rents sit within 10% of your rent/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/compare the live asking-rent listings with evidence you collect/i)
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
@@ -271,6 +286,9 @@ describe("App", () => {
       })
     );
     expect(String(fetchMock.mock.calls[0][0])).not.toContain("/prices/comparables");
+    expect(screen.queryByRole("button", { name: /deeper/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /export/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/manual evidence/i)).not.toBeInTheDocument();
   });
 
   it("falls back to ONS when PMI rejects the key", async () => {
@@ -293,6 +311,7 @@ describe("App", () => {
 
     expect(await screen.findByText(/property market intel rejected the api key/i))
       .toBeInTheDocument();
+    expect(screen.getByText(/PMI unavailable/i)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /^official area benchmark$/i })
     ).toBeInTheDocument();

@@ -58,11 +58,6 @@ export function LiveEvidencePanel({
           <dd>{calibration.freshnessLabel}</dd>
         </div>
       </dl>
-      <div className="live-calibration-grid" aria-label="Live evidence calibration">
-        <p>{liveEvidenceCopy.quality[calibration.qualityLevel]}</p>
-        <p>{calibration.sampleSizeLabel}</p>
-        <p>{formatSpread(calibration.spreadPercent)}</p>
-      </div>
       <div className="table-wrap">
         <table>
           <caption>{liveEvidenceCopy.caption}</caption>
@@ -116,9 +111,13 @@ export function LiveEvidencePanel({
       </div>
       <div className="warning-list" aria-label="Live evidence notes">
         <div>
-          {calibration.reasons.map((reason) => (
-            <p key={reason}>{reason}</p>
-          ))}
+          <p>{liveEvidenceCopy.quality[calibration.qualityLevel]}</p>
+          <p>
+            {calibration.sampleSizeLabel}. {formatSpread(calibration.spreadPercent)}
+          </p>
+          {calibration.freshnessLabel === "Unknown freshness" && (
+            <p>Unknown listing dates: most usable listings do not include a date.</p>
+          )}
           {evidence.warnings.map((warning) => (
             <p key={warning}>{warning}</p>
           ))}
@@ -145,7 +144,7 @@ function formatRange(minimum: number | undefined, maximum: number | undefined): 
 
 function formatSpread(value: number | undefined): string {
   if (value === undefined) return "Range spread unavailable";
-  return `Range spread ${value.toFixed(1)}% around the median`;
+  return `Range spread is ${value.toFixed(1)}% around the median`;
 }
 
 function formatQualityLabel(

@@ -1,4 +1,4 @@
-import { fieldCopy, liveEvidenceCopy, resultCopy } from "../content/uiCopy";
+import { fieldCopy, resultCopy } from "../content/uiCopy";
 import { formatCurrency } from "../lib/rentMath";
 import type { RentCheckResult } from "../types/rentCheckResult";
 
@@ -21,14 +21,6 @@ export function ResultSummary({ result }: ResultSummaryProps) {
       </div>
 
       <p>{copy.summary}</p>
-      {result.liveEvidence && result.liveEvidence.medianMonthly !== undefined && (
-        <p>
-          {liveEvidenceCopy.resultSummary} PMI found{" "}
-          {result.liveEvidence.displayedCount} live asking-rent listings, with
-          a median asking rent of{" "}
-          {formatCurrency(result.liveEvidence.medianMonthly)} per month.
-        </p>
-      )}
       <p className="evidence-warning">{fieldCopy.evidenceNotice}</p>
 
       <dl className="metric-grid">

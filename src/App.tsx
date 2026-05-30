@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { EvidenceSummaryPanel } from "./components/EvidenceSummaryPanel";
 import { InfoDialog } from "./components/InfoDialog";
 import { LiveEvidencePanel } from "./components/LiveEvidencePanel";
 import { NextStepsPanel } from "./components/NextStepsPanel";
@@ -284,6 +285,7 @@ export default function App() {
               {result ? (
                 <div className="result-stack">
                   <ResultSummary result={result} />
+                  <EvidenceSummaryPanel result={result} />
                   <OfficialBenchmarkPanel
                     comparison={result.officialBenchmarkComparison}
                     sourceUrl={officialBenchmarkDataset.sourceUrl}
@@ -308,6 +310,7 @@ export default function App() {
                   <NextStepsPanel
                     context={result.input.tenancyContext}
                     status={result.officialBenchmarkComparison.status}
+                    evidenceMode={result.evidenceMode}
                   />
                   {landlordMessage && <CopyableMessage message={landlordMessage} />}
                 </div>

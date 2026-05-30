@@ -88,6 +88,33 @@ export const liveEvidenceCopy = {
   }
 };
 
+export const evidenceSummaryCopy = {
+  title: "Evidence summary",
+  summary:
+    "The official benchmark remains the main result. Live listings add context when available.",
+  onsLabel: "ONS benchmark status",
+  pmiLabel: "PMI context status",
+  actionLabel: "Recommended action",
+  pmiOnly: "ONS benchmark only",
+  pmiWarning:
+    "PMI unavailable. Use the ONS benchmark and evidence you collect yourself.",
+  pmiQuality: {
+    limited: "Limited PMI context",
+    useful: "Useful PMI context",
+    strong: "Strong PMI context"
+  },
+  pmiPosition: {
+    above: "median sits below your rent",
+    near: "median sits near your rent",
+    below: "median sits above your rent",
+    unavailable: "median unavailable"
+  },
+  actionWithPmi:
+    "Use the ONS benchmark as the main result, then compare PMI listings with evidence you collect.",
+  actionWithoutPmi:
+    "Use the ONS benchmark as the main result and collect your own evidence before acting."
+};
+
 export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",

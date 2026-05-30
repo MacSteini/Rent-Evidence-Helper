@@ -396,6 +396,7 @@ legend {
 .form-panel,
 .panel,
 .result-panel,
+.evidence-summary-panel,
 .live-evidence-panel,
 .official-benchmark-panel,
 .empty-state,
@@ -412,6 +413,7 @@ legend {
 
 .panel,
 .result-panel,
+.evidence-summary-panel,
 .live-evidence-panel,
 .official-benchmark-panel,
 .empty-state {
@@ -913,6 +915,10 @@ textarea {
   border-top: 5px solid var(--teal);
 }
 
+.evidence-summary-panel {
+  border-top: 5px solid var(--navy);
+}
+
 .official-benchmark-panel {
   border-top: 5px solid var(--navy);
 }
@@ -999,21 +1005,24 @@ textarea {
   color: var(--teal-dark);
 }
 
-.live-calibration-grid {
+.evidence-summary-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.55rem;
+  gap: 0.65rem;
   margin: 1rem 0;
 }
 
-.live-calibration-grid p {
+.evidence-summary-list > div {
   margin: 0;
   padding: 0.7rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-raised);
-  color: var(--muted);
-  font-weight: 700;
+}
+
+.evidence-summary-list dd {
+  font-size: 1rem;
+  font-weight: 750;
 }
 
 .metric-card {
