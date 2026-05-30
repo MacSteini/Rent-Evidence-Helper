@@ -1,16 +1,20 @@
 import { percentageDifference } from "./rentMath";
 import type {
+  DeeperComparableEvidenceResult,
   LiveEvidenceCalibration,
   LiveEvidenceFreshnessLabel,
+  LiveEvidenceQualityLevel,
   LiveEvidenceRentPosition,
   LiveEvidenceSampleSizeLabel,
-  LiveRentalEvidenceResult
+  LiveRentalEvidenceResult,
+  PmiEvidenceLayerComparison
 } from "../types/liveEvidence";
 
 const nearRentPercent = 10;
 const strongSpreadPercent = 35;
 const limitedSpreadPercent = 60;
 const recentDays = 60;
+const layerDisagreementPercent = 15;
 
 export function calibrateLiveRentalEvidence(
   evidence: LiveRentalEvidenceResult,
@@ -55,6 +59,91 @@ export function calibrateLiveRentalEvidence(
   };
 }
 
+export function calibrateDeeperComparableEvidence(
+  evidence: DeeperComparableEvidenceResult,
+  userRentMonthly: number
+): LiveEvidenceCalibration {
+  const median = evidence.medianMonthly;
+  const displayedCount = evidence.displayedCount;
+  const datedListings = countDatedComparables(evidence);
+  const datedThreshold = Math.ceil(displayedCount / 2);
+  const freshnessLabel = getComparableFreshnessLabel(evidence, datedListings);
+  const spreadPercent = calculateComparableSpreadPercent(evidence);
+  const medianDifferenceMonthly =
+    median === undefined ? undefined : userRentMonthly - median;
+  const medianDifferencePercent =
+    median === undefined ? undefined : percentageDifference(userRentMonthly, median);
+
+  const reasons = buildComparableReasons({
+    displayedCount,
+    median,
+    spreadPercent,
+    datedListings,
+    datedThreshold,
+    freshnessLabel
+  });
+
+  return {
+    qualityLevel: getQualityLevel({
+      displayedCount,
+      median,
+      spreadPercent,
+      datedListings,
+      datedThreshold
+    }),
+    sampleSizeLabel: getSampleSizeLabel(displayedCount),
+    freshnessLabel,
+    rentPosition: getRentPosition(medianDifferencePercent),
+    medianDifferenceMonthly,
+    medianDifferencePercent,
+    spreadPercent,
+    datedListings,
+    reasons
+  };
+}
+
+export function comparePmiEvidenceLayers(
+  liveEvidence: LiveRentalEvidenceResult | undefined,
+  deeperEvidence: DeeperComparableEvidenceResult | undefined
+): PmiEvidenceLayerComparison {
+  if (
+    liveEvidence?.medianMonthly === undefined ||
+    deeperEvidence?.medianMonthly === undefined
+  ) {
+    return {
+      status: "unavailable",
+      message:
+        "Live-listing and deeper-comparable medians cannot be compared yet."
+    };
+  }
+
+  const medianDifferenceMonthly =
+    deeperEvidence.medianMonthly - liveEvidence.medianMonthly;
+  const medianDifferencePercent = percentageDifference(
+    deeperEvidence.medianMonthly,
+    liveEvidence.medianMonthly
+  );
+  const absoluteDifference = Math.abs(medianDifferencePercent);
+
+  if (absoluteDifference > layerDisagreementPercent) {
+    return {
+      status: "materially-different",
+      medianDifferenceMonthly,
+      medianDifferencePercent,
+      message:
+        "Live listings and deeper comparables point to different rent levels, so treat PMI as context only."
+    };
+  }
+
+  return {
+    status: "aligned",
+    medianDifferenceMonthly,
+    medianDifferencePercent,
+    message:
+      "Live listings and deeper comparables are broadly aligned, but PMI remains context only."
+  };
+}
+
 function getQualityLevel({
   displayedCount,
   median,
@@ -67,7 +156,7 @@ function getQualityLevel({
   spreadPercent: number | undefined;
   datedListings: number;
   datedThreshold: number;
-}): LiveEvidenceCalibration["qualityLevel"] {
+}): LiveEvidenceQualityLevel {
   if (
     displayedCount < 4 ||
     median === undefined ||
@@ -119,6 +208,21 @@ function calculateSpreadPercent(
   return ((evidence.maximumMonthly - evidence.minimumMonthly) / evidence.medianMonthly) * 100;
 }
 
+function calculateComparableSpreadPercent(
+  evidence: DeeperComparableEvidenceResult
+): number | undefined {
+  if (
+    evidence.medianMonthly === undefined ||
+    evidence.minimumMonthly === undefined ||
+    evidence.maximumMonthly === undefined ||
+    evidence.medianMonthly <= 0
+  ) {
+    return undefined;
+  }
+
+  return ((evidence.maximumMonthly - evidence.minimumMonthly) / evidence.medianMonthly) * 100;
+}
+
 function getFreshnessLabel(
   evidence: LiveRentalEvidenceResult,
   datedListings: number
@@ -144,6 +248,12 @@ function getFreshnessLabel(
 
 function countDatedListings(evidence: LiveRentalEvidenceResult): number {
   return evidence.listings.filter((listing) => parseEvidenceDate(listing.listedDate)).length;
+}
+
+function countDatedComparables(evidence: DeeperComparableEvidenceResult): number {
+  return evidence.comparables.filter((comparable) =>
+    parseEvidenceDate(comparable.evidenceDate)
+  ).length;
 }
 
 function parseEvidenceDate(value: string | undefined): Date | null {
@@ -209,6 +319,75 @@ function buildReasons({
     reasons.push("Recent listings: dated listings are within the recent search window.");
   } else {
     reasons.push("Mixed freshness: dated listings are not all recent.");
+  }
+
+  return reasons;
+}
+
+function getComparableFreshnessLabel(
+  evidence: DeeperComparableEvidenceResult,
+  datedListings: number
+): LiveEvidenceFreshnessLabel {
+  if (datedListings < Math.ceil(evidence.displayedCount / 2)) {
+    return "Unknown freshness";
+  }
+
+  const searchedAt = parseEvidenceDate(evidence.searchedAt);
+  if (!searchedAt) return "Mixed freshness";
+
+  const datedRows = evidence.comparables
+    .map((comparable) => parseEvidenceDate(comparable.evidenceDate))
+    .filter((date): date is Date => date !== null);
+
+  const allRecent = datedRows.every((date) => {
+    const ageDays = (searchedAt.getTime() - date.getTime()) / 86_400_000;
+    return ageDays >= 0 && ageDays <= recentDays;
+  });
+
+  return allRecent ? "Recent" : "Mixed freshness";
+}
+
+function buildComparableReasons({
+  displayedCount,
+  median,
+  spreadPercent,
+  datedListings,
+  datedThreshold,
+  freshnessLabel
+}: {
+  displayedCount: number;
+  median: number | undefined;
+  spreadPercent: number | undefined;
+  datedListings: number;
+  datedThreshold: number;
+  freshnessLabel: LiveEvidenceFreshnessLabel;
+}): string[] {
+  const reasons: string[] = [];
+
+  if (displayedCount < 4) {
+    reasons.push("Small sample: fewer than 4 comparable records were usable.");
+  } else if (displayedCount >= 8) {
+    reasons.push("Broad sample: at least 8 comparable records were usable.");
+  } else {
+    reasons.push("Usable sample: at least 4 comparable records were usable.");
+  }
+
+  if (median === undefined) {
+    reasons.push("No median comparable rent could be calculated.");
+  }
+
+  if (spreadPercent !== undefined && spreadPercent > limitedSpreadPercent) {
+    reasons.push("Wide range: comparable rents vary by more than 60% around the median.");
+  } else if (spreadPercent !== undefined && spreadPercent <= strongSpreadPercent) {
+    reasons.push("Tighter range: comparable rents vary by no more than 35% around the median.");
+  }
+
+  if (datedListings < datedThreshold) {
+    reasons.push("Unknown evidence dates: most usable records do not include a date.");
+  } else if (freshnessLabel === "Recent") {
+    reasons.push("Recent records: dated records are within the recent search window.");
+  } else {
+    reasons.push("Mixed freshness: dated records are not all recent.");
   }
 
   return reasons;

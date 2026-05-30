@@ -105,7 +105,17 @@ export const deeperComparableCopy = {
   sourceLabel: "Property Market Intel comparables",
   available: "Deeper PMI comparables available",
   status:
-    "Treat these records as rental evidence context, not achieved-rent certainty, legal advice or a tribunal decision."
+    "Treat these records as rental evidence context, not achieved-rent certainty, legal advice or a tribunal decision.",
+  disagreement:
+    "Live listings and deeper comparables point to different rent levels. Treat PMI as context only.",
+  quality: {
+    limited:
+      "Limited comparable context. A small sample, broad range or missing dates means you should not lean on this alone.",
+    useful:
+      "Useful comparable context. Check the records and compare them with your own evidence.",
+    strong:
+      "Stronger comparable context. It is still context only, not a rent decision."
+  }
 };
 
 export const evidenceSummaryCopy = {
@@ -143,7 +153,8 @@ export const methodologyCopy = [
   "The optional deeper PMI comparable check is user-triggered, may cost 5 PMI credits, and uses only the postcode sector derived in the browser. Property Market Intel free-tier use may require short waits between requests; the app does not retry automatically.",
   "Bedroom count is used first to select the ONS benchmark field. If bedrooms are not usable, flats and maisonettes use the flat or maisonette benchmark; other cases use the all-property benchmark.",
   "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add context but do not change the ONS-based status or tribunal rules.",
-  "The live-listing quality label looks at usable listing count, asking-rent spread and whether listing dates are present. It helps you judge the context; it is not a reliability score.",
+  "The PMI quality labels look at usable row count, rent spread and whether dates are present. A range spread above 60% forces a limited context label even when there are 10 rows.",
+  "If live listings and deeper comparables point to materially different rent levels, the app warns you to treat PMI as context only.",
   "The ONS benchmark is an area-level estimate. Live listings and deeper PMI comparables are context only. None of these sources is a tribunal decision or legal advice."
 ];
 

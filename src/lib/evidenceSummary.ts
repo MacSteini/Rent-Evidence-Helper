@@ -3,7 +3,11 @@ import {
   deeperComparableCopy,
   officialBenchmarkStatusCopy
 } from "../content/uiCopy";
-import { calibrateLiveRentalEvidence } from "./liveEvidenceCalibration";
+import {
+  calibrateDeeperComparableEvidence,
+  calibrateLiveRentalEvidence,
+  comparePmiEvidenceLayers
+} from "./liveEvidenceCalibration";
 import type { RentCheckResult } from "../types/rentCheckResult";
 
 export type EvidenceSummary = {
@@ -28,9 +32,7 @@ export function buildEvidenceSummary(result: RentCheckResult): EvidenceSummary {
       pmiStatus: `${
         evidenceSummaryCopy.pmiQuality[calibration.qualityLevel]
       }; ${evidenceSummaryCopy.pmiPosition[calibration.rentPosition]}.`,
-      deeperStatus: result.deeperComparableEvidence
-        ? deeperComparableCopy.available
-        : undefined,
+      deeperStatus: buildDeeperStatus(result),
       recommendedAction: evidenceSummaryCopy.actionWithPmi
     };
   }
@@ -41,9 +43,28 @@ export function buildEvidenceSummary(result: RentCheckResult): EvidenceSummary {
       result.evidenceMode === "official-with-pmi-warning"
         ? evidenceSummaryCopy.pmiWarning
         : evidenceSummaryCopy.pmiOnly,
-    deeperStatus: result.deeperComparableEvidence
-      ? deeperComparableCopy.available
-      : undefined,
+    deeperStatus: buildDeeperStatus(result),
     recommendedAction: evidenceSummaryCopy.actionWithoutPmi
   };
+}
+
+function buildDeeperStatus(result: RentCheckResult): string | undefined {
+  if (!result.deeperComparableEvidence) return undefined;
+
+  const deeperCalibration = calibrateDeeperComparableEvidence(
+    result.deeperComparableEvidence,
+    result.officialBenchmarkComparison.userRentMonthly
+  );
+  const disagreement = comparePmiEvidenceLayers(
+    result.liveEvidence,
+    result.deeperComparableEvidence
+  );
+
+  if (disagreement.status === "materially-different") {
+    return deeperComparableCopy.disagreement;
+  }
+
+  return `${deeperComparableCopy.available}; ${
+    evidenceSummaryCopy.pmiQuality[deeperCalibration.qualityLevel]
+  }.`;
 }

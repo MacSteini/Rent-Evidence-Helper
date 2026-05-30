@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { calibrateLiveRentalEvidence } from "../lib/liveEvidenceCalibration";
+import {
+  calibrateDeeperComparableEvidence,
+  calibrateLiveRentalEvidence,
+  comparePmiEvidenceLayers
+} from "../lib/liveEvidenceCalibration";
 import type {
+  DeeperComparableEvidenceResult,
+  DeeperComparableRent,
   LiveRentalEvidenceResult,
   LiveRentalListing
 } from "../types/liveEvidence";
@@ -105,6 +111,69 @@ describe("live evidence calibration", () => {
       "No median asking rent could be calculated."
     );
   });
+
+  it("keeps real broad-spread live samples limited even with 10 usable rows", () => {
+    const bristolLikeEvidence = evidenceWithRents(
+      [580, 620, 700, 730, 740, 755, 800, 900, 1200, 2300],
+      {
+        listedDates: [
+          "2026-05-01",
+          "2026-05-02",
+          "2026-05-03",
+          "2026-05-04",
+          "2026-05-05",
+          "2026-05-06",
+          "2026-05-07",
+          "2026-05-08",
+          "2026-05-09",
+          "2026-05-10"
+        ]
+      }
+    );
+
+    const calibration = calibrateLiveRentalEvidence(bristolLikeEvidence, 1300);
+
+    expect(calibration.qualityLevel).toBe("limited");
+    expect(calibration.spreadPercent).toBeCloseTo(230.1, 1);
+    expect(calibration.reasons).toContain(
+      "Wide range: asking rents vary by more than 60% around the median."
+    );
+  });
+
+  it("calibrates deeper comparables with the same broad-spread caution", () => {
+    const londonDeeperEvidence = deeperEvidenceWithRents([
+      1200, 1600, 1800, 1900, 2000, 2000, 2200, 2400, 2600, 4000
+    ]);
+
+    const calibration = calibrateDeeperComparableEvidence(
+      londonDeeperEvidence,
+      2450
+    );
+
+    expect(calibration.qualityLevel).toBe("limited");
+    expect(calibration.sampleSizeLabel).toBe("Broad sample");
+    expect(calibration.spreadPercent).toBeCloseTo(140, 1);
+    expect(calibration.medianDifferencePercent).toBeCloseTo(22.5, 1);
+    expect(calibration.reasons).toContain(
+      "Wide range: comparable rents vary by more than 60% around the median."
+    );
+  });
+
+  it("flags material disagreement between live listings and deeper comparables", () => {
+    const liveEvidence = evidenceWithRents([
+      565, 1000, 1100, 1200, 1200, 1205, 1300, 1400, 1450, 1495
+    ]);
+    const deeperEvidence = deeperEvidenceWithRents([
+      797, 820, 850, 880, 890, 900, 950, 1000, 1100, 1150
+    ]);
+
+    const comparison = comparePmiEvidenceLayers(liveEvidence, deeperEvidence);
+
+    expect(comparison.status).toBe("materially-different");
+    expect(comparison.medianDifferenceMonthly).toBe(-307.5);
+    expect(comparison.medianDifferencePercent).toBeCloseTo(-25.6, 1);
+    expect(comparison.message).toMatch(/context only/i);
+  });
 });
 
 function evidenceWithRents(
@@ -144,6 +213,44 @@ function evidenceWithRents(
     listings,
     warnings: [
       "Property Market Intel listing prices are treated as live asking rents, not achieved rents."
+    ]
+  };
+}
+
+function deeperEvidenceWithRents(rents: number[]): DeeperComparableEvidenceResult {
+  const sorted = [...rents].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  const medianMonthly =
+    sorted.length % 2 === 0
+      ? (sorted[middle - 1] + sorted[middle]) / 2
+      : sorted[middle];
+  const comparables = rents.map((rent, index): DeeperComparableRent => ({
+    id: `comparable-${index}`,
+    sourceName: "Property Market Intel",
+    sourceType: "licensed-dataset",
+    observedAt: "2026-05-30T00:00:00Z",
+    postcodeSector: "SW12 8",
+    rentAmount: rent,
+    rentPeriod: "month",
+    rentMonthly: rent,
+    bedrooms: 1,
+    propertyType: "flat",
+    evidenceDate: `2026-05-${String(index + 1).padStart(2, "0")}`
+  }));
+
+  return {
+    evidenceKind: "licensed-comparables",
+    provider: "property-market-intel",
+    searchedAt: "2026-05-30T00:00:00Z",
+    searchAreaDescription: "SW12 8 postcode sector",
+    totalCount: rents.length,
+    displayedCount: rents.length,
+    medianMonthly,
+    minimumMonthly: sorted[0],
+    maximumMonthly: sorted[sorted.length - 1],
+    comparables,
+    warnings: [
+      "Property Market Intel comparable prices are treated as rental evidence context, not a market-rent decision."
     ]
   };
 }

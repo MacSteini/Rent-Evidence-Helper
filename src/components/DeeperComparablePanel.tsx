@@ -1,4 +1,5 @@
 import { deeperComparableCopy } from "../content/uiCopy";
+import { calibrateDeeperComparableEvidence } from "../lib/liveEvidenceCalibration";
 import { formatCurrency } from "../lib/rentMath";
 import type { DeeperComparableEvidenceResult } from "../types/liveEvidence";
 import type { RentSearchInput } from "../types/rent";
@@ -24,6 +25,9 @@ export function DeeperComparablePanel({
 }: DeeperComparablePanelProps) {
   const searchArea = evidence?.searchAreaDescription ?? derivePostcodeSectorLabel(input);
   const isWaitingForPmi = cooldownSeconds > 0;
+  const calibration = evidence
+    ? calibrateDeeperComparableEvidence(evidence, Number(input.rentAmount))
+    : null;
 
   return (
     <section
@@ -48,6 +52,10 @@ export function DeeperComparablePanel({
               <dd>{evidence.displayedCount}</dd>
             </div>
             <div>
+              <dt>Comparable quality</dt>
+              <dd>{formatQualityLabel(calibration?.qualityLevel)}</dd>
+            </div>
+            <div>
               <dt>Median comparable rent</dt>
               <dd>
                 {evidence.medianMonthly === undefined
@@ -58,6 +66,10 @@ export function DeeperComparablePanel({
             <div>
               <dt>Range</dt>
               <dd>{formatRange(evidence.minimumMonthly, evidence.maximumMonthly)}</dd>
+            </div>
+            <div>
+              <dt>Compared with your rent</dt>
+              <dd>{formatSignedCurrency(calibration?.medianDifferenceMonthly)}</dd>
             </div>
           </>
         )}
@@ -136,6 +148,15 @@ export function DeeperComparablePanel({
           </div>
           <div className="warning-list" aria-label="Deeper comparable notes">
             <div>
+              {calibration && (
+                <>
+                  <p>{deeperComparableCopy.quality[calibration.qualityLevel]}</p>
+                  <p>
+                    {calibration.sampleSizeLabel}.{" "}
+                    {formatSpread(calibration.spreadPercent)}
+                  </p>
+                </>
+              )}
               {evidence.warnings.map((warning) => (
                 <p key={warning}>{warning}</p>
               ))}
@@ -156,6 +177,24 @@ function derivePostcodeSectorLabel(input: RentSearchInput): string {
 function formatRange(minimum: number | undefined, maximum: number | undefined): string {
   if (minimum === undefined || maximum === undefined) return "Unavailable";
   return `${formatCurrency(minimum)} to ${formatCurrency(maximum)}`;
+}
+
+function formatSignedCurrency(value: number | undefined): string {
+  if (value === undefined) return "Unavailable";
+  if (value === 0) return formatCurrency(0);
+  return `${value > 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
+}
+
+function formatSpread(value: number | undefined): string {
+  if (value === undefined) return "Range spread unavailable";
+  return `Range spread is ${value.toFixed(1)}% around the median`;
+}
+
+function formatQualityLabel(value: "limited" | "useful" | "strong" | undefined): string {
+  if (value === "limited") return "Limited";
+  if (value === "useful") return "Useful";
+  if (value === "strong") return "Strong";
+  return "Unavailable";
 }
 
 function formatDistance(value: number | undefined): string {

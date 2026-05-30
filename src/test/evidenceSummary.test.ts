@@ -81,7 +81,69 @@ describe("evidence summary", () => {
     );
 
     expect(summary.onsStatus).toBe("Well above official area benchmark");
-    expect(summary.deeperStatus).toBe("Deeper PMI comparables available");
+    expect(summary.deeperStatus).toBe(
+      "Deeper PMI comparables available; Limited PMI context."
+    );
+  });
+
+  it("summarises material disagreement between PMI evidence layers", () => {
+    const summary = buildEvidenceSummary(
+      buildResult({
+        evidenceMode: "official-with-pmi-live",
+        liveEvidence: {
+          evidenceKind: "licensed-live",
+          provider: "property-market-intel",
+          searchedAt: "2026-05-30T00:00:00Z",
+          searchAreaDescription: "M1 outcode",
+          totalCount: 10,
+          displayedCount: 10,
+          medianMonthly: 1202.5,
+          minimumMonthly: 565,
+          maximumMonthly: 1495,
+          listings: [
+            liveListing("one", 565, "2026-05-01"),
+            liveListing("two", 1000, "2026-05-02"),
+            liveListing("three", 1100, "2026-05-03"),
+            liveListing("four", 1200, "2026-05-04"),
+            liveListing("five", 1200, "2026-05-05"),
+            liveListing("six", 1205, "2026-05-06"),
+            liveListing("seven", 1300, "2026-05-07"),
+            liveListing("eight", 1400, "2026-05-08"),
+            liveListing("nine", 1450, "2026-05-09"),
+            liveListing("ten", 1495, "2026-05-10")
+          ],
+          warnings: []
+        },
+        deeperComparableEvidence: {
+          evidenceKind: "licensed-comparables",
+          provider: "property-market-intel",
+          searchedAt: "2026-05-30T00:00:00Z",
+          searchAreaDescription: "M1 1 postcode sector",
+          totalCount: 10,
+          displayedCount: 10,
+          medianMonthly: 895,
+          minimumMonthly: 797,
+          maximumMonthly: 1150,
+          comparables: [
+            comparable("one", 797),
+            comparable("two", 820),
+            comparable("three", 850),
+            comparable("four", 880),
+            comparable("five", 890),
+            comparable("six", 900),
+            comparable("seven", 950),
+            comparable("eight", 1000),
+            comparable("nine", 1100),
+            comparable("ten", 1150)
+          ],
+          warnings: []
+        }
+      })
+    );
+
+    expect(summary.deeperStatus).toBe(
+      "Live listings and deeper comparables point to different rent levels. Treat PMI as context only."
+    );
   });
 });
 
@@ -138,5 +200,21 @@ function liveListing(id: string, rentMonthly: number, listedDate: string) {
     bedrooms: 2,
     propertyType: "flat" as const,
     listedDate
+  };
+}
+
+function comparable(id: string, rentMonthly: number) {
+  return {
+    id,
+    sourceName: "Property Market Intel" as const,
+    sourceType: "licensed-dataset" as const,
+    observedAt: "2026-05-30T00:00:00Z",
+    postcodeSector: "M1 1",
+    rentAmount: rentMonthly,
+    rentPeriod: "month" as const,
+    rentMonthly,
+    bedrooms: 1,
+    propertyType: "flat" as const,
+    evidenceDate: "2026-05-01"
   };
 }

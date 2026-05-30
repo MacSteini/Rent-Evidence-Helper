@@ -99,6 +99,13 @@ export type LiveEvidenceCalibration = {
   reasons: string[];
 };
 
+export type PmiEvidenceLayerComparison = {
+  status: "unavailable" | "aligned" | "materially-different";
+  medianDifferenceMonthly?: number;
+  medianDifferencePercent?: number;
+  message: string;
+};
+
 export type LiveEvidenceRequest = {
   input: RentSearchInput;
   apiKey: string;
