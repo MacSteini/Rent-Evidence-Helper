@@ -951,6 +951,14 @@ textarea {
   font-weight: 700;
 }
 
+.live-evidence-interpretation {
+  padding: 0.75rem;
+  border-left: 4px solid var(--green);
+  border-radius: 0 8px 8px 0;
+  background: var(--surface-muted);
+  font-weight: 800;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, max-content));
@@ -989,6 +997,23 @@ textarea {
 
 .benchmark-source-line a:hover {
   color: var(--teal-dark);
+}
+
+.live-calibration-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  margin: 1rem 0;
+}
+
+.live-calibration-grid p {
+  margin: 0;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .metric-card {

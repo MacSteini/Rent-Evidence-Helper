@@ -1,4 +1,4 @@
-import { fieldCopy, resultCopy } from "../content/uiCopy";
+import { fieldCopy, liveEvidenceCopy, resultCopy } from "../content/uiCopy";
 import { formatCurrency } from "../lib/rentMath";
 import type { RentCheckResult } from "../types/rentCheckResult";
 
@@ -23,8 +23,9 @@ export function ResultSummary({ result }: ResultSummaryProps) {
       <p>{copy.summary}</p>
       {result.liveEvidence && result.liveEvidence.medianMonthly !== undefined && (
         <p>
-          Property Market Intel found {result.liveEvidence.displayedCount} live
-          asking-rent listings. Their median asking rent is{" "}
+          {liveEvidenceCopy.resultSummary} PMI found{" "}
+          {result.liveEvidence.displayedCount} live asking-rent listings, with
+          a median asking rent of{" "}
           {formatCurrency(result.liveEvidence.medianMonthly)} per month.
         </p>
       )}

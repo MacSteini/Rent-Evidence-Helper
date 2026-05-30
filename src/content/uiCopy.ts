@@ -60,12 +60,41 @@ export const officialBenchmarkStatusCopy = {
   substantially_above_benchmark: "Well above official area benchmark"
 };
 
+export const liveEvidenceCopy = {
+  resultSummary:
+    "Property Market Intel adds live asking-rent context. It does not replace the official benchmark result.",
+  title: "Live rental listings",
+  summary:
+    "Live asking-rent listings for the search area. These are not achieved rents, a tribunal decision or legal advice.",
+  caption:
+    "Selected Property Market Intel rental listings. Exact addresses and UPRNs are not shown.",
+  interpretation: {
+    above:
+      "Live asking rents sit below your rent by more than 10% of their median.",
+    near:
+      "Live asking rents sit within 10% of your rent when compared with their median.",
+    below:
+      "Live asking rents sit above your rent by more than 10% of their median.",
+    unavailable:
+      "Live asking-rent position is unavailable because no median could be calculated."
+  },
+  quality: {
+    limited:
+      "Limited live context. Treat this as a prompt to gather more evidence.",
+    useful:
+      "Useful live context. Check the individual listings before relying on it.",
+    strong:
+      "Strong live context. It is still asking-rent evidence, not a decision."
+  }
+};
+
 export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",
   "If you provide a Property Market Intel API key, the app also requests live rental listings directly from Property Market Intel and treats those listing prices as asking rents.",
   "Bedroom count is used first to select the ONS benchmark field. If bedrooms are not usable, flats and maisonettes use the flat or maisonette benchmark; other cases use the all-property benchmark.",
-  "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add market context but do not change tribunal rules.",
+  "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add context but do not change the ONS-based status or tribunal rules.",
+  "The live-listing quality label looks at usable listing count, asking-rent spread and whether listing dates are present. It helps you judge the context; it is not a reliability score.",
   "The ONS benchmark is an area-level estimate. Live listings are asking rents. Neither source is a tribunal decision or legal advice."
 ];
 

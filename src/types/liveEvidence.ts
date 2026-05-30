@@ -12,6 +12,20 @@ export type LiveEvidenceFailureCode =
   | "no-listings"
   | "malformed-response";
 
+export type LiveEvidenceQualityLevel = "limited" | "useful" | "strong";
+
+export type LiveEvidenceSampleSizeLabel =
+  | "Small sample"
+  | "Usable sample"
+  | "Broad sample";
+
+export type LiveEvidenceFreshnessLabel =
+  | "Recent"
+  | "Mixed freshness"
+  | "Unknown freshness";
+
+export type LiveEvidenceRentPosition = "below" | "near" | "above" | "unavailable";
+
 export type LiveRentalListing = {
   id: string;
   sourceName: "Property Market Intel";
@@ -42,8 +56,19 @@ export type LiveRentalEvidenceResult = {
   warnings: string[];
 };
 
+export type LiveEvidenceCalibration = {
+  qualityLevel: LiveEvidenceQualityLevel;
+  sampleSizeLabel: LiveEvidenceSampleSizeLabel;
+  freshnessLabel: LiveEvidenceFreshnessLabel;
+  rentPosition: LiveEvidenceRentPosition;
+  medianDifferenceMonthly?: number;
+  medianDifferencePercent?: number;
+  spreadPercent?: number;
+  datedListings: number;
+  reasons: string[];
+};
+
 export type LiveEvidenceRequest = {
   input: RentSearchInput;
   apiKey: string;
 };
-

@@ -245,7 +245,22 @@ describe("App", () => {
       name: /live rental listings/i
     });
     expect(livePanel).toBeInTheDocument();
-    expect(screen.getByText(/median asking rent is £2,500/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/adds live asking-rent context/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/median asking rent of £2,500/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/limited/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/small sample/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/live asking rents sit within 10% of your rent/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: /your rent is well above the official area benchmark/i
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText(/exact addresses and UPRNs are not shown/i)).toBeInTheDocument();
     expect(screen.queryByText(/Hidden Address/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/do-not-render/i)).not.toBeInTheDocument();

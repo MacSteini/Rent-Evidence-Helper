@@ -291,7 +291,12 @@ export default function App() {
                     period={officialBenchmarkDataset.period}
                   />
                   {result.liveEvidence && (
-                    <LiveEvidencePanel evidence={result.liveEvidence} />
+                    <LiveEvidencePanel
+                      evidence={result.liveEvidence}
+                      userRentMonthly={
+                        result.officialBenchmarkComparison.userRentMonthly
+                      }
+                    />
                   )}
                   {result.warnings.length > 0 && (
                     <div className="notice notice-compact" role="status">
