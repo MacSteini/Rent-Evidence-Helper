@@ -26,6 +26,10 @@ import {
   writeStoredPmiApiKey
 } from "./lib/pmiApiKey";
 import {
+  buildPmiCooldownMessage,
+  getPmiCooldownSeconds
+} from "./lib/pmiRequestPacing";
+import {
   deeperComparableErrorMessage,
   liveEvidenceErrorMessage,
   searchPmiDeeperComparables,
@@ -86,11 +90,14 @@ export default function App() {
   const [deeperComparableError, setDeeperComparableError] = useState<string | null>(
     null
   );
+  const [lastPmiAttemptAt, setLastPmiAttemptAt] = useState<number | null>(null);
+  const [, setPmiCooldownTick] = useState(0);
   const [hasStartedCheck, setHasStartedCheck] = useState(Boolean(storedCheck));
   const [activeDialog, setActiveDialog] = useState<
     "methodology" | "privacy" | "scope" | null
   >(null);
   const resultSectionRef = useRef<HTMLElement>(null);
+  const pmiCooldownSeconds = getPmiCooldownSeconds(lastPmiAttemptAt);
 
   const landlordMessage = useMemo(() => {
     if (!result) return "";
@@ -122,6 +129,20 @@ export default function App() {
     });
   }, [result]);
 
+  useEffect(() => {
+    if (pmiCooldownSeconds <= 0) return undefined;
+
+    const timer = window.setInterval(() => {
+      setPmiCooldownTick((tick) => tick + 1);
+    }, 250);
+
+    return () => window.clearInterval(timer);
+  }, [pmiCooldownSeconds]);
+
+  function markPmiAttempt() {
+    setLastPmiAttemptAt(Date.now());
+  }
+
   async function handleSubmit(input: RentSearchInput) {
     setHasStartedCheck(true);
     setIsChecking(true);
@@ -146,10 +167,16 @@ export default function App() {
       let liveEvidence;
 
       if (pmiApiKey.trim()) {
-        try {
-          liveEvidence = await searchPmiLiveRentalListings(input, pmiApiKey);
-        } catch (liveEvidenceError) {
-          warnings.push(liveEvidenceErrorMessage(liveEvidenceError));
+        const cooldownSeconds = getPmiCooldownSeconds(lastPmiAttemptAt);
+        if (cooldownSeconds > 0) {
+          warnings.push(buildPmiCooldownMessage(cooldownSeconds));
+        } else {
+          try {
+            markPmiAttempt();
+            liveEvidence = await searchPmiLiveRentalListings(input, pmiApiKey);
+          } catch (liveEvidenceError) {
+            warnings.push(liveEvidenceErrorMessage(liveEvidenceError));
+          }
         }
       }
 
@@ -220,9 +247,16 @@ export default function App() {
   async function handleRunDeeperComparables() {
     if (!result) return;
 
+    const cooldownSeconds = getPmiCooldownSeconds(lastPmiAttemptAt);
+    if (cooldownSeconds > 0) {
+      setDeeperComparableError(buildPmiCooldownMessage(cooldownSeconds));
+      return;
+    }
+
     setIsRunningDeeperCheck(true);
     setDeeperComparableError(null);
     try {
+      markPmiAttempt();
       const deeperComparableEvidence = await searchPmiDeeperComparables(
         result.input,
         pmiApiKey
@@ -350,7 +384,12 @@ export default function App() {
                     <DeeperComparablePanel
                       input={result.input}
                       evidence={result.deeperComparableEvidence}
-                      canRun={Boolean(pmiApiKey.trim())}
+                      canRun={Boolean(pmiApiKey.trim()) && pmiCooldownSeconds === 0}
+                      cooldownSeconds={
+                        pmiApiKey.trim() && pmiCooldownSeconds > 0
+                          ? pmiCooldownSeconds
+                          : 0
+                      }
                       isRunning={isRunningDeeperCheck}
                       error={deeperComparableError}
                       onRun={handleRunDeeperComparables}

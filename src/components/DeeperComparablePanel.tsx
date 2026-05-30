@@ -7,6 +7,7 @@ type DeeperComparablePanelProps = {
   input: RentSearchInput;
   evidence?: DeeperComparableEvidenceResult;
   canRun: boolean;
+  cooldownSeconds: number;
   isRunning: boolean;
   error: string | null;
   onRun: () => void;
@@ -16,11 +17,13 @@ export function DeeperComparablePanel({
   input,
   evidence,
   canRun,
+  cooldownSeconds,
   isRunning,
   error,
   onRun
 }: DeeperComparablePanelProps) {
   const searchArea = evidence?.searchAreaDescription ?? derivePostcodeSectorLabel(input);
+  const isWaitingForPmi = cooldownSeconds > 0;
 
   return (
     <section
@@ -60,17 +63,21 @@ export function DeeperComparablePanel({
         )}
       </dl>
 
-      {!evidence && canRun && (
+      {!evidence && (canRun || isWaitingForPmi) && (
         <button
           type="button"
           className="secondary-button"
-          disabled={isRunning}
+          disabled={isRunning || isWaitingForPmi}
           onClick={onRun}
         >
-          {isRunning ? deeperComparableCopy.loading : deeperComparableCopy.button}
+          {isWaitingForPmi
+            ? deeperComparableCopy.wait(cooldownSeconds)
+            : isRunning
+              ? deeperComparableCopy.loading
+              : deeperComparableCopy.button}
         </button>
       )}
-      {!evidence && !canRun && (
+      {!evidence && !canRun && !isWaitingForPmi && (
         <p className="benchmark-threshold-note">{deeperComparableCopy.noKey}</p>
       )}
       {error && (

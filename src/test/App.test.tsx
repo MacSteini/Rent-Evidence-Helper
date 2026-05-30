@@ -67,6 +67,8 @@ const pmiComparablesResponse = {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 async function selectLocalAuthority(
@@ -78,6 +80,11 @@ async function selectLocalAuthority(
   });
   await user.clear(localAuthority);
   await user.type(localAuthority, localAuthorityLabels[areaCode]);
+}
+
+async function forceAppRerender(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /privacy/i }));
+  await user.keyboard("{Escape}");
 }
 
 describe("App", () => {
@@ -316,9 +323,10 @@ describe("App", () => {
       })
     );
     expect(String(fetchMock.mock.calls[0][0])).not.toContain("/prices/comparables");
-    expect(
-      screen.getByRole("button", { name: /run deeper comparable check/i })
-    ).toBeInTheDocument();
+    const deeperRunButton = screen.getByRole("button", {
+      name: /wait \d+s before running pmi again/i
+    });
+    expect(deeperRunButton).toBeDisabled();
     const deeperPanel = screen.getByRole("region", {
       name: /optional deeper PMI comparable check/i
     });
@@ -329,6 +337,7 @@ describe("App", () => {
   });
 
   it("runs the optional deeper PMI comparable check only after explicit click", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockImplementation((url: URL) => {
       if (String(url).includes("/prices/comparables")) {
@@ -360,6 +369,17 @@ describe("App", () => {
 
     await screen.findByRole("heading", { name: /live rental listings/i });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: /wait \d+s before running pmi again/i })
+    ).toBeDisabled();
+
+    nowSpy.mockReturnValue(1_010_000);
+    await forceAppRerender(user);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /run deeper comparable check/i })
+      ).toBeEnabled()
+    );
 
     await user.click(
       screen.getByRole("button", { name: /run deeper comparable check/i })
@@ -391,6 +411,7 @@ describe("App", () => {
   });
 
   it("shows a deeper comparable warning without breaking ONS and live evidence", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockImplementation((url: URL) => {
       if (String(url).includes("/prices/comparables")) {
@@ -420,6 +441,13 @@ describe("App", () => {
     await selectLocalAuthority(user);
     await user.click(screen.getByRole("button", { name: /start check/i }));
     await screen.findByRole("heading", { name: /live rental listings/i });
+    nowSpy.mockReturnValue(1_010_000);
+    await forceAppRerender(user);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /run deeper comparable check/i })
+      ).toBeEnabled()
+    );
 
     await user.click(
       screen.getByRole("button", { name: /run deeper comparable check/i })
@@ -461,6 +489,45 @@ describe("App", () => {
     expect(
       screen.queryByRole("heading", { name: /live rental listings/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("paces repeated PMI listing checks while keeping ONS available", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(pmiListingsResponse), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await screen.findByRole("heading", { name: /live rental listings/i });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    nowSpy.mockReturnValue(1_001_200);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/free tier allows 2 requests per 10 seconds/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^official area benchmark$/i })
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    nowSpy.mockReturnValue(1_010_000);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   });
 
   it("stores a PMI key only when the user opts in and can clear it", async () => {
@@ -610,6 +677,7 @@ describe("App", () => {
   });
 
   it("restores saved deeper comparable evidence after refresh without requiring a key", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockImplementation((url: URL) => {
       if (String(url).includes("/prices/comparables")) {
@@ -639,6 +707,13 @@ describe("App", () => {
     await selectLocalAuthority(user);
     await user.click(screen.getByRole("button", { name: /start check/i }));
     await screen.findByRole("heading", { name: /live rental listings/i });
+    nowSpy.mockReturnValue(1_010_000);
+    await forceAppRerender(user);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /run deeper comparable check/i })
+      ).toBeEnabled()
+    );
     await user.click(
       screen.getByRole("button", { name: /run deeper comparable check/i })
     );
