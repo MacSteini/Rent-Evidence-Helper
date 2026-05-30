@@ -5,7 +5,7 @@ export const legalContent: LegalContentItem[] = [
     id: "general-disclaimer",
     title: "General information, not legal advice",
     body:
-      "This tool is intended for rental properties in England. It gives a market-evidence indication based on available rental evidence, not legal advice, and it does not decide the legal market rent. A tribunal or court may take a different view.",
+      "This tool is intended for rental properties in England. It gives an official area-benchmark indication and optional live asking-rent context, not legal advice, and it does not decide the legal market rent. A tribunal or court may take a different view.",
     sourceUrls: [
       "https://www.gov.uk/government/publications/the-renters-rights-act-information-sheet-2026",
       "https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases"
@@ -14,7 +14,7 @@ export const legalContent: LegalContentItem[] = [
       "Renters' Rights Act information sheet",
       "Assured periodic tenancies: rent increases"
     ],
-    lastCheckedAt: "2026-05-29",
+    lastCheckedAt: "2026-05-30",
     jurisdiction: "england",
     status: "active"
   },
@@ -31,7 +31,7 @@ export const legalContent: LegalContentItem[] = [
       "Apply for an open market rent determination",
       "Assured tenancy forms"
     ],
-    lastCheckedAt: "2026-05-29",
+    lastCheckedAt: "2026-05-30",
     jurisdiction: "england",
     status: "active"
   },
@@ -48,7 +48,7 @@ export const legalContent: LegalContentItem[] = [
       "Assured tenancy forms",
       "Assured periodic tenancies: rent increases"
     ],
-    lastCheckedAt: "2026-05-29",
+    lastCheckedAt: "2026-05-30",
     jurisdiction: "england",
     status: "active"
   },
@@ -58,7 +58,7 @@ export const legalContent: LegalContentItem[] = [
     body:
       "Use this result as a market-evidence check only. Compare it with evidence you collect and check official guidance before acting. It is not legal advice and does not decide the legal market rent.",
     sourceUrls: [],
-    lastCheckedAt: "2026-05-29",
+    lastCheckedAt: "2026-05-30",
     jurisdiction: "england",
     status: "active"
   }
