@@ -98,6 +98,17 @@ export function writeStoredCheck(
   }
 }
 
+export function clearStoredCheck(): void {
+  const storage = getLocalStorage();
+  if (!storage) return;
+
+  try {
+    storage.removeItem(storageKey);
+  } catch {
+    // Clearing local refresh state must not block the active in-memory result.
+  }
+}
+
 function isStoredCheck(value: Partial<StoredCheck>): value is StoredCheck {
   return (
     value.version === storageVersion &&

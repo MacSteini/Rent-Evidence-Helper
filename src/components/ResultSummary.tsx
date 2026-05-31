@@ -1,4 +1,5 @@
 import { fieldCopy, resultCopy } from "../content/uiCopy";
+import { formatSignedCurrency, formatSignedPercent } from "../lib/displayFormat";
 import { formatCurrency } from "../lib/rentMath";
 import type { RentCheckResult } from "../types/rentCheckResult";
 
@@ -43,15 +44,4 @@ export function ResultSummary({ result }: ResultSummaryProps) {
       </dl>
     </article>
   );
-}
-
-function formatSignedCurrency(value: number): string {
-  if (value === 0) return formatCurrency(0);
-  return `${value > 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
-}
-
-function formatSignedPercent(value: number): string {
-  const rounded = Math.abs(value).toFixed(1);
-  if (value === 0) return "0.0%";
-  return `${value > 0 ? "+" : "-"}${rounded}%`;
 }

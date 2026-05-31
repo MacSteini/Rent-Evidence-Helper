@@ -1,4 +1,13 @@
 import { deeperComparableCopy } from "../content/uiCopy";
+import {
+  formatCurrencyRange,
+  formatDistance,
+  formatPropertyTypeLabel,
+  formatRecentRecordQualityLabel,
+  formatSearchAreaLabel,
+  formatSignedCurrency,
+  formatSpread
+} from "../lib/displayFormat";
 import { formatEvidenceDate, formatEvidenceDateRange } from "../lib/evidenceDates";
 import { calibrateDeeperComparableEvidence } from "../lib/liveEvidenceCalibration";
 import { formatCurrency } from "../lib/rentMath";
@@ -58,7 +67,7 @@ export function DeeperComparablePanel({
             </div>
             <div>
               <dt>Record context</dt>
-              <dd>{formatQualityLabel(calibration?.qualityLevel)}</dd>
+              <dd>{formatRecentRecordQualityLabel(calibration?.qualityLevel)}</dd>
             </div>
             <div>
               <dt>Median record rent</dt>
@@ -70,7 +79,7 @@ export function DeeperComparablePanel({
             </div>
             <div>
               <dt>Range</dt>
-              <dd>{formatRange(evidence.minimumMonthly, evidence.maximumMonthly)}</dd>
+              <dd>{formatCurrencyRange(evidence.minimumMonthly, evidence.maximumMonthly)}</dd>
             </div>
             <div>
               <dt>Record window</dt>
@@ -142,7 +151,7 @@ export function DeeperComparablePanel({
                     </td>
                     <td data-label="Type">
                       <span className="cell-label">Type</span>
-                      <span>{formatPropertyType(comparable.propertyType)}</span>
+                      <span>{formatPropertyTypeLabel(comparable.propertyType)}</span>
                     </td>
                     <td data-label="Bedrooms">
                       <span className="cell-label">Bedrooms</span>
@@ -191,44 +200,4 @@ function derivePostcodeSectorLabel(input: RentSearchInput): string {
   const parts = input.postcode.trim().toUpperCase().split(/\s+/);
   if (parts.length === 2 && parts[1]) return `${parts[0]} ${parts[1][0]}`;
   return "Postcode sector";
-}
-
-function formatSearchAreaLabel(value: string): string {
-  return value
-    .replace(/\bpostcode sector\b/g, "Postcode sector")
-    .replace(/\boutcode\b/g, "Outcode");
-}
-
-function formatRange(minimum: number | undefined, maximum: number | undefined): string {
-  if (minimum === undefined || maximum === undefined) return "Unavailable";
-  return `${formatCurrency(minimum)} to ${formatCurrency(maximum)}`;
-}
-
-function formatSignedCurrency(value: number | undefined): string {
-  if (value === undefined) return "Unavailable";
-  if (value === 0) return formatCurrency(0);
-  return `${value > 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
-}
-
-function formatSpread(value: number | undefined): string {
-  if (value === undefined) return "Range spread unavailable";
-  return `Range spread is ${value.toFixed(1)}% around the median`;
-}
-
-function formatQualityLabel(value: "limited" | "useful" | "strong" | undefined): string {
-  if (value === "limited") return "Limited";
-  if (value === "useful") return "Usable";
-  if (value === "strong") return "Broader";
-  return "Unavailable";
-}
-
-function formatDistance(value: number | undefined): string {
-  if (value === undefined) return "Unknown";
-  if (value >= 1000) return `${(value / 1000).toFixed(1)} km`;
-  return `${Math.round(value)} m`;
-}
-
-function formatPropertyType(value: string | undefined): string {
-  if (!value) return "Unknown";
-  return value.replace(/-/g, " ");
 }

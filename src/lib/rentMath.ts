@@ -19,10 +19,6 @@ export function normaliseRentToMonthly(
   return rentAmount;
 }
 
-export function monthlyToAnnual(monthlyRent: number): number {
-  return monthlyRent * 12;
-}
-
 export function formatCurrency(value: number): string {
   const hasPence = !Number.isInteger(value);
 

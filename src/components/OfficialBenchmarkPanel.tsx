@@ -2,6 +2,7 @@ import {
   officialBenchmarkCopy,
   officialBenchmarkStatusCopy
 } from "../content/uiCopy";
+import { capitaliseFirst, formatDateLong, formatMonthLong } from "../lib/displayFormat";
 import type { OfficialBenchmarkComparison } from "../types/officialRentBenchmark";
 
 type OfficialBenchmarkPanelProps = {
@@ -39,7 +40,7 @@ export function OfficialBenchmarkPanel({
         </div>
         <div>
           <dt>ONS period</dt>
-          <dd>{formatMonth(period)}</dd>
+          <dd>{formatMonthLong(period)}</dd>
         </div>
         <div>
           <dt>Selected benchmark</dt>
@@ -49,30 +50,11 @@ export function OfficialBenchmarkPanel({
 
       <p className="benchmark-threshold-note">{officialBenchmarkCopy.threshold}</p>
       <p className="benchmark-source-line">
-        Release checked: {formatDate(releaseDate)}. Source:{" "}
+        Release checked: {formatDateLong(releaseDate)}. Source:{" "}
         <a href={sourceUrl} rel="noreferrer" target="_blank">
           {officialBenchmarkCopy.sourceLabel}
         </a>
       </p>
     </section>
   );
-}
-
-function formatMonth(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    month: "long",
-    year: "numeric"
-  }).format(new Date(value));
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(new Date(value));
-}
-
-function capitaliseFirst(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

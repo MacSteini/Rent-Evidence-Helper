@@ -1,4 +1,13 @@
 import { liveEvidenceCopy } from "../content/uiCopy";
+import {
+  formatCurrencyRange,
+  formatLiveQualityLabel,
+  formatListingDate,
+  formatOptionalCurrency,
+  formatPropertyTypeLabel,
+  formatSignedCurrency,
+  formatSpread
+} from "../lib/displayFormat";
 import { calibrateLiveRentalEvidence } from "../lib/liveEvidenceCalibration";
 import { formatCurrency } from "../lib/rentMath";
 import type { LiveRentalEvidenceResult } from "../types/liveEvidence";
@@ -37,7 +46,7 @@ export function LiveEvidencePanel({
         </div>
         <div className="metric-card metric-card-wide">
           <dt>Live context quality</dt>
-          <dd>{formatQualityLabel(calibration.qualityLevel)}</dd>
+          <dd>{formatLiveQualityLabel(calibration.qualityLevel)}</dd>
         </div>
         <div className="metric-card metric-card-wide">
           <dt>Median asking rent</dt>
@@ -50,7 +59,7 @@ export function LiveEvidencePanel({
         <div className="metric-card metric-card-wide">
           <dt>Observed range</dt>
           <dd>
-            {formatRange(evidence.minimumMonthly, evidence.maximumMonthly)}
+            {formatCurrencyRange(evidence.minimumMonthly, evidence.maximumMonthly)}
           </dd>
         </div>
         <div className="metric-card">
@@ -80,7 +89,7 @@ export function LiveEvidencePanel({
                 </td>
                 <td>
                   <span className="cell-label">Type</span>
-                  {formatPropertyType(listing.propertyType)}
+                  {formatPropertyTypeLabel(listing.propertyType)}
                 </td>
                 <td>
                   <span className="cell-label">Beds</span>
@@ -125,66 +134,4 @@ export function LiveEvidencePanel({
       </div>
     </section>
   );
-}
-
-function formatOptionalCurrency(value: number | undefined): string {
-  return value === undefined ? "Unavailable" : formatCurrency(value);
-}
-
-function formatSignedCurrency(value: number | undefined): string {
-  if (value === undefined) return "Unavailable";
-  if (value === 0) return formatCurrency(0);
-  return `${value > 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
-}
-
-function formatRange(minimum: number | undefined, maximum: number | undefined): string {
-  if (minimum === undefined || maximum === undefined) return "Unavailable";
-  return `${formatCurrency(minimum)} to ${formatCurrency(maximum)}`;
-}
-
-function formatSpread(value: number | undefined): string {
-  if (value === undefined) return "Range spread unavailable";
-  return `Range spread is ${value.toFixed(1)}% around the median`;
-}
-
-function formatQualityLabel(
-  value: "limited" | "useful" | "strong"
-): string {
-  if (value === "limited") return "Limited";
-  if (value === "useful") return "Useful";
-  return "Strong";
-}
-
-function formatPropertyType(value: string | undefined): string {
-  if (!value || value === "unknown") return "Unknown";
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function formatListingDate(value: string | undefined): string {
-  const date = parseListingDate(value);
-  if (!date) return "Unknown";
-
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  }).format(date);
-}
-
-function parseListingDate(value: string | undefined): Date | null {
-  if (!value) return null;
-
-  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) return buildUtcDate(isoMatch[1], isoMatch[2], isoMatch[3]);
-
-  const ukMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (ukMatch) return buildUtcDate(ukMatch[3], ukMatch[2], ukMatch[1]);
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function buildUtcDate(year: string, month: string, day: string): Date | null {
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-  return Number.isNaN(date.getTime()) ? null : date;
 }

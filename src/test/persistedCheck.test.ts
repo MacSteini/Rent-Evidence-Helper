@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { readStoredCheck, writeStoredCheck } from "../lib/persistedCheck";
+import {
+  clearStoredCheck,
+  readStoredCheck,
+  writeStoredCheck
+} from "../lib/persistedCheck";
 import type {
   OfficialBenchmarkComparison,
   OfficialRentBenchmark
@@ -156,5 +160,22 @@ describe("persisted check", () => {
 
     expect(readStoredCheck("different-source-hash")).toBeNull();
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+  });
+
+  it("clears only the saved check and leaves the PMI key alone", () => {
+    writeStoredCheck(
+      input,
+      comparison,
+      { warnings: [], evidenceMode: "official-only" },
+      sourceSha256
+    );
+    window.localStorage.setItem("market-rent-check-pmi-api-key", "pmi_live_test");
+
+    clearStoredCheck();
+
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+    expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBe(
+      "pmi_live_test"
+    );
   });
 });

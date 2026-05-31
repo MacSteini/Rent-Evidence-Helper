@@ -1,5 +1,11 @@
 import type { OfficialBenchmarkStatus } from "../types/officialRentBenchmark";
-import type { ResultCopy } from "../types/rent";
+
+type ResultCopy = {
+  headline: string;
+  summary: string;
+  nextStepIntro: string;
+  severity: "neutral" | "notice" | "warning";
+};
 
 export const fieldCopy = {
   postcodeHint:
@@ -148,6 +154,14 @@ export const evidenceSummaryCopy = {
     "Use the ONS benchmark as the main result and collect your own evidence before acting."
 };
 
+export const savedResultCopy = {
+  title: "Saved result",
+  body:
+    "This completed check is saved in this browser so it can survive a refresh. Clear it if you are using a shared device.",
+  clearButton: "Clear saved result",
+  clearNote: "This does not clear your Property Market Intel API key."
+};
+
 export const disputeSupportCopy = {
   title: "Dispute support",
   summary:
@@ -237,7 +251,7 @@ export const methodologyCopy = [
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional recent rented-record check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the ONS area benchmark.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. It keeps three local states separate: the API key in the current tab, an optional remembered API key on this device, and the latest completed check saved in this browser for refresh recovery. You can clear the saved result without clearing the API key, and Clear key removes the key without clearing the result. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional recent rented-record check sends the postcode sector, not the full postcode. Local Authority is selected manually and is used for the ONS area benchmark.";
 
 export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
   below_benchmark: {

@@ -8,6 +8,7 @@ import { NextStepsPanel } from "./components/NextStepsPanel";
 import { OfficialBenchmarkPanel } from "./components/OfficialBenchmarkPanel";
 import { RentCheckForm } from "./components/RentCheckForm";
 import { ResultSummary } from "./components/ResultSummary";
+import { SavedResultControls } from "./components/SavedResultControls";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { appConfig } from "./config/appConfig";
 import { jurisdictionCopy, methodologyCopy, privacyCopy } from "./content/uiCopy";
@@ -18,7 +19,11 @@ import {
   listOfficialBenchmarkAreas,
   validateOfficialRentBenchmarkDataset
 } from "./lib/officialRentBenchmarks";
-import { readStoredCheck, writeStoredCheck } from "./lib/persistedCheck";
+import {
+  clearStoredCheck,
+  readStoredCheck,
+  writeStoredCheck
+} from "./lib/persistedCheck";
 import {
   clearStoredPmiApiKey,
   readStoredPmiApiKey,
@@ -229,6 +234,14 @@ export default function App() {
     handleInputChange();
   }
 
+  function handleClearSavedResult() {
+    clearStoredCheck();
+    setResult(null);
+    setHasStartedCheck(false);
+    setError(null);
+    setDeeperComparableError(null);
+  }
+
   async function handleRunDeeperComparables() {
     if (!result) return;
 
@@ -349,6 +362,7 @@ export default function App() {
               {result ? (
                 <div className="result-stack">
                   <ResultSummary result={result} />
+                  <SavedResultControls onClear={handleClearSavedResult} />
                   <EvidenceSummaryPanel result={result} />
                   <OfficialBenchmarkPanel
                     comparison={result.officialBenchmarkComparison}

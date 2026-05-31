@@ -843,6 +843,36 @@ describe("App", () => {
     );
   });
 
+  it("lets the user clear the saved result without clearing the PMI key", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByLabelText(/rent check result/i)
+    ).toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeTruthy();
+
+    window.localStorage.setItem("market-rent-check-pmi-api-key", "pmi_live_test");
+
+    expect(
+      screen.getByRole("region", { name: /saved result/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not clear your property market intel api key/i)
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /clear saved result/i }));
+
+    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+    expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBe(
+      "pmi_live_test"
+    );
+  });
+
   it("restores saved deeper comparable evidence after refresh without requiring a key", async () => {
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
     const user = userEvent.setup();
