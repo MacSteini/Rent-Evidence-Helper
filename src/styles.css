@@ -1026,8 +1026,8 @@ textarea {
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, max-content));
-  justify-content: center;
+  grid-template-columns: 1fr;
+  justify-content: stretch;
   align-items: stretch;
   gap: 0.65rem;
   margin: 1rem 0;
@@ -1088,7 +1088,7 @@ textarea {
   display: grid;
   justify-items: center;
   align-content: center;
-  min-width: 8.5rem;
+  min-width: 0;
   min-height: 5.2rem;
   padding: 0.75rem 0.9rem;
   border: 1px solid var(--border);
@@ -1098,11 +1098,11 @@ textarea {
 }
 
 .metric-card-wide {
-  min-width: min(100%, 14rem);
+  min-width: 0;
 }
 
 .metric-card-compact {
-  min-width: 7rem;
+  min-width: 0;
 }
 
 dt {
@@ -1423,6 +1423,10 @@ th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .api-key-actions {
     flex-direction: row;
     align-items: center;
@@ -1582,6 +1586,10 @@ th {
 
   .guidance-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
