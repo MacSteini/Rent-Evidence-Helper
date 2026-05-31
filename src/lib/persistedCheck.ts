@@ -135,6 +135,10 @@ function isRentSearchInput(value: unknown): value is RentSearchInput {
     typeof input.localAuthorityCode === "string" &&
     input.localAuthorityCode.trim() !== "" &&
     typeof input.rentAmount === "number" &&
+    (input.currentRentBeforeIncrease === undefined ||
+      (typeof input.currentRentBeforeIncrease === "number" &&
+        Number.isFinite(input.currentRentBeforeIncrease) &&
+        input.currentRentBeforeIncrease > 0)) &&
     typeof input.rentPeriod === "string" &&
     typeof input.propertyType === "string" &&
     typeof input.bedrooms === "number" &&

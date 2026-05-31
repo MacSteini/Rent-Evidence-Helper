@@ -4,6 +4,10 @@ import {
   calibrateDeeperComparableEvidence,
   calibrateLiveRentalEvidence
 } from "./liveEvidenceCalibration";
+import {
+  calculateProposedIncrease,
+  isRentIncreaseContext
+} from "./proposedIncrease";
 import type { RentCheckResult } from "../types/rentCheckResult";
 import type {
   DisputeEvidenceOptionAdvisory,
@@ -201,14 +205,15 @@ export function buildDisputeMessageTemplate(
   const { input } = result;
   const evidenceAdvisories = getDisputeEvidenceOptionAdvisories(result);
   const rentLabel = `${formatCurrency(input.rentAmount)} per ${input.rentPeriod}`;
+  const isIncrease = isRentIncreaseContext(input);
   const postcode = input.postcode.trim().toUpperCase();
   const intro =
     templateId === "ask-for-evidence"
-      ? `I am writing to ask for the evidence used to assess the rent of ${rentLabel}.`
+      ? `I am writing to ask for the evidence used to assess the ${isIncrease ? "proposed rent" : "rent"} of ${rentLabel}.`
       : templateId === "negotiate-informally"
-        ? `I am writing to discuss the rent of ${rentLabel} and to see whether we can resolve this informally.`
+        ? `I am writing to discuss the ${isIncrease ? "proposed rent" : "rent"} of ${rentLabel} and to see whether we can resolve this informally.`
         : templateId === "formal-notice-query"
-          ? `I am writing about the rent increase notice I have received for ${rentLabel}.`
+          ? `I am writing about the rent increase notice I have received for the proposed rent of ${rentLabel}.`
           : `I am writing because I am checking the official guidance on rent increases and open market rent determination.`;
 
   const paragraphs = [
@@ -216,6 +221,11 @@ export function buildDisputeMessageTemplate(
     intro,
     `For context, the rental property postcode I entered is ${postcode}.`
   ];
+
+  const proposedIncrease = calculateProposedIncrease(input);
+  if (proposedIncrease) {
+    paragraphs.push(buildProposedIncreaseParagraph(proposedIncrease));
+  }
 
   if (
     selection.includeOnsBenchmark &&
@@ -297,6 +307,16 @@ function isEvidenceOptionAllowed(
 function buildOnsParagraph(result: RentCheckResult): string {
   const comparison = result.officialBenchmarkComparison;
   return `I checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. This is a Local Authority benchmark, not a figure for the individual postcode. For ${comparison.selection.label}, the area benchmark is ${formatCurrency(comparison.selection.monthlyRent)} per month. The monthly rent I entered is ${formatCurrency(comparison.userRentMonthly)}, which is ${formatSignedCurrency(comparison.differenceMonthly)} (${formatSignedPercent(comparison.percentageDifference)}) compared with that benchmark.`;
+}
+
+function buildProposedIncreaseParagraph(
+  proposedIncrease: NonNullable<ReturnType<typeof calculateProposedIncrease>>
+): string {
+  return [
+    `My current rent is ${formatCurrency(proposedIncrease.currentRentMonthly)} per month.`,
+    `The proposed rent is ${formatCurrency(proposedIncrease.proposedRentMonthly)} per month, an increase of ${formatCurrency(proposedIncrease.increaseMonthly)} per month, or ${formatUnsignedPercent(proposedIncrease.increasePercent)}.`,
+    `This is ${formatCurrency(proposedIncrease.increaseYearly)} more per year.`
+  ].join(" ");
 }
 
 function getOnsAdvisory(result: RentCheckResult): DisputeEvidenceOptionAdvisory {
@@ -497,4 +517,8 @@ function formatSignedPercent(value: number): string {
   const rounded = Math.abs(value).toFixed(1);
   if (value === 0) return "0.0%";
   return `${value > 0 ? "+" : "-"}${rounded}%`;
+}
+
+function formatUnsignedPercent(value: number): string {
+  return `${Math.abs(value).toFixed(1)}%`;
 }

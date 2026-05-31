@@ -61,6 +61,12 @@ export function RentCheckForm({
   const [rentAmountText, setRentAmountText] = useState(
     String(initialInput.rentAmount)
   );
+  const [currentRentBeforeIncreaseText, setCurrentRentBeforeIncreaseText] =
+    useState(
+      initialInput.currentRentBeforeIncrease
+        ? String(initialInput.currentRentBeforeIncrease)
+        : ""
+    );
   const [localAuthorityText, setLocalAuthorityText] = useState(() =>
     getLocalAuthorityLabel(initialInput.localAuthorityCode, localAuthorityOptions)
   );
@@ -78,6 +84,31 @@ export function RentCheckForm({
     const sanitisedValue = sanitiseRentAmountInput(value);
     setRentAmountText(sanitisedValue);
     update("rentAmount", parseRentAmountInput(sanitisedValue));
+  }
+
+  function updateCurrentRentBeforeIncrease(value: string) {
+    const sanitisedValue = sanitiseRentAmountInput(value);
+    const parsedValue = parseRentAmountInput(sanitisedValue);
+    setCurrentRentBeforeIncreaseText(sanitisedValue);
+    update(
+      "currentRentBeforeIncrease",
+      Number.isFinite(parsedValue) ? parsedValue : undefined
+    );
+  }
+
+  function updateTenancyContext(value: TenancyContext) {
+    if (value === "current-rent-only") {
+      setCurrentRentBeforeIncreaseText("");
+      setInput((current) => ({
+        ...current,
+        tenancyContext: value,
+        currentRentBeforeIncrease: undefined
+      }));
+      onInputChange();
+      return;
+    }
+
+    update("tenancyContext", value);
   }
 
   function updateLocalAuthority(value: string) {
@@ -121,6 +152,22 @@ export function RentCheckForm({
     }
     if (input.rentAmount > 50_000) {
       nextErrors.rentAmount = "Enter a monthly-equivalent rent below £50,000.";
+    }
+    if (
+      input.tenancyContext !== "current-rent-only" &&
+      currentRentBeforeIncreaseText.trim() !== ""
+    ) {
+      if (
+        !Number.isFinite(input.currentRentBeforeIncrease) ||
+        input.currentRentBeforeIncrease === undefined ||
+        input.currentRentBeforeIncrease <= 0
+      ) {
+        nextErrors.currentRentBeforeIncrease =
+          "Enter a current rent greater than zero.";
+      } else if (input.currentRentBeforeIncrease >= input.rentAmount) {
+        nextErrors.currentRentBeforeIncrease =
+          "Enter a current rent below the proposed new rent, or change the situation.";
+      }
     }
     if (input.bedrooms < 0 || input.bedrooms > 10) {
       nextErrors.bedrooms = "Enter a bedroom count between 0 and 10.";
@@ -169,6 +216,8 @@ export function RentCheckForm({
     setSubmitGuardMessage(null);
     onSubmit(input);
   }
+
+  const isIncreaseContext = input.tenancyContext !== "current-rent-only";
 
   return (
     <form
@@ -224,10 +273,14 @@ export function RentCheckForm({
 
       <div className="field-grid">
         <TextField
-          label="Rent amount"
+          label={isIncreaseContext ? "Proposed new rent" : "Current rent"}
           value={rentAmountText}
           required
-          hint={fieldCopy.rentHint}
+          hint={
+            isIncreaseContext
+              ? fieldCopy.proposedRentHint
+              : fieldCopy.currentRentHint
+          }
           error={errors.rentAmount}
           maxLength={10}
           inputMode="decimal"
@@ -245,6 +298,19 @@ export function RentCheckForm({
           onChange={(value) => update("rentPeriod", value as RentPeriod)}
         />
       </div>
+
+      {isIncreaseContext && (
+        <TextField
+          label="Current rent before increase"
+          value={currentRentBeforeIncreaseText}
+          hint={fieldCopy.currentRentBeforeIncreaseHint}
+          error={errors.currentRentBeforeIncrease}
+          maxLength={10}
+          inputMode="decimal"
+          pattern="[0-9]*[.]?[0-9]{0,2}"
+          onChange={updateCurrentRentBeforeIncrease}
+        />
+      )}
 
       <div className="field-grid">
         <SelectField
@@ -337,7 +403,7 @@ export function RentCheckForm({
             ["informal-proposed-increase", "Landlord proposed an increase informally"],
             ["formal-form-4a-section-13", "Form 4A / section 13 notice"]
           ]}
-          onChange={(value) => update("tenancyContext", value as TenancyContext)}
+          onChange={(value) => updateTenancyContext(value as TenancyContext)}
         />
       </div>
 

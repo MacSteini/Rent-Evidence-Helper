@@ -738,6 +738,47 @@ describe("App", () => {
     ).toBe(true);
   });
 
+  it("shows proposed-increase rent context only for increase situations", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.getByLabelText(/current rent/i, { selector: "input" }))
+      .toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/current rent before increase/i)
+    ).not.toBeInTheDocument();
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /situation/i }),
+      "informal-proposed-increase"
+    );
+
+    expect(screen.getByLabelText(/proposed new rent/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/current rent before increase/i)
+    ).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(/current rent before increase/i));
+    await user.type(screen.getByLabelText(/current rent before increase/i), "2500");
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/enter a current rent below the proposed new rent/i)
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByLabelText(/current rent before increase/i)).toHaveFocus()
+    );
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /situation/i }),
+      "formal-form-4a-section-13"
+    );
+
+    expect(screen.getByLabelText(/proposed new rent/i)).toBeInTheDocument();
+    expect(screen.getByText(/optional notice questions/i)).toBeInTheDocument();
+  });
+
   it("updates and copies a dispute support template", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
@@ -753,6 +794,7 @@ describe("App", () => {
       screen.getByRole("combobox", { name: /situation/i }),
       "informal-proposed-increase"
     );
+    await user.type(screen.getByLabelText(/current rent before increase/i), "1800");
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     await waitFor(() =>
@@ -761,6 +803,9 @@ describe("App", () => {
     expect(
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
     ).toContain("Dear Landlord/Landlady/Agent");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("My current rent is £1,800 per month");
     expect(
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
     ).toContain("ONS monthly private rent estimate");
@@ -814,8 +859,11 @@ describe("App", () => {
     await selectLocalAuthority(user, "E09000009");
     await user.clear(screen.getByLabelText(/postcode/i));
     await user.type(screen.getByLabelText(/postcode/i), "W25BQ");
-    await user.clear(screen.getByLabelText(/rent amount/i));
-    await user.type(screen.getByLabelText(/rent amount/i), "2200");
+    await user.clear(screen.getByLabelText(/current rent/i, { selector: "input" }));
+    await user.type(
+      screen.getByLabelText(/current rent/i, { selector: "input" }),
+      "2200"
+    );
     await user.clear(screen.getByLabelText(/bedrooms/i));
     await user.type(screen.getByLabelText(/bedrooms/i), "4");
     await user.click(screen.getByRole("button", { name: /start check/i }));
@@ -1096,7 +1144,9 @@ describe("App", () => {
     render(<App />);
 
     await selectLocalAuthority(user);
-    const rentAmount = screen.getByLabelText(/rent amount/i);
+    const rentAmount = screen.getByLabelText(/current rent/i, {
+      selector: "input"
+    });
     await user.clear(rentAmount);
     await user.type(rentAmount, "£0<script>");
     await user.click(screen.getByRole("button", { name: /start check/i }));

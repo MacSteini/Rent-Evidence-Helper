@@ -123,6 +123,28 @@ describe("dispute support templates", () => {
     expect(message).not.toContain("proposed start date:");
   });
 
+  it("summarises the proposed increase when current rent is provided", () => {
+    const result = buildResult({
+      input: {
+        ...buildResult().input,
+        tenancyContext: "informal-proposed-increase",
+        rentAmount: 2200,
+        currentRentBeforeIncrease: 1800
+      }
+    });
+
+    const message = buildDisputeMessageTemplate(
+      result,
+      "ask-for-evidence",
+      getDefaultDisputeSupportSelection(result)
+    );
+
+    expect(message).toContain(
+      "My current rent is £1,800 per month. The proposed rent is £2,200 per month, an increase of £400 per month, or 22.2%."
+    );
+    expect(message).toContain("£4,800 more per year");
+  });
+
   it("renders formal notice query details for Form 4A or section 13 contexts", () => {
     const formalResult = buildResult({
       input: {

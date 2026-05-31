@@ -32,6 +32,7 @@ export type RentSearchInput = {
   postcodeSector?: string;
   localAuthorityCode: string;
   rentAmount: number;
+  currentRentBeforeIncrease?: number;
   rentPeriod: RentPeriod;
   propertyType: PropertyType;
   bedrooms: number;

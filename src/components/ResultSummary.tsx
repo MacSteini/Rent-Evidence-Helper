@@ -1,5 +1,6 @@
 import { fieldCopy, resultCopy } from "../content/uiCopy";
 import { formatSignedCurrency, formatSignedPercent } from "../lib/displayFormat";
+import { isRentIncreaseContext } from "../lib/proposedIncrease";
 import { formatCurrency } from "../lib/rentMath";
 import type { RentCheckResult } from "../types/rentCheckResult";
 
@@ -26,7 +27,11 @@ export function ResultSummary({ result }: ResultSummaryProps) {
 
       <dl className="metric-grid">
         <div className="metric-card">
-          <dt>Your monthly rent</dt>
+          <dt>
+            {isRentIncreaseContext(result.input)
+              ? "Proposed monthly rent"
+              : "Your monthly rent"}
+          </dt>
           <dd>{formatCurrency(comparison.userRentMonthly)}</dd>
         </div>
         <div className="metric-card metric-card-wide">

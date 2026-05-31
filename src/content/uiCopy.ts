@@ -12,7 +12,10 @@ export const fieldCopy = {
     "Use the rental property's UK postcode.",
   localAuthorityHint:
     "This is used only for the ONS area benchmark.",
-  rentHint: "Enter the current rent or proposed new rent.",
+  currentRentHint: "Enter the rent currently being paid.",
+  proposedRentHint: "Enter the new rent being requested.",
+  currentRentBeforeIncreaseHint:
+    "Optional, but useful for letters. Use the rent being paid before this proposed increase, using the same rent period.",
   evidenceNotice:
     "Use this as evidence, not a decision. ONS data is an area benchmark; Property Market Intel data is live asking-rent evidence when you provide a key. Check official guidance before acting or sending any formal challenge."
 };
