@@ -286,6 +286,9 @@ describe("App", () => {
       screen.getByRole("heading", { name: /open market rent determination/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/timing rules before any proposed start date/i)
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("heading", { name: /renters' rights act information/i })
     ).toBeInTheDocument();
     expect(
@@ -665,6 +668,9 @@ describe("App", () => {
     expect(
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
     ).not.toContain("comparable data points");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("similar nearby properties or agreed lettings");
 
     await user.click(
       screen.getByRole("checkbox", { name: /include ONS benchmark summary/i })

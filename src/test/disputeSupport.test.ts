@@ -21,9 +21,10 @@ describe("dispute support templates", () => {
     expect(message).toContain("official area benchmark is £2,050 per month");
     expect(message).toContain("+£400 (+19.5%)");
     expect(message).toContain("written evidence and calculation");
+    expect(message).toContain("similar nearby properties or agreed lettings");
     expect(message).toContain("not legal advice");
     expect(message).toContain("not a tribunal decision");
-    expect(message).toContain("does not pause or extend any tribunal deadline");
+    expect(message).toContain("does not pause, extend or satisfy any tribunal deadline");
     expect(message).not.toMatch(/fair rent|proved|guaranteed/i);
   });
 
@@ -128,6 +129,21 @@ describe("dispute support templates", () => {
     expect(message).toContain("proposed start date: 2026-07-01");
     expect(message).toContain("the notice refers to Form 4A");
     expect(message).toContain("the notice refers to section 13");
+    expect(message).toContain("basis on which you consider the notice process applies");
+  });
+
+  it("keeps tribunal route preparation cautious about timing and legal effect", () => {
+    const result = buildResult();
+    const message = buildDisputeMessageTemplate(
+      result,
+      "tribunal-route-preparation",
+      getDefaultDisputeSupportSelection(result)
+    );
+
+    expect(message).toContain("check the official GOV.UK guidance promptly");
+    expect(message).toContain("what timing rules I need to consider");
+    expect(message).toContain("this message does not pause, extend or satisfy any tribunal deadline");
+    expect(message).not.toMatch(/guaranteed|deadline is extended|fair rent/i);
   });
 });
 

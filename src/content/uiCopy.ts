@@ -8,7 +8,7 @@ export const fieldCopy = {
     "This is used only for the official ONS area benchmark.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
-    "Use this as evidence, not a decision. ONS data is an official area benchmark; Property Market Intel data is live asking-rent evidence when you provide a key. Check official guidance before acting."
+    "Use this as evidence, not a decision. ONS data is an official area benchmark; Property Market Intel data is live asking-rent evidence when you provide a key. Check official guidance before acting or sending any formal challenge."
 };
 
 export const jurisdictionCopy = {
@@ -149,9 +149,9 @@ export const evidenceSummaryCopy = {
 export const disputeSupportCopy = {
   title: "Dispute support",
   summary:
-    "Use these templates to ask for evidence, explain what you want to resolve, and check official routes. Edit any message before sending it.",
+    "Use these templates to ask for evidence, explain what you want to resolve, and check official routes before you decide what to do next. Edit any message before sending it.",
   note:
-    "Sending a message does not pause or extend any tribunal deadline and is not a substitute for legal advice.",
+    "Sending a message does not pause, extend or satisfy any tribunal deadline and is not a substitute for legal advice.",
   templateLabel: "Choose a message template",
   optionLegend: "Tailor the message",
   editableLabel: "Editable message",
@@ -162,7 +162,7 @@ export const disputeSupportCopy = {
   templates: {
     "ask-for-evidence": {
       title: "Ask for evidence",
-      summary: "Ask for the calculation and rental evidence behind the rent."
+      summary: "Ask for the calculation and written rental evidence behind the rent."
     },
     "negotiate-informally": {
       title: "Negotiate informally",
@@ -174,7 +174,7 @@ export const disputeSupportCopy = {
     },
     "tribunal-route-preparation": {
       title: "Tribunal route preparation",
-      summary: "Say that you may check official tribunal guidance if needed."
+      summary: "Say that you will check official tribunal guidance promptly if needed."
     }
   },
   options: {
@@ -188,26 +188,26 @@ export const disputeSupportCopy = {
   },
   officialRoutesTitle: "Official routes to check",
   officialRoutesSummary:
-    "Use official guidance to understand the process before you act.",
+    "Use official guidance to understand the process, forms, evidence and timing before you act.",
   officialRoutes: [
     {
       title: "Rent increase rules",
       description:
-        "Use this to check the general GOV.UK explanation of assured periodic tenancy rent increases.",
+        "Use this to check when an assured periodic tenancy rent increase can happen, how much notice is needed and when Form 4A / section 13 may apply.",
       href: "https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases",
       label: "Assured periodic tenancies: rent increases"
     },
     {
       title: "Assured tenancy forms",
       description:
-        "Use this to find the current prescribed forms, including Form 4A where the section 13 process applies.",
+        "Use this to find the current prescribed forms and check whether the form named in a notice matches the current official forms for England.",
       href: "https://www.gov.uk/guidance/assured-tenancy-forms",
       label: "Assured tenancy forms"
     },
     {
       title: "Open market rent determination",
       description:
-        "Use this to check whether applying to the First-tier Tribunal may be available, plus fees, forms and timing.",
+        "Use this to check whether the First-tier Tribunal route may be available, what evidence can help, fees, forms and the timing rules before any proposed start date.",
       href: "https://www.gov.uk/guidance/apply-for-an-open-market-rent-determination",
       label: "Apply for an open market rent determination"
     },
@@ -230,11 +230,12 @@ export const methodologyCopy = [
   "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add context but do not change the ONS-based status or tribunal rules.",
   "The PMI quality labels look at usable row count, rent spread and whether dates are present. A range spread above 60% forces a limited context label even when there are 10 rows.",
   "If live listings and deeper comparables point to materially different rent levels, the app warns you to treat PMI as context only.",
-  "The ONS benchmark is an area-level estimate. Live listings and deeper PMI comparables are context only. None of these sources is a tribunal decision or legal advice."
+  "The ONS benchmark is an area-level estimate. Live listings and deeper PMI comparables are context only. None of these sources is a tribunal decision or legal advice.",
+  "Dispute support templates are generated locally from the result and your selected options. They do not send data to AI services and do not calculate or satisfy tribunal deadlines."
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional deeper comparable check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional deeper comparable check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
 
 export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
   below_benchmark: {

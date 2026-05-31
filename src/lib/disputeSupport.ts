@@ -85,19 +85,19 @@ export function buildDisputeMessageTemplate(
 
   if (selection.requestWrittenEvidence) {
     paragraphs.push(
-      "Please could you provide the written evidence and calculation used to support the rent or proposed rent?"
+      "Please could you provide the written evidence and calculation used to support the rent or proposed rent, including any similar nearby properties or agreed lettings you relied on?"
     );
   }
 
   if (templateId === "formal-notice-query") {
     paragraphs.push(
-      "Please could you also confirm whether the notice is intended to be a Form 4A / section 13 notice, the date it was served, and the date the proposed rent would start?"
+      "Please could you also confirm whether the notice is intended to be a Form 4A / section 13 notice, the date it was served, the date the proposed rent would start, and the basis on which you consider the notice process applies?"
     );
   }
 
   if (templateId === "tribunal-route-preparation") {
     paragraphs.push(
-      "If we cannot resolve this informally, I may check the official GOV.UK guidance on whether the First-tier Tribunal open market rent determination process applies."
+      "If we cannot resolve this informally, I will check the official GOV.UK guidance promptly to understand whether the First-tier Tribunal open market rent determination process may apply and what timing rules I need to consider."
     );
   }
 
@@ -109,7 +109,7 @@ export function buildDisputeMessageTemplate(
 
   if (selection.includeCaveat) {
     paragraphs.push(
-      "I understand that this evidence is for context only. It is not legal advice, not a tribunal decision, and it does not pause or extend any tribunal deadline."
+      "I understand that this evidence is for context only. It is not legal advice, not a tribunal decision, and this message does not pause, extend or satisfy any tribunal deadline."
     );
   }
 
