@@ -572,6 +572,18 @@ legend {
   align-items: stretch;
 }
 
+.api-key-actions .checkbox-row,
+.api-key-actions .text-button {
+  min-height: 2rem;
+  margin-bottom: 0;
+  line-height: 1.15;
+}
+
+.api-key-actions .text-button {
+  display: inline-flex;
+  align-items: center;
+}
+
 .text-button {
   border: 0;
   padding: 0;
