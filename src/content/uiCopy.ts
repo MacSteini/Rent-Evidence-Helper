@@ -146,6 +146,81 @@ export const evidenceSummaryCopy = {
     "Use the ONS benchmark as the main result and collect your own evidence before acting."
 };
 
+export const disputeSupportCopy = {
+  title: "Dispute support",
+  summary:
+    "Use these templates to ask for evidence, explain what you want to resolve, and check official routes. Edit any message before sending it.",
+  note:
+    "Sending a message does not pause or extend any tribunal deadline and is not a substitute for legal advice.",
+  templateLabel: "Choose a message template",
+  optionLegend: "Tailor the message",
+  editableLabel: "Editable message",
+  copyButton: "Copy this message",
+  copiedButton: "Message copied.",
+  copyError:
+    "The message could not be copied. Select the text and copy it manually.",
+  templates: {
+    "ask-for-evidence": {
+      title: "Ask for evidence",
+      summary: "Ask for the calculation and rental evidence behind the rent."
+    },
+    "negotiate-informally": {
+      title: "Negotiate informally",
+      summary: "Ask for a calm discussion and a chance to resolve the issue."
+    },
+    "formal-notice-query": {
+      title: "Formal notice query",
+      summary: "Ask about Form 4A / section 13 notice details."
+    },
+    "tribunal-route-preparation": {
+      title: "Tribunal route preparation",
+      summary: "Say that you may check official tribunal guidance if needed."
+    }
+  },
+  options: {
+    includeOnsBenchmark: "Include ONS benchmark summary",
+    includePmiLive: "Include PMI live-listings context",
+    includePmiDeeper: "Include deeper PMI comparable context",
+    requestWrittenEvidence: "Ask for written evidence",
+    askForInformalResolution: "Ask to resolve this informally",
+    includeFormalNoticeDetails: "Mention recorded notice details",
+    includeCaveat: "Keep evidence and deadline caveat"
+  },
+  officialRoutesTitle: "Official routes to check",
+  officialRoutesSummary:
+    "Use official guidance to understand the process before you act.",
+  officialRoutes: [
+    {
+      title: "Rent increase rules",
+      description:
+        "Use this to check the general GOV.UK explanation of assured periodic tenancy rent increases.",
+      href: "https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases",
+      label: "Assured periodic tenancies: rent increases"
+    },
+    {
+      title: "Assured tenancy forms",
+      description:
+        "Use this to find the current prescribed forms, including Form 4A where the section 13 process applies.",
+      href: "https://www.gov.uk/guidance/assured-tenancy-forms",
+      label: "Assured tenancy forms"
+    },
+    {
+      title: "Open market rent determination",
+      description:
+        "Use this to check whether applying to the First-tier Tribunal may be available, plus fees, forms and timing.",
+      href: "https://www.gov.uk/guidance/apply-for-an-open-market-rent-determination",
+      label: "Apply for an open market rent determination"
+    },
+    {
+      title: "Renters' Rights Act information",
+      description:
+        "Use this for official context on reforms. It does not decide an individual rent dispute.",
+      href: "https://www.gov.uk/government/publications/the-renters-rights-act-information-sheet-2026",
+      label: "Renters' Rights Act information sheet"
+    }
+  ]
+};
+
 export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",

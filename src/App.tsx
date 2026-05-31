@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DeeperComparablePanel } from "./components/DeeperComparablePanel";
+import { DisputeSupportPanel } from "./components/DisputeSupportPanel";
 import { EvidenceSummaryPanel } from "./components/EvidenceSummaryPanel";
 import { InfoDialog } from "./components/InfoDialog";
 import { LiveEvidencePanel } from "./components/LiveEvidencePanel";
@@ -7,12 +8,10 @@ import { NextStepsPanel } from "./components/NextStepsPanel";
 import { OfficialBenchmarkPanel } from "./components/OfficialBenchmarkPanel";
 import { RentCheckForm } from "./components/RentCheckForm";
 import { ResultSummary } from "./components/ResultSummary";
-import { CopyableMessage } from "./components/CopyableMessage";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { appConfig } from "./config/appConfig";
 import { jurisdictionCopy, methodologyCopy, privacyCopy } from "./content/uiCopy";
 import officialBenchmarkDatasetJson from "./data/official-rent-benchmarks.json";
-import { buildLandlordMessage } from "./lib/landlordMessage";
 import {
   compareRentWithOfficialBenchmark,
   findOfficialBenchmarkByAreaCode,
@@ -43,11 +42,6 @@ const officialBenchmarkDataset =
   officialBenchmarkDatasetJson as OfficialRentBenchmarkDataset;
 validateOfficialRentBenchmarkDataset(officialBenchmarkDataset);
 const localAuthorityOptions = listOfficialBenchmarkAreas(officialBenchmarkDataset);
-
-const messageEligibleContexts = new Set<RentSearchInput["tenancyContext"]>([
-  "informal-proposed-increase",
-  "formal-form-4a-section-13"
-]);
 
 const initialInput: RentSearchInput = {
   postcode: "SW12 8AA",
@@ -98,15 +92,6 @@ export default function App() {
   >(null);
   const resultSectionRef = useRef<HTMLElement>(null);
   const pmiCooldownSeconds = getPmiCooldownSeconds(lastPmiAttemptAt);
-
-  const landlordMessage = useMemo(() => {
-    if (!result) return "";
-    if (!messageEligibleContexts.has(result.input.tenancyContext)) return "";
-    return buildLandlordMessage(
-      result.input,
-      result.officialBenchmarkComparison
-    );
-  }, [result]);
 
   useEffect(() => {
     if (!result) return;
@@ -407,7 +392,7 @@ export default function App() {
                     status={result.officialBenchmarkComparison.status}
                     evidenceMode={result.evidenceMode}
                   />
-                  {landlordMessage && <CopyableMessage message={landlordMessage} />}
+                  <DisputeSupportPanel result={result} />
                 </div>
               ) : (
                 <div className="empty-state">

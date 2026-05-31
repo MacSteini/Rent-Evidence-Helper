@@ -167,7 +167,7 @@ describe("App", () => {
     expect(scopeButton).toHaveFocus();
   });
 
-  it("lets a user complete the default current-rent check without showing the landlord message template", async () => {
+  it("lets a user complete the default current-rent check with dispute support", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -262,9 +262,38 @@ describe("App", () => {
     expect(screen.queryByText(/median comparable/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Comparables$/i)).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: /message template/i })
+      screen.getByRole("heading", { name: /dispute support/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /choose a message template/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: /formal notice query/i })
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/editable message/i)).not.toBeInTheDocument();
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toMatch(/postcode.*SW12 8AA/i);
+    expect(
+      screen.getByRole("heading", { name: /official routes to check/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /rent increase rules/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /assured tenancy forms/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /open market rent determination/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /renters' rights act information/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /manual evidence/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /export|print|report/i })
+    ).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -604,7 +633,7 @@ describe("App", () => {
     ).toBe(true);
   });
 
-  it("shows and copies a landlord message only for a rent-increase situation", async () => {
+  it("updates and copies a dispute support template", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
@@ -632,13 +661,21 @@ describe("App", () => {
     ).toContain("ONS monthly private rent estimate");
     expect(
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
-    ).toContain("postcode SW12 8AA");
+    ).toMatch(/postcode.*SW12 8AA/i);
     expect(
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
     ).not.toContain("comparable data points");
 
     await user.click(
-      screen.getByRole("button", { name: /copy message/i })
+      screen.getByRole("checkbox", { name: /include ONS benchmark summary/i })
+    );
+
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).not.toContain("ONS monthly private rent estimate");
+
+    await user.click(
+      screen.getByRole("button", { name: /copy this message/i })
     );
 
     expect(writeText).toHaveBeenCalled();
@@ -646,6 +683,43 @@ describe("App", () => {
       await screen.findByRole("button", { name: /message copied/i })
     ).toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("shows formal notice support only for Form 4A or section 13 situations", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await selectLocalAuthority(user);
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /situation/i }),
+      "formal-form-4a-section-13"
+    );
+    await user.type(screen.getByLabelText(/date notice was received/i), "2026-06-01");
+    await user.type(
+      screen.getByLabelText(/date proposed increase would start/i),
+      "2026-07-01"
+    );
+    await user.click(screen.getByRole("checkbox", { name: /form 4a/i }));
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    const templateSelect = await screen.findByRole("combobox", {
+      name: /choose a message template/i
+    });
+    expect(
+      screen.getByRole("option", { name: /formal notice query/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(templateSelect, "formal-notice-query");
+
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("Form 4A / section 13 notice");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("notice received: 2026-06-01");
+    expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toContain("proposed start date: 2026-07-01");
   });
 
   it("restores a completed check after refresh", async () => {
@@ -865,7 +939,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: /start check/i }));
     expect(await screen.findByLabelText(/rent check result/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /message template/i })
+      screen.getByRole("heading", { name: /dispute support/i })
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /start check/i }));
@@ -875,7 +949,7 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: /message template/i })
+      screen.queryByRole("heading", { name: /dispute support/i })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /manual evidence/i })
@@ -894,7 +968,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: /start check/i }));
     expect(await screen.findByLabelText(/rent check result/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /message template/i })
+      screen.getByRole("heading", { name: /dispute support/i })
     ).toBeInTheDocument();
 
     const postcode = screen.getByLabelText(/postcode/i);
@@ -903,7 +977,7 @@ describe("App", () => {
 
     expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: /message template/i })
+      screen.queryByRole("heading", { name: /dispute support/i })
     ).not.toBeInTheDocument();
   });
 });

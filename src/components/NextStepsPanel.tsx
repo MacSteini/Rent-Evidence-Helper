@@ -1,4 +1,3 @@
-import { getLegalContent } from "../content/legalGuidance";
 import { resultCopy } from "../content/uiCopy";
 import type { OfficialBenchmarkStatus } from "../types/officialRentBenchmark";
 import type { TenancyContext } from "../types/rent";
@@ -16,8 +15,6 @@ export function NextStepsPanel({
   evidenceMode = "official-only"
 }: NextStepsPanelProps) {
   const steps = stepsForContext(context, evidenceMode);
-  const tribunal = getLegalContent("first-tier-tribunal");
-  const form4a = getLegalContent("form-4a-section-13");
 
   return (
     <section className="panel" aria-labelledby="next-steps-title">
@@ -30,45 +27,7 @@ export function NextStepsPanel({
           <p key={step}>{step}</p>
         ))}
       </div>
-      <div className="guidance-grid">
-        <article>
-          <h3>{form4a.title}</h3>
-          <p>{form4a.body}</p>
-          <OfficialLinks item={form4a} />
-        </article>
-        <article>
-          <h3>{tribunal.title}</h3>
-          <p>{tribunal.body}</p>
-          <OfficialLinks item={tribunal} />
-        </article>
-      </div>
     </section>
-  );
-}
-
-type OfficialLinksProps = {
-  item: ReturnType<typeof getLegalContent>;
-};
-
-function OfficialLinks({ item }: OfficialLinksProps) {
-  if (item.sourceUrls.length === 0) {
-    return null;
-  }
-
-  return (
-    <nav className="official-link-list" aria-label={`Official sources for ${item.title}`}>
-      {item.sourceUrls.map((url, index) => (
-        <a
-          key={url}
-          href={url}
-          rel="noreferrer"
-          target="_blank"
-          aria-label={`${item.sourceTitles?.[index] ?? "Official guidance"} (opens in a new tab)`}
-        >
-          {item.sourceTitles?.[index] ?? "Official guidance"}
-        </a>
-      ))}
-    </nav>
   );
 }
 

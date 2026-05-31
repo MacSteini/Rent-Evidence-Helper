@@ -447,6 +447,14 @@ legend {
   animation-delay: 180ms;
 }
 
+.result-stack > *:nth-child(6) {
+  animation-delay: 225ms;
+}
+
+.result-stack > *:nth-child(7) {
+  animation-delay: 270ms;
+}
+
 .section-heading {
   margin-bottom: 1rem;
 }
@@ -1235,6 +1243,49 @@ th {
   grid-template-columns: 1fr;
   gap: 1rem;
   margin-top: 1rem;
+}
+
+.dispute-support-panel,
+.dispute-template-controls,
+.official-routes,
+.copyable-template {
+  display: grid;
+  gap: 1rem;
+}
+
+.dispute-support-panel .section-heading,
+.dispute-template-controls .field,
+.copyable-template .section-heading,
+.official-routes .section-heading {
+  margin-bottom: 0;
+}
+
+.dispute-template-controls > p,
+.copyable-template > p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.dispute-options {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0;
+}
+
+.copyable-template {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.copyable-template textarea {
+  min-height: 8rem;
+}
+
+.official-routes h4 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
 }
 
 .official-link-list {

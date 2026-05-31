@@ -2,9 +2,27 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type CopyableMessageProps = {
   message: string;
+  title?: string;
+  description?: string;
+  textareaLabel?: string;
+  copyLabel?: string;
+  copiedLabel?: string;
+  copyError?: string;
+  className?: string;
+  headingLevel?: "h2" | "h3";
 };
 
-export function CopyableMessage({ message }: CopyableMessageProps) {
+export function CopyableMessage({
+  message,
+  title = "Optional message template",
+  description = "Edit this before using it. Sending a message does not pause or extend any tribunal deadline.",
+  textareaLabel = "Editable message",
+  copyLabel = "Copy message",
+  copiedLabel = "Message copied.",
+  copyError = "The message could not be copied. Select the text and copy it manually.",
+  className = "panel",
+  headingLevel = "h2"
+}: CopyableMessageProps) {
   const [draft, setDraft] = useState(message);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -41,14 +59,16 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
     }
   }
 
+  const Heading = headingLevel;
+
   return (
-    <section className="panel" aria-labelledby="message-title">
+    <section className={className} aria-labelledby="message-title">
       <div className="section-heading">
-        <h2 id="message-title">Optional message template</h2>
-        <p>Edit this before using it. Sending a message does not pause or extend any tribunal deadline.</p>
+        <Heading id="message-title">{title}</Heading>
+        <p>{description}</p>
       </div>
       <label className="field">
-        <span>Editable message</span>
+        <span>{textareaLabel}</span>
         <textarea
           ref={textareaRef}
           value={draft}
@@ -65,11 +85,11 @@ export function CopyableMessage({ message }: CopyableMessageProps) {
         aria-live="polite"
         onClick={copyMessage}
       >
-        {copyStatus === "copied" ? "Message copied." : "Copy message"}
+        {copyStatus === "copied" ? copiedLabel : copyLabel}
       </button>
       {copyStatus === "failed" && (
         <p className="form-error" role="alert">
-          The message could not be copied. Select the text and copy it manually.
+          {copyError}
         </p>
       )}
     </section>
