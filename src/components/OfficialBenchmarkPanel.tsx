@@ -43,7 +43,7 @@ export function OfficialBenchmarkPanel({
         </div>
         <div>
           <dt>Selected benchmark</dt>
-          <dd>{comparison.selection.label}</dd>
+          <dd>{capitaliseFirst(comparison.selection.label)}</dd>
         </div>
       </dl>
 
@@ -71,4 +71,8 @@ function formatDate(value: string): string {
     month: "long",
     year: "numeric"
   }).format(new Date(value));
+}
+
+function capitaliseFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

@@ -26,7 +26,9 @@ export function DeeperComparablePanel({
   error,
   onRun
 }: DeeperComparablePanelProps) {
-  const searchArea = evidence?.searchAreaDescription ?? derivePostcodeSectorLabel(input);
+  const searchArea = formatSearchAreaLabel(
+    evidence?.searchAreaDescription ?? derivePostcodeSectorLabel(input)
+  );
   const isWaitingForPmi = cooldownSeconds > 0;
   const calibration = evidence
     ? calibrateDeeperComparableEvidence(evidence, Number(input.rentAmount))
@@ -188,7 +190,13 @@ export function DeeperComparablePanel({
 function derivePostcodeSectorLabel(input: RentSearchInput): string {
   const parts = input.postcode.trim().toUpperCase().split(/\s+/);
   if (parts.length === 2 && parts[1]) return `${parts[0]} ${parts[1][0]}`;
-  return "postcode sector";
+  return "Postcode sector";
+}
+
+function formatSearchAreaLabel(value: string): string {
+  return value
+    .replace(/\bpostcode sector\b/g, "Postcode sector")
+    .replace(/\boutcode\b/g, "Outcode");
 }
 
 function formatRange(minimum: number | undefined, maximum: number | undefined): string {

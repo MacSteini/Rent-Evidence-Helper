@@ -18,21 +18,17 @@ export function ApiKeyPanel({
       <div className="section-heading">
         <h2 id="api-key-title">Live rental evidence</h2>
         <p>
-          Add your own Property Market Intel API key to include live asking-rent
-          listings. Without a key, the check uses the official ONS benchmark only.
+          <a
+            href="https://www.propertymarketintel.com/api-docs"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Add your own Property Market Intel API key
+          </a>{" "}
+          to include live asking-rent listings. Without a key, the check uses
+          the official ONS benchmark only.
         </p>
       </div>
-      <p className="provider-note">
-        Get a key from{" "}
-        <a
-          href="https://www.propertymarketintel.com/api-docs"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Property Market Intel
-        </a>
-        .
-      </p>
       <div className="field api-key-field">
         <label htmlFor="pmi-api-key">Property Market Intel API key</label>
         <input
@@ -44,8 +40,8 @@ export function ApiKeyPanel({
           onChange={(event) => onApiKeyChange(event.target.value)}
         />
         <p className="hint">
-          Paste the key itself, for example pmi_live_..., or the full Bearer header.
-          The key stays in this tab unless you choose to remember it on this device.
+          Paste your Property Market Intel API key. The key stays in this tab
+          unless you choose to remember it on this device.
         </p>
       </div>
       <div className="api-key-actions">

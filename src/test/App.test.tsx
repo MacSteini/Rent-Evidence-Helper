@@ -239,6 +239,8 @@ describe("App", () => {
     expect(
       within(officialBenchmarkPanel).getByText(/one bedroom/i)
     ).toBeInTheDocument();
+    expect(within(officialBenchmarkPanel).getByText("One bedroom"))
+      .toBeInTheDocument();
     expect(
       within(officialBenchmarkPanel).getByText(/not a list of individual rental listings/i)
     ).toBeInTheDocument();
@@ -323,8 +325,13 @@ describe("App", () => {
     render(<App />);
 
     expect(
-      screen.getByRole("link", { name: /^Property Market Intel$/i })
+      screen.getByRole("link", {
+        name: /^Add your own Property Market Intel API key$/i
+      })
     ).toHaveAttribute("href", "https://www.propertymarketintel.com/api-docs");
+    expect(screen.queryByText(/Get a key from Property Market Intel/i))
+      .not.toBeInTheDocument();
+    expect(screen.queryByText(/full Bearer header/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Requests go from this browser to Property Market Intel/i)
     ).not.toBeInTheDocument();
@@ -440,6 +447,8 @@ describe("App", () => {
     const deeperPanel = screen.getByRole("region", {
       name: /recent PMI rented records/i
     });
+    expect(within(deeperPanel).getByText("SW12 8 Postcode sector"))
+      .toBeInTheDocument();
     expect(within(deeperPanel).getByText(/median record rent/i))
       .toBeInTheDocument();
     expect(within(deeperPanel).getAllByText(/record date/i).length)

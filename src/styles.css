@@ -1551,23 +1551,6 @@ th {
     grid-template-columns: minmax(20rem, 29rem) minmax(0, 1fr);
     grid-template-areas: "form result";
     gap: 1.25rem;
-    height: calc(100dvh - 1.5rem);
-    min-height: 38rem;
-    overflow: hidden;
-  }
-
-  .workspace-grid-has-result .form-panel {
-    max-height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-  }
-
-  .workspace-grid-has-result .result-region {
-    max-height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
   }
 
   .workspace-grid-has-result .field-grid {
