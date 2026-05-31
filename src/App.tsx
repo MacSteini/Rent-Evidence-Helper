@@ -11,7 +11,12 @@ import { ResultSummary } from "./components/ResultSummary";
 import { SavedResultControls } from "./components/SavedResultControls";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { appConfig } from "./config/appConfig";
-import { jurisdictionCopy, methodologyCopy, privacyCopy } from "./content/uiCopy";
+import {
+  jurisdictionCopy,
+  methodologyCopy,
+  privacyCopy,
+  resultPlaceholderCopy
+} from "./content/uiCopy";
 import officialBenchmarkDatasetJson from "./data/official-rent-benchmarks.json";
 import {
   compareRentWithOfficialBenchmark,
@@ -92,6 +97,7 @@ export default function App() {
   const [lastPmiAttemptAt, setLastPmiAttemptAt] = useState<number | null>(null);
   const [, setPmiCooldownTick] = useState(0);
   const [hasStartedCheck, setHasStartedCheck] = useState(Boolean(storedCheck));
+  const [hasClearedStaleResult, setHasClearedStaleResult] = useState(false);
   const [activeDialog, setActiveDialog] = useState<
     "methodology" | "privacy" | "scope" | null
   >(null);
@@ -134,7 +140,9 @@ export default function App() {
   }
 
   async function handleSubmit(input: RentSearchInput) {
+    const hadVisibleWorkspace = hasStartedCheck;
     setHasStartedCheck(true);
+    setHasClearedStaleResult(false);
     setIsChecking(true);
     setError(null);
     setDeeperComparableError(null);
@@ -196,6 +204,9 @@ export default function App() {
       );
     } catch (caught) {
       setResult(null);
+      if (!hadVisibleWorkspace) {
+        setHasStartedCheck(false);
+      }
       setError(caught instanceof Error ? caught.message : "The rent check failed.");
     } finally {
       setIsChecking(false);
@@ -203,14 +214,14 @@ export default function App() {
   }
 
   function handleInvalidSubmit() {
-    setHasStartedCheck(false);
+    setHasClearedStaleResult(false);
     setResult(null);
     setError(null);
     setDeeperComparableError(null);
   }
 
   function handleInputChange() {
-    setHasStartedCheck(false);
+    setHasClearedStaleResult(hasStartedCheck || Boolean(result));
     setResult(null);
     setError(null);
     setDeeperComparableError(null);
@@ -219,7 +230,6 @@ export default function App() {
   function handlePmiApiKeyChange(nextKey: string) {
     setPmiApiKey(nextKey);
     writeStoredPmiApiKey(nextKey, rememberPmiApiKey);
-    handleInputChange();
   }
 
   function handlePmiRememberChange(remember: boolean) {
@@ -231,13 +241,13 @@ export default function App() {
     setPmiApiKey("");
     setRememberPmiApiKey(false);
     clearStoredPmiApiKey();
-    handleInputChange();
   }
 
   function handleClearSavedResult() {
     clearStoredCheck();
     setResult(null);
     setHasStartedCheck(false);
+    setHasClearedStaleResult(false);
     setError(null);
     setDeeperComparableError(null);
   }
@@ -410,11 +420,19 @@ export default function App() {
                 </div>
               ) : (
                 <div className="empty-state">
-                  <h2>{isChecking ? "Checking your rent" : "No result available"}</h2>
+                  <h2>
+                    {isChecking
+                      ? resultPlaceholderCopy.checkingTitle
+                      : hasClearedStaleResult
+                        ? resultPlaceholderCopy.clearedTitle
+                        : resultPlaceholderCopy.unavailableTitle}
+                  </h2>
                   <p>
                     {isChecking
-                      ? "The result will appear here when the comparison is ready."
-                      : "Check the form and try again."}
+                      ? resultPlaceholderCopy.checkingBody
+                      : hasClearedStaleResult
+                        ? resultPlaceholderCopy.clearedBody
+                        : resultPlaceholderCopy.unavailableBody}
                   </p>
                 </div>
               )}

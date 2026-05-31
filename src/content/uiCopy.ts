@@ -94,6 +94,14 @@ export const liveEvidenceCopy = {
       "Useful live context. Check the individual listings before relying on it.",
     strong:
       "Strong live context. It is still asking-rent evidence, not a decision."
+  },
+  help: {
+    title: "What this means",
+    items: [
+      "Limited live context means PMI returned data, but the sample or quality is not strong enough to rely on alone.",
+      "Range spread compares the lowest and highest displayed asking rents with the median. A high spread means the listings are not tightly grouped.",
+      "Live asking rents are advertised prices, not agreed rents, proof of legal market rent or a tribunal decision."
+    ]
   }
 };
 
@@ -163,6 +171,16 @@ export const savedResultCopy = {
     "This completed check is saved in this browser so it can survive a refresh. Clear it if you are using a shared device.",
   clearButton: "Clear saved result",
   clearNote: "This does not clear your Property Market Intel API key."
+};
+
+export const resultPlaceholderCopy = {
+  checkingTitle: "Checking your rent",
+  checkingBody: "The result will appear here when the comparison is ready.",
+  clearedTitle: "Result cleared",
+  clearedBody:
+    "Your previous result was cleared because the form changed. Run the check again to update the evidence.",
+  unavailableTitle: "No result available",
+  unavailableBody: "Check the form and try again."
 };
 
 export const disputeSupportCopy = {

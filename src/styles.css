@@ -1186,6 +1186,7 @@ meter {
 }
 
 .warning-list,
+.evidence-help,
 .guidance-grid article {
   padding: 1rem;
   border-radius: 8px;
@@ -1281,6 +1282,29 @@ th {
 .warning-list div {
   display: grid;
   gap: 0.5rem;
+}
+
+.evidence-help {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+}
+
+.evidence-help summary {
+  cursor: pointer;
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.evidence-help div {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.evidence-help p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .guidance-grid {

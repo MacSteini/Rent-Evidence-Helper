@@ -132,6 +132,14 @@ export function LiveEvidencePanel({
           ))}
         </div>
       </div>
+      <details className="evidence-help">
+        <summary>{liveEvidenceCopy.help.title}</summary>
+        <div>
+          {liveEvidenceCopy.help.items.map((item) => (
+            <p key={item}>{item}</p>
+          ))}
+        </div>
+      </details>
     </section>
   );
 }

@@ -376,6 +376,16 @@ describe("App", () => {
     expect(
       screen.getByText(/live asking rents sit within 10% of your rent/i)
     ).toBeInTheDocument();
+    await user.click(screen.getByText(/what this means/i));
+    expect(
+      screen.getByText(/Limited live context means PMI returned data/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Range spread compares the lowest and highest displayed asking rents/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Live asking rents are advertised prices/i)
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/compare the live asking-rent listings with evidence you collect/i)
     ).toBeInTheDocument();
@@ -686,6 +696,36 @@ describe("App", () => {
     expect(keyInput).toHaveValue("");
     expect(window.sessionStorage.getItem("market-rent-check-pmi-api-key")).toBeNull();
     expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBeNull();
+  });
+
+  it("keeps the existing result visible when only the PMI key changes", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(await screen.findByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /evidence summary/i })
+    ).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+
+    expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /evidence summary/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /clear key/i }));
+
+    expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /evidence summary/i })
+    ).toBeInTheDocument();
   });
 
   it("requires a manually selected Local Authority before running a check", async () => {
@@ -1120,7 +1160,11 @@ describe("App", () => {
     expect(
       await screen.findByText(/outside the England scope/i)
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(screen.getByText(/no result available/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /dispute support/i })
+    ).not.toBeInTheDocument();
     await waitFor(() => expect(postcode).toHaveFocus());
   });
 
@@ -1187,7 +1231,8 @@ describe("App", () => {
     expect(
       await screen.findByText(/please wait a moment before starting another check/i)
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(screen.getByText(/no result available/i)).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /dispute support/i })
     ).not.toBeInTheDocument();
@@ -1215,7 +1260,11 @@ describe("App", () => {
     await user.clear(postcode);
     await user.type(postcode, "BN252D");
 
-    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/rent check result/i)).toBeInTheDocument();
+    expect(screen.getByText(/result cleared/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/previous result was cleared because the form changed/i)
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /dispute support/i })
     ).not.toBeInTheDocument();
