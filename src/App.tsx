@@ -300,7 +300,13 @@ export default function App() {
       </a>
       <header className="site-header">
         <a className="brand" href="./" aria-label={`${appConfig.productName} home`}>
-          <span className="brand-mark" aria-hidden="true">M</span>
+          <span className="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M4.5 11.5 12 5l7.5 6.5" />
+              <path d="M6.5 10.5v8h11v-8" />
+              <path d="M10 18.5v-5h4v5" />
+            </svg>
+          </span>
           <span>{appConfig.productName}</span>
         </a>
         <nav aria-label="Primary">

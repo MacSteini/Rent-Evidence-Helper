@@ -348,11 +348,13 @@ export function normalisePmiComparablesResponse(
 
   if (comparables.length === 0) {
     const returnedCount = response.comparables.length;
+    const recentOnlyMessage =
+      "Older PMI records may still exist, but this tool does not include records outside the last 12 months. Use the ONS benchmark and evidence you collect yourself.";
     throw new PmiEvidenceError(
       "no-listings",
       returnedCount > 0
-        ? "PMI returned no recent rented records for this postcode sector in the last 12 months. Use the ONS benchmark and evidence you collect yourself."
-        : "Property Market Intel returned no recent rented records for this postcode sector in the last 12 months. Use the ONS benchmark and evidence you collect yourself."
+        ? `PMI returned records, but none within the last 12 months for this postcode sector. ${recentOnlyMessage}`
+        : `Property Market Intel returned no recent rented records for this postcode sector in the last 12 months. ${recentOnlyMessage}`
     );
   }
 

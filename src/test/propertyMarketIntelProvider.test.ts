@@ -286,7 +286,26 @@ describe("Property Market Intel provider", () => {
         input,
         "2026-05-30T00:00:00Z"
       )
-    ).toThrow(/no recent rented records/i);
+    ).toThrow(/none within the last 12 months/i);
+    expect(() =>
+      normalisePmiComparablesResponse(
+        {
+          total_count: 1,
+          count: 1,
+          comparables: [
+            {
+              postcode: "SW12 8AA",
+              price: 2300,
+              date: "2024-04-01",
+              bedrooms: 2,
+              property_type: "Flat"
+            }
+          ]
+        },
+        input,
+        "2026-05-30T00:00:00Z"
+      )
+    ).toThrow(/does not include records outside the last 12 months/i);
   });
 
   it("maps deeper comparable failures and calls PMI with a bearer token", async () => {

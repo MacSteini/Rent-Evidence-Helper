@@ -6,8 +6,9 @@ import sitemap from "../../public/sitemap.xml?raw";
 describe("public SEO metadata", () => {
   it("describes the benchmark and dispute-support product focus", () => {
     expect(html).toContain(
-      "<title>Market Rent Check | England rent benchmark and dispute support</title>"
+      "<title>Rent Evidence Helper | England rent benchmark and dispute support</title>"
     );
+    expect(html).toContain('<meta property="og:title" content="Rent Evidence Helper" />');
     expect(html).toContain("editable dispute-support message templates");
     expect(html).toContain("calm rent-increase response in England");
     expect(html).toContain(

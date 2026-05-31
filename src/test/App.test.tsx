@@ -190,6 +190,10 @@ describe("App", () => {
     render(<App />);
 
     expect(
+      screen.getByRole("link", { name: /Rent Evidence Helper home/i })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/^Rent Evidence Helper$/i).length).toBeGreaterThan(0);
+    expect(
       screen.getByText(/Office for National Statistics \(ONS\)/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/England rent benchmark and dispute support/i))

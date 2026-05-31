@@ -1,5 +1,5 @@
 export const appConfig = {
-  productName: "Market Rent Check",
+  productName: "Rent Evidence Helper",
   jurisdictionName: "England",
   legalLastCheckedAt: "2026-05-29"
 };
