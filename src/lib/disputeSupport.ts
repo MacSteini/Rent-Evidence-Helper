@@ -58,7 +58,7 @@ export function buildDisputeMessageTemplate(
   const paragraphs = [
     "Dear Landlord/Landlady/Agent,",
     intro,
-    `The rental property postcode I entered is ${postcode}.`
+    `For context, the rental property postcode I entered is ${postcode}.`
   ];
 
   if (selection.includeOnsBenchmark) {
@@ -125,7 +125,7 @@ export function buildDisputeMessageTemplate(
 
 function buildOnsParagraph(result: RentCheckResult): string {
   const comparison = result.officialBenchmarkComparison;
-  return `I checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. For ${comparison.selection.label}, the official area benchmark is ${formatCurrency(comparison.selection.monthlyRent)} per month. The monthly rent I entered is ${formatCurrency(comparison.userRentMonthly)}, which is ${formatSignedCurrency(comparison.differenceMonthly)} (${formatSignedPercent(comparison.percentageDifference)}) compared with that benchmark.`;
+  return `I checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. This is a Local Authority benchmark, not a figure for the individual postcode. For ${comparison.selection.label}, the area benchmark is ${formatCurrency(comparison.selection.monthlyRent)} per month. The monthly rent I entered is ${formatCurrency(comparison.userRentMonthly)}, which is ${formatSignedCurrency(comparison.differenceMonthly)} (${formatSignedPercent(comparison.percentageDifference)}) compared with that benchmark.`;
 }
 
 function buildFormalNoticeParagraph(result: RentCheckResult): string {

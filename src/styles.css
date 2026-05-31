@@ -327,7 +327,7 @@ legend {
 .intro-band .jurisdiction-note {
   display: grid;
   gap: 0.45rem;
-  width: min(100%, 58rem);
+  width: min(100%, 48rem);
   max-width: 100%;
   margin: 1.2rem auto 0;
   padding: 0.85rem 1rem;
@@ -339,13 +339,16 @@ legend {
 }
 
 .intro-band .jurisdiction-note strong {
+  max-width: 44rem;
   color: var(--text);
   font-size: 0.95rem;
+  text-wrap: balance;
 }
 
 .intro-band .jurisdiction-note span {
-  max-width: 54rem;
+  max-width: 40rem;
   color: var(--muted);
+  text-wrap: pretty;
 }
 
 .scope-link {
@@ -907,6 +910,10 @@ textarea {
 
 .notice-compact {
   font-size: 0.95rem;
+}
+
+.deeper-comparable-panel .secondary-button + .notice {
+  margin-top: 1rem;
 }
 
 .notice p {
@@ -1544,11 +1551,23 @@ th {
     grid-template-columns: minmax(20rem, 29rem) minmax(0, 1fr);
     grid-template-areas: "form result";
     gap: 1.25rem;
+    height: calc(100dvh - 1.5rem);
+    min-height: 38rem;
+    overflow: hidden;
   }
 
   .workspace-grid-has-result .form-panel {
-    position: sticky;
-    top: 5rem;
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .workspace-grid-has-result .result-region {
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 
   .workspace-grid-has-result .field-grid {

@@ -175,8 +175,15 @@ describe("App", () => {
     render(<App />);
 
     expect(
+      screen.getByText(/Office for National Statistics \(ONS\)/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/England rent benchmark and dispute support/i))
+      .toBeInTheDocument();
+    expect(screen.queryByText(/England official rent benchmark/i))
+      .not.toBeInTheDocument();
+    expect(
       screen.getByRole("complementary", { name: /scope and legal note/i })
-    ).toHaveTextContent(/for rental properties in england only/i);
+    ).toHaveTextContent(/England only/i);
 
     expect(
       screen.queryByRole("heading", { name: /your result will appear here/i })
@@ -274,6 +281,9 @@ describe("App", () => {
       (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
     ).toMatch(/postcode.*SW12 8AA/i);
     expect(
+      (screen.getByLabelText(/editable message/i) as HTMLTextAreaElement).value
+    ).toMatch(/Local Authority benchmark, not a figure for the individual postcode/i);
+    expect(
       screen.getByRole("heading", { name: /official routes to check/i })
     ).toBeInTheDocument();
     expect(
@@ -311,6 +321,13 @@ describe("App", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<App />);
+
+    expect(
+      screen.getByRole("link", { name: /^Property Market Intel$/i })
+    ).toHaveAttribute("href", "https://www.propertymarketintel.com/api-docs");
+    expect(
+      screen.queryByText(/Requests go from this browser to Property Market Intel/i)
+    ).not.toBeInTheDocument();
 
     await user.type(
       screen.getByLabelText(/property market intel api key/i),
@@ -572,7 +589,10 @@ describe("App", () => {
 
     expect(await screen.findByText(/property market intel rejected the api key/i))
       .toBeInTheDocument();
-    expect(screen.getByText(/PMI unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/PMI unavailable/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Current PMI live listings unavailable/i)
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /^official area benchmark$/i })
     ).toBeInTheDocument();

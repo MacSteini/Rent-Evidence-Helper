@@ -29,10 +29,9 @@ export function ApiKeyPanel({
           target="_blank"
           rel="noreferrer"
         >
-          Property Market Intel API Docs
+          Property Market Intel
         </a>
-        . Requests go from this browser to Property Market Intel; no shared key
-        or scraper is used.
+        .
       </p>
       <div className="field api-key-field">
         <label htmlFor="pmi-api-key">Property Market Intel API key</label>

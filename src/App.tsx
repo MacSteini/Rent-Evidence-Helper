@@ -311,12 +311,11 @@ export default function App() {
       <main id="main-content">
         <section className="intro-band" aria-labelledby="page-title">
           <div>
-            <h1 id="page-title">Check your rent against the official area benchmark</h1>
+            <h1 id="page-title">Check your rent against the ONS area benchmark</h1>
             <p>
-              Enter your rent and property details to compare your rent with the
-              ONS monthly private rent estimate for your selected Local Authority.
-              This tool is for rental properties in England and gives general
-              information, not legal advice.
+              Compare your rent with the Office for National Statistics (ONS)
+              monthly private rent estimate for your selected Local Authority,
+              then prepare a calm evidence request if you need one.
             </p>
             <aside className="jurisdiction-note" aria-label="Scope and legal note">
               <strong>{jurisdictionCopy.intro}</strong>
@@ -488,7 +487,7 @@ export default function App() {
 
       <footer className="site-footer">
         <span>{appConfig.productName}</span>
-        <span>England official rent benchmark</span>
+        <span>England rent benchmark and dispute support</span>
       </footer>
     </div>
   );

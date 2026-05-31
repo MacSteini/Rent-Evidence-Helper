@@ -45,7 +45,10 @@ describe("buildLandlordMessage", () => {
     expect(message).toContain("Dear Landlord/Landlady/Agent");
     expect(message).toContain("ONS monthly private rent estimate for Lambeth");
     expect(message).toContain("postcode SW12 8AA");
-    expect(message).toContain("official area benchmark is £2,050 per month");
+    expect(message).toContain(
+      "Local Authority benchmark, not a figure for the individual postcode"
+    );
+    expect(message).toContain("area benchmark is £2,050 per month");
     expect(message).toContain("+£400 (+19.5%)");
     expect(message).not.toContain("postcode sector SW12 8");
   });

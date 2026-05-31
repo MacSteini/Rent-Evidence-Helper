@@ -18,7 +18,10 @@ describe("dispute support templates", () => {
     expect(message).toContain("Dear Landlord/Landlady/Agent");
     expect(message).toMatch(/postcode.*SW12 8AA/i);
     expect(message).toContain("ONS monthly private rent estimate for Lambeth");
-    expect(message).toContain("official area benchmark is £2,050 per month");
+    expect(message).toContain(
+      "Local Authority benchmark, not a figure for the individual postcode"
+    );
+    expect(message).toContain("area benchmark is £2,050 per month");
     expect(message).toContain("+£400 (+19.5%)");
     expect(message).toContain("written evidence and calculation");
     expect(message).toContain("similar nearby properties or agreed lettings");

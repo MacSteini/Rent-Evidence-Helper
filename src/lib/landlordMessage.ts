@@ -19,7 +19,7 @@ export function buildLandlordMessage(
 
 I am writing about the current rent of ${rentLabel}.
 
-I have checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. For ${benchmarkLabel}, the official area benchmark is ${benchmarkRent} per month. The rent I entered for postcode ${postcode} is ${userMonthlyRent} per month, which is ${difference} (${percentageDifference}) compared with that benchmark.
+I have checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. This is a Local Authority benchmark, not a figure for the individual postcode. For ${benchmarkLabel}, the area benchmark is ${benchmarkRent} per month. The rent I entered for postcode ${postcode} is ${userMonthlyRent} per month, which is ${difference} (${percentageDifference}) compared with that benchmark.
 
 I understand this is area-level evidence, not individual rental listings, a tribunal decision or legal advice.
 
@@ -34,7 +34,7 @@ Kind regards,`;
 
 I am writing about the proposed rent of ${rentLabel}.
 
-I have checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. For ${benchmarkLabel}, the official area benchmark is ${benchmarkRent} per month. The rent I entered for postcode ${postcode} is ${userMonthlyRent} per month, which is ${difference} (${percentageDifference}) compared with that benchmark.
+I have checked the ONS monthly private rent estimate for ${comparison.benchmark.areaName}. This is a Local Authority benchmark, not a figure for the individual postcode. For ${benchmarkLabel}, the area benchmark is ${benchmarkRent} per month. The rent I entered for postcode ${postcode} is ${userMonthlyRent} per month, which is ${difference} (${percentageDifference}) compared with that benchmark.
 
 I understand this is area-level evidence, not individual rental listings, a tribunal decision or legal advice.
 

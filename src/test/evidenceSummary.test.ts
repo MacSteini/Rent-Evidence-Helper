@@ -47,7 +47,9 @@ describe("evidence summary", () => {
       })
     );
 
-    expect(summary.pmiStatus).toMatch(/PMI unavailable/i);
+    expect(summary.pmiStatus).toBe(
+      "Current PMI live listings unavailable. Recent rented records are a separate optional check."
+    );
   });
 
   it("summarises deeper comparable evidence without changing ONS status", () => {

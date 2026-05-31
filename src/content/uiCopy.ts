@@ -5,17 +5,17 @@ export const fieldCopy = {
   postcodeHint:
     "Use the rental property's UK postcode.",
   localAuthorityHint:
-    "This is used only for the official ONS area benchmark.",
+    "This is used only for the ONS area benchmark.",
   rentHint: "Enter the current rent or proposed new rent.",
   evidenceNotice:
-    "Use this as evidence, not a decision. ONS data is an official area benchmark; Property Market Intel data is live asking-rent evidence when you provide a key. Check official guidance before acting or sending any formal challenge."
+    "Use this as evidence, not a decision. ONS data is an area benchmark; Property Market Intel data is live asking-rent evidence when you provide a key. Check official guidance before acting or sending any formal challenge."
 };
 
 export const jurisdictionCopy = {
   intro:
-    "For rental properties in England only. Rent-increase rules and tribunal routes differ in Scotland, Wales and Northern Ireland.",
+    "England only: rent-increase rules and tribunal routes differ elsewhere in the UK.",
   disclaimer:
-    "This tool is for rental properties in England only. It gives an official area-benchmark indication, not legal advice, and it does not decide the legal market rent.",
+    "Area benchmark and dispute support only. Not legal advice.",
   privacy:
     "The postcode stays in the browser. It is used for local validation and to block postcode areas that are clearly outside the supported England scope.",
   scopeTitle: "Why this is England only",
@@ -37,7 +37,7 @@ export const fieldHelpCopy = {
   condition:
     "Use Basic for tired homes, Average for typical lived-in homes, Good for well-kept homes, and Newly renovated for recently upgraded homes. This check records condition for context.",
   localAuthority:
-    "Start typing to narrow the Local Authority list. The app does not send the full postcode to a lookup service, and this selection only controls the official ONS area benchmark.",
+    "Start typing to narrow the Local Authority list. The app does not send the full postcode to a lookup service, and this selection only controls the ONS area benchmark.",
   tenancyContext:
     "Choose the situation closest to yours. This changes the next-step guidance and may show notice questions, but it does not decide your legal position or calculate deadlines."
 };
@@ -91,7 +91,7 @@ export const liveEvidenceCopy = {
 export const deeperComparableCopy = {
   title: "Recent PMI rented records",
   summary:
-    "Property Market Intel can return recent rented records for the postcode sector. This is historical record context and does not replace the ONS benchmark result.",
+    "A separate historical rented-record check for the postcode sector. It may add context, may cost credits, and may still return no recent records.",
   creditWarning:
     "This check may cost 5 PMI credits each time it is run.",
   button: "Run recent rented-record check",
@@ -125,12 +125,12 @@ export const evidenceSummaryCopy = {
   summary:
     "The official benchmark remains the main result. Live listings add context when available.",
   onsLabel: "ONS benchmark status",
-  pmiLabel: "PMI context status",
+  pmiLabel: "Current PMI live listings",
   deeperLabel: "Recent PMI records",
   actionLabel: "Recommended action",
   pmiOnly: "ONS benchmark only",
   pmiWarning:
-    "PMI unavailable. Use the ONS benchmark and evidence you collect yourself.",
+    "Current PMI live listings unavailable. Recent rented records are a separate optional check.",
   pmiQuality: {
     limited: "Limited PMI context",
     useful: "Useful PMI context",
@@ -237,7 +237,7 @@ export const methodologyCopy = [
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional recent rented-record check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional recent rented-record check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the ONS area benchmark.";
 
 export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
   below_benchmark: {
