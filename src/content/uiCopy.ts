@@ -202,6 +202,15 @@ export const disputeSupportCopy = {
     includeFormalNoticeDetails: "Mention recorded notice details",
     includeCaveat: "Keep evidence and deadline caveat"
   },
+  advisor: {
+    label: "Advisor note",
+    recommended: "Suitable",
+    use_with_caution: "Use with caution",
+    not_recommended: "Not recommended",
+    reasonsTitle: "Why this matters",
+    recommendationTitle: "Better next step",
+    disabledOptionPrefix: "Not added automatically"
+  },
   officialRoutesTitle: "Official routes to check",
   officialRoutesSummary:
     "Use official guidance to understand the process, forms, evidence and timing before you act.",

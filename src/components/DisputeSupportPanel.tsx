@@ -2,14 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { CopyableMessage } from "./CopyableMessage";
 import { disputeSupportCopy } from "../content/uiCopy";
 import {
+  assessDisputeTemplateSuitability,
   buildDisputeMessageTemplate,
+  getAdvisedDisputeSupportSelection,
   getAvailableDisputeTemplateIds,
-  getDefaultDisputeSupportSelection
+  getDisputeEvidenceOptionAdvisories
 } from "../lib/disputeSupport";
 import type {
+  DisputeEvidenceOptionAdvisory,
   DisputeSupportSelection,
   DisputeTemplateId,
-  DisputeTemplateOption
+  DisputeTemplateOption,
+  DisputeTemplateSuitability
 } from "../types/disputeSupport";
 import type { RentCheckResult } from "../types/rentCheckResult";
 
@@ -22,12 +26,12 @@ export function DisputeSupportPanel({ result }: DisputeSupportPanelProps) {
     () => getAvailableDisputeTemplateIds(result),
     [result]
   );
-  const defaultSelection = useMemo(
-    () => getDefaultDisputeSupportSelection(result),
-    [result]
-  );
   const [templateId, setTemplateId] = useState<DisputeTemplateId>(
     availableTemplates[0]
+  );
+  const defaultSelection = useMemo(
+    () => getAdvisedDisputeSupportSelection(result, templateId),
+    [result, templateId]
   );
   const [selection, setSelection] =
     useState<DisputeSupportSelection>(defaultSelection);
@@ -43,8 +47,17 @@ export function DisputeSupportPanel({ result }: DisputeSupportPanelProps) {
 
   const message = buildDisputeMessageTemplate(result, templateId, selection);
   const selectedTemplate = disputeSupportCopy.templates[templateId];
+  const evidenceAdvisories = useMemo(
+    () => getDisputeEvidenceOptionAdvisories(result),
+    [result]
+  );
+  const templateSuitability = useMemo(
+    () => assessDisputeTemplateSuitability(result, templateId),
+    [result, templateId]
+  );
 
   function toggleOption(option: DisputeTemplateOption) {
+    if (isEvidenceOptionDisabled(option, evidenceAdvisories)) return;
     setSelection((current) => ({
       ...current,
       [option]: !current[option]
@@ -86,12 +99,14 @@ export function DisputeSupportPanel({ result }: DisputeSupportPanelProps) {
         <OptionCheckbox
           option="includeOnsBenchmark"
           checked={selection.includeOnsBenchmark}
+          advisory={findEvidenceAdvisory(evidenceAdvisories, "includeOnsBenchmark")}
           onChange={toggleOption}
         />
         {result.liveEvidence?.medianMonthly && (
           <OptionCheckbox
             option="includePmiLive"
             checked={selection.includePmiLive}
+            advisory={findEvidenceAdvisory(evidenceAdvisories, "includePmiLive")}
             onChange={toggleOption}
           />
         )}
@@ -99,6 +114,7 @@ export function DisputeSupportPanel({ result }: DisputeSupportPanelProps) {
           <OptionCheckbox
             option="includePmiDeeper"
             checked={selection.includePmiDeeper}
+            advisory={findEvidenceAdvisory(evidenceAdvisories, "includePmiDeeper")}
             onChange={toggleOption}
           />
         )}
@@ -125,6 +141,8 @@ export function DisputeSupportPanel({ result }: DisputeSupportPanelProps) {
           onChange={toggleOption}
         />
       </fieldset>
+
+      <AdvisorNotice suitability={templateSuitability} />
 
       <CopyableMessage
         message={message}
@@ -172,20 +190,93 @@ export function DisputeSupportPanel({ result }: DisputeSupportPanelProps) {
 type OptionCheckboxProps = {
   option: DisputeTemplateOption;
   checked: boolean;
+  advisory?: DisputeEvidenceOptionAdvisory;
   onChange: (option: DisputeTemplateOption) => void;
 };
 
-function OptionCheckbox({ option, checked, onChange }: OptionCheckboxProps) {
+function OptionCheckbox({
+  option,
+  checked,
+  advisory,
+  onChange
+}: OptionCheckboxProps) {
+  const disabled = advisory?.allowed === false;
   return (
-    <label className="checkbox-row">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={() => onChange(option)}
-      />
-      {disputeSupportCopy.options[option]}
-    </label>
+    <div className="dispute-option-row">
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={disabled ? false : checked}
+          disabled={disabled}
+          onChange={() => onChange(option)}
+        />
+        {disputeSupportCopy.options[option]}
+      </label>
+      {disabled && advisory && (
+        <p className="option-advisory">
+          <strong>{disputeSupportCopy.advisor.disabledOptionPrefix}:</strong>{" "}
+          {advisory.reason}
+        </p>
+      )}
+    </div>
   );
+}
+
+function AdvisorNotice({
+  suitability
+}: {
+  suitability: DisputeTemplateSuitability;
+}) {
+  return (
+    <section
+      className={`advisor-notice advisor-notice-${suitability.status}`}
+      aria-labelledby="advisor-note-title"
+    >
+      <div className="advisor-notice-header">
+        <p className="label">{disputeSupportCopy.advisor.label}</p>
+        <span className="status-badge">
+          {disputeSupportCopy.advisor[suitability.status]}
+        </span>
+      </div>
+      <h3 id="advisor-note-title">{suitability.title}</h3>
+      <p>{suitability.summary}</p>
+      {suitability.reasons.length > 0 && (
+        <div>
+          <h4>{disputeSupportCopy.advisor.reasonsTitle}</h4>
+          <ul className="plain-list">
+            {suitability.reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div>
+        <h4>{disputeSupportCopy.advisor.recommendationTitle}</h4>
+        <p>{suitability.recommendation}</p>
+      </div>
+    </section>
+  );
+}
+
+function findEvidenceAdvisory(
+  advisories: DisputeEvidenceOptionAdvisory[],
+  option: DisputeEvidenceOptionAdvisory["option"]
+): DisputeEvidenceOptionAdvisory | undefined {
+  return advisories.find((advisory) => advisory.option === option);
+}
+
+function isEvidenceOptionDisabled(
+  option: DisputeTemplateOption,
+  advisories: DisputeEvidenceOptionAdvisory[]
+): boolean {
+  if (
+    option !== "includeOnsBenchmark" &&
+    option !== "includePmiLive" &&
+    option !== "includePmiDeeper"
+  ) {
+    return false;
+  }
+  return findEvidenceAdvisory(advisories, option)?.allowed === false;
 }
 
 function hasFormalNoticeDetails(result: RentCheckResult): boolean {

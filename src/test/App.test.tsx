@@ -7,6 +7,7 @@ const localAuthorityLabels: Record<string, string> = {
   E06000023: "Bristol, City of (South West)",
   E07000178: "Oxford (South East)",
   E08000003: "Manchester (North West)",
+  E09000009: "Ealing (London)",
   E09000022: "Lambeth (London)"
 };
 
@@ -63,6 +64,20 @@ const pmiComparablesResponse = {
       distance_m: 320
     }
   ]
+};
+
+const highPmiListingsResponse = {
+  total_count: 10,
+  listings: Array.from({ length: 10 }, (_, index) => ({
+    uprn: `do-not-render-high-${index}`,
+    address: `${index} Hidden Address`,
+    postcode: "W2 5BQ",
+    price: index < 5 ? 12424 : 12425,
+    bedrooms: 4,
+    property_type: "Flat",
+    distance_m: 120 + index,
+    url: `https://provider.example/high-${index}`
+  }))
 };
 
 afterEach(() => {
@@ -776,6 +791,58 @@ describe("App", () => {
       await screen.findByRole("button", { name: /message copied/i })
     ).toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("warns when a generated dispute message may weaken the user's position", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(highPmiListingsResponse), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      )
+    );
+
+    render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user, "E09000009");
+    await user.clear(screen.getByLabelText(/postcode/i));
+    await user.type(screen.getByLabelText(/postcode/i), "W25BQ");
+    await user.clear(screen.getByLabelText(/rent amount/i));
+    await user.type(screen.getByLabelText(/rent amount/i), "2200");
+    await user.clear(screen.getByLabelText(/bedrooms/i));
+    await user.type(screen.getByLabelText(/bedrooms/i), "4");
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/this message may weaken your position/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/ONS Local Authority benchmark is more than 10% higher/i)
+        .length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("checkbox", { name: /include ons benchmark summary/i })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("checkbox", { name: /include pmi live-listings context/i })
+    ).toBeDisabled();
+
+    const message = screen.getByLabelText(
+      /editable message/i
+    ) as HTMLTextAreaElement;
+    expect(message.value).toContain("postcode I entered is W25BQ");
+    expect(message.value).not.toContain("ONS monthly private rent estimate");
+    expect(message.value).not.toContain("£12,424.50");
+    expect(
+      screen.getByRole("button", { name: /copy this message/i })
+    ).toBeInTheDocument();
   });
 
   it("shows formal notice support only for Form 4A or section 13 situations", async () => {
