@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  buildPmiComparableDateWindow,
   buildPmiComparablesUrl,
   buildPmiListingsUrl,
   normalisePmiApiKey,
@@ -100,7 +101,7 @@ describe("Property Market Intel provider", () => {
   });
 
   it("builds a deeper comparable request using postcode sector only", () => {
-    const url = buildPmiComparablesUrl(input);
+    const url = buildPmiComparablesUrl(input, new Date("2026-05-30T00:00:00Z"));
 
     expect(url.origin).toBe("https://api.propertymarketintel.com");
     expect(url.pathname).toBe("/v1/prices/comparables");
@@ -108,11 +109,20 @@ describe("Property Market Intel provider", () => {
     expect(url.searchParams.get("postcode")).toBe("SW12 8");
     expect(url.searchParams.get("bedrooms")).toBe("2");
     expect(url.searchParams.get("per_page")).toBe("10");
+    expect(url.searchParams.get("min_date")).toBe("2025-05-30");
+    expect(url.searchParams.get("max_date")).toBe("2026-05-30");
     expect(String(url)).not.toContain("SW12+8AA");
     expect(url.searchParams.has("outcode")).toBe(false);
     expect(url.searchParams.has("property_type")).toBe(false);
     expect(url.searchParams.has("address")).toBe(false);
     expect(url.searchParams.has("uprn")).toBe(false);
+  });
+
+  it("builds a rolling 12-month comparable date window", () => {
+    expect(buildPmiComparableDateWindow(new Date("2026-05-31T18:00:00Z"))).toEqual({
+      start: "2025-05-31",
+      end: "2026-05-31"
+    });
   });
 
   it("normalises listings without exposing exact address or UPRN", () => {
@@ -197,8 +207,11 @@ describe("Property Market Intel provider", () => {
     );
 
     expect(evidence.evidenceKind).toBe("licensed-comparables");
+    expect(evidence.recordKind).toBe("historical-rented-records");
     expect(evidence.provider).toBe("property-market-intel");
     expect(evidence.searchAreaDescription).toBe("SW12 8 postcode sector");
+    expect(evidence.dateWindowStart).toBe("2025-05-30");
+    expect(evidence.dateWindowEnd).toBe("2026-05-30");
     expect(evidence.displayedCount).toBe(2);
     expect(evidence.medianMonthly).toBe(2400);
     expect(evidence.comparables[0]).toMatchObject({
@@ -211,6 +224,69 @@ describe("Property Market Intel provider", () => {
     expect(JSON.stringify(evidence)).not.toContain("Hidden Comparable Street");
     expect(JSON.stringify(evidence)).not.toContain("secret-comparable-uprn");
     expect(JSON.stringify(evidence)).not.toContain("SW12 8AA");
+  });
+
+  it("filters deeper comparables outside the recent date window", () => {
+    const evidence = normalisePmiComparablesResponse(
+      {
+        total_count: 3,
+        count: 3,
+        comparables: [
+          {
+            postcode: "SW12 8AA",
+            price: 2300,
+            date: "2026-04-01",
+            bedrooms: 2,
+            property_type: "Flat"
+          },
+          {
+            postcode: "SW12 8AB",
+            price: 9999,
+            date: "2024-04-01",
+            bedrooms: 2,
+            property_type: "Flat"
+          },
+          {
+            postcode: "SW12 8AC",
+            price: 2500,
+            date: "15/04/2026",
+            bedrooms: 2,
+            property_type: "Flat"
+          }
+        ]
+      },
+      input,
+      "2026-05-30T00:00:00Z"
+    );
+
+    expect(evidence.displayedCount).toBe(2);
+    expect(evidence.medianMonthly).toBe(2400);
+    expect(evidence.comparables.map((comparable) => comparable.rentMonthly)).toEqual([
+      2300,
+      2500
+    ]);
+  });
+
+  it("rejects deeper comparables when no recent records remain", () => {
+    expect(() =>
+      normalisePmiComparablesResponse(
+        {
+          total_count: 1,
+          count: 1,
+          comparables: [
+            {
+              postcode: "SW12 8AA",
+              price: 2300,
+              date: "2024-04-01",
+              bedrooms: 2,
+              property_type: "Flat"
+            }
+          ]
+        },
+        input,
+        "2026-05-30T00:00:00Z"
+      )
+    ).toThrow(/no recent rented records/i);
   });
 
   it("maps deeper comparable failures and calls PMI with a bearer token", async () => {

@@ -1,4 +1,5 @@
 import { deeperComparableCopy } from "../content/uiCopy";
+import { formatEvidenceDate, formatEvidenceDateRange } from "../lib/evidenceDates";
 import { calibrateDeeperComparableEvidence } from "../lib/liveEvidenceCalibration";
 import { formatCurrency } from "../lib/rentMath";
 import type { DeeperComparableEvidenceResult } from "../types/liveEvidence";
@@ -7,6 +8,7 @@ import type { RentSearchInput } from "../types/rent";
 type DeeperComparablePanelProps = {
   input: RentSearchInput;
   evidence?: DeeperComparableEvidenceResult;
+  hasLiveEvidence: boolean;
   canRun: boolean;
   cooldownSeconds: number;
   isRunning: boolean;
@@ -17,6 +19,7 @@ type DeeperComparablePanelProps = {
 export function DeeperComparablePanel({
   input,
   evidence,
+  hasLiveEvidence,
   canRun,
   cooldownSeconds,
   isRunning,
@@ -48,15 +51,15 @@ export function DeeperComparablePanel({
         {evidence && (
           <>
             <div>
-              <dt>Comparable records</dt>
+              <dt>Recent records</dt>
               <dd>{evidence.displayedCount}</dd>
             </div>
             <div>
-              <dt>Comparable quality</dt>
+              <dt>Record context</dt>
               <dd>{formatQualityLabel(calibration?.qualityLevel)}</dd>
             </div>
             <div>
-              <dt>Median comparable rent</dt>
+              <dt>Median record rent</dt>
               <dd>
                 {evidence.medianMonthly === undefined
                   ? "Unavailable"
@@ -66,6 +69,15 @@ export function DeeperComparablePanel({
             <div>
               <dt>Range</dt>
               <dd>{formatRange(evidence.minimumMonthly, evidence.maximumMonthly)}</dd>
+            </div>
+            <div>
+              <dt>Record window</dt>
+              <dd>
+                {formatEvidenceDateRange(
+                  evidence.dateWindowStart,
+                  evidence.dateWindowEnd
+                )}
+              </dd>
             </div>
             <div>
               <dt>Compared with your rent</dt>
@@ -101,6 +113,11 @@ export function DeeperComparablePanel({
       {evidence && (
         <>
           <p className="live-evidence-interpretation">{deeperComparableCopy.status}</p>
+          {!hasLiveEvidence && (
+            <p className="benchmark-threshold-note">
+              {deeperComparableCopy.liveEmptyWithRecords}
+            </p>
+          )}
           <div className="table-wrap">
             <table>
               <caption>{deeperComparableCopy.caption}</caption>
@@ -110,7 +127,7 @@ export function DeeperComparablePanel({
                   <th scope="col">Type</th>
                   <th scope="col">Bedrooms</th>
                   <th scope="col">Rent</th>
-                  <th scope="col">Date</th>
+                  <th scope="col">Record date</th>
                   <th scope="col">Distance</th>
                 </tr>
               </thead>
@@ -133,9 +150,9 @@ export function DeeperComparablePanel({
                       <span className="cell-label">Rent</span>
                       <span>{formatCurrency(comparable.rentMonthly)}</span>
                     </td>
-                    <td data-label="Date">
-                      <span className="cell-label">Date</span>
-                      <span>{formatDate(comparable.evidenceDate)}</span>
+                    <td data-label="Record date">
+                      <span className="cell-label">Record date</span>
+                      <span>{formatEvidenceDate(comparable.evidenceDate)}</span>
                     </td>
                     <td data-label="Distance">
                       <span className="cell-label">Distance</span>
@@ -146,7 +163,7 @@ export function DeeperComparablePanel({
               </tbody>
             </table>
           </div>
-          <div className="warning-list" aria-label="Deeper comparable notes">
+          <div className="warning-list" aria-label="Recent rented-record notes">
             <div>
               {calibration && (
                 <>
@@ -192,8 +209,8 @@ function formatSpread(value: number | undefined): string {
 
 function formatQualityLabel(value: "limited" | "useful" | "strong" | undefined): string {
   if (value === "limited") return "Limited";
-  if (value === "useful") return "Useful";
-  if (value === "strong") return "Strong";
+  if (value === "useful") return "Usable";
+  if (value === "strong") return "Broader";
   return "Unavailable";
 }
 
@@ -201,16 +218,6 @@ function formatDistance(value: number | undefined): string {
   if (value === undefined) return "Unknown";
   if (value >= 1000) return `${(value / 1000).toFixed(1)} km`;
   return `${Math.round(value)} m`;
-}
-
-function formatDate(value: string | undefined): string {
-  if (!value) return "Unknown";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
-    month: "short",
-    year: "numeric"
-  }).format(date);
 }
 
 function formatPropertyType(value: string | undefined): string {

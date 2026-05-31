@@ -1,4 +1,5 @@
 import { percentageDifference } from "./rentMath";
+import { parseEvidenceDate } from "./evidenceDates";
 import type {
   DeeperComparableEvidenceResult,
   LiveEvidenceCalibration,
@@ -113,7 +114,7 @@ export function comparePmiEvidenceLayers(
     return {
       status: "unavailable",
       message:
-        "Live-listing and deeper-comparable medians cannot be compared yet."
+        "Live-listing and recent rented-record medians cannot be compared yet."
     };
   }
 
@@ -131,7 +132,7 @@ export function comparePmiEvidenceLayers(
       medianDifferenceMonthly,
       medianDifferencePercent,
       message:
-        "Live listings and deeper comparables point to different rent levels, so treat PMI as context only."
+        "Live listings and recent rented records point to different rent levels, so treat PMI as context only."
     };
   }
 
@@ -140,7 +141,7 @@ export function comparePmiEvidenceLayers(
     medianDifferenceMonthly,
     medianDifferencePercent,
     message:
-      "Live listings and deeper comparables are broadly aligned, but PMI remains context only."
+      "Live listings and recent rented records are broadly aligned, but PMI remains context only."
   };
 }
 
@@ -231,11 +232,11 @@ function getFreshnessLabel(
     return "Unknown freshness";
   }
 
-  const searchedAt = parseEvidenceDate(evidence.searchedAt);
+  const searchedAt = parseEvidenceDate(evidence.searchedAt)?.date ?? null;
   if (!searchedAt) return "Mixed freshness";
 
   const datedRows = evidence.listings
-    .map((listing) => parseEvidenceDate(listing.listedDate))
+    .map((listing) => parseEvidenceDate(listing.listedDate)?.date ?? null)
     .filter((date): date is Date => date !== null);
 
   const allRecent = datedRows.every((date) => {
@@ -254,28 +255,6 @@ function countDatedComparables(evidence: DeeperComparableEvidenceResult): number
   return evidence.comparables.filter((comparable) =>
     parseEvidenceDate(comparable.evidenceDate)
   ).length;
-}
-
-function parseEvidenceDate(value: string | undefined): Date | null {
-  if (!value) return null;
-
-  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    return buildUtcDate(isoMatch[1], isoMatch[2], isoMatch[3]);
-  }
-
-  const ukMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (ukMatch) {
-    return buildUtcDate(ukMatch[3], ukMatch[2], ukMatch[1]);
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function buildUtcDate(year: string, month: string, day: string): Date | null {
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function buildReasons({
@@ -332,11 +311,11 @@ function getComparableFreshnessLabel(
     return "Unknown freshness";
   }
 
-  const searchedAt = parseEvidenceDate(evidence.searchedAt);
+  const searchedAt = parseEvidenceDate(evidence.searchedAt)?.date ?? null;
   if (!searchedAt) return "Mixed freshness";
 
   const datedRows = evidence.comparables
-    .map((comparable) => parseEvidenceDate(comparable.evidenceDate))
+    .map((comparable) => parseEvidenceDate(comparable.evidenceDate)?.date ?? null)
     .filter((date): date is Date => date !== null);
 
   const allRecent = datedRows.every((date) => {
@@ -365,27 +344,27 @@ function buildComparableReasons({
   const reasons: string[] = [];
 
   if (displayedCount < 4) {
-    reasons.push("Small sample: fewer than 4 comparable records were usable.");
+    reasons.push("Small sample: fewer than 4 recent rented records were usable.");
   } else if (displayedCount >= 8) {
-    reasons.push("Broad sample: at least 8 comparable records were usable.");
+    reasons.push("Broad sample: at least 8 recent rented records were usable.");
   } else {
-    reasons.push("Usable sample: at least 4 comparable records were usable.");
+    reasons.push("Usable sample: at least 4 recent rented records were usable.");
   }
 
   if (median === undefined) {
-    reasons.push("No median comparable rent could be calculated.");
+    reasons.push("No median recent record rent could be calculated.");
   }
 
   if (spreadPercent !== undefined && spreadPercent > limitedSpreadPercent) {
-    reasons.push("Wide range: comparable rents vary by more than 60% around the median.");
+    reasons.push("Wide range: recent rented records vary by more than 60% around the median.");
   } else if (spreadPercent !== undefined && spreadPercent <= strongSpreadPercent) {
-    reasons.push("Tighter range: comparable rents vary by no more than 35% around the median.");
+    reasons.push("Tighter range: recent rented records vary by no more than 35% around the median.");
   }
 
   if (datedListings < datedThreshold) {
-    reasons.push("Unknown evidence dates: most usable records do not include a date.");
+    reasons.push("Unknown record dates: most usable records do not include a date.");
   } else if (freshnessLabel === "Recent") {
-    reasons.push("Recent records: dated records are within the recent search window.");
+    reasons.push("Recent records: dated records are within the 12-month record window.");
   } else {
     reasons.push("Mixed freshness: dated records are not all recent.");
   }

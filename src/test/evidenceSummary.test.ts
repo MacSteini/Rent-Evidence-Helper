@@ -55,9 +55,12 @@ describe("evidence summary", () => {
       buildResult({
         deeperComparableEvidence: {
           evidenceKind: "licensed-comparables",
+          recordKind: "historical-rented-records",
           provider: "property-market-intel",
           searchedAt: "2026-05-30T00:00:00Z",
           searchAreaDescription: "SW12 8 postcode sector",
+          dateWindowStart: "2025-05-30",
+          dateWindowEnd: "2026-05-30",
           totalCount: 1,
           displayedCount: 1,
           medianMonthly: 2300,
@@ -82,7 +85,7 @@ describe("evidence summary", () => {
 
     expect(summary.onsStatus).toBe("Well above official area benchmark");
     expect(summary.deeperStatus).toBe(
-      "Deeper PMI comparables available; Limited PMI context."
+      "Recent PMI rented records available; Limited recent record context. A small sample, broad range or missing dates means you should not lean on this alone."
     );
   });
 
@@ -116,9 +119,12 @@ describe("evidence summary", () => {
         },
         deeperComparableEvidence: {
           evidenceKind: "licensed-comparables",
+          recordKind: "historical-rented-records",
           provider: "property-market-intel",
           searchedAt: "2026-05-30T00:00:00Z",
           searchAreaDescription: "M1 1 postcode sector",
+          dateWindowStart: "2025-05-30",
+          dateWindowEnd: "2026-05-30",
           totalCount: 10,
           displayedCount: 10,
           medianMonthly: 895,
@@ -142,7 +148,7 @@ describe("evidence summary", () => {
     );
 
     expect(summary.deeperStatus).toBe(
-      "Live listings and deeper comparables point to different rent levels. Treat PMI as context only."
+      "Live listings and recent rented records point to different rent levels. Treat PMI as context only."
     );
   });
 });

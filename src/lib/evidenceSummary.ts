@@ -65,6 +65,6 @@ function buildDeeperStatus(result: RentCheckResult): string | undefined {
   }
 
   return `${deeperComparableCopy.available}; ${
-    evidenceSummaryCopy.pmiQuality[deeperCalibration.qualityLevel]
-  }.`;
+    deeperComparableCopy.quality[deeperCalibration.qualityLevel]
+  }`;
 }

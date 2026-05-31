@@ -369,6 +369,7 @@ export default function App() {
                     <DeeperComparablePanel
                       input={result.input}
                       evidence={result.deeperComparableEvidence}
+                      hasLiveEvidence={Boolean(result.liveEvidence)}
                       canRun={Boolean(pmiApiKey.trim()) && pmiCooldownSeconds === 0}
                       cooldownSeconds={
                         pmiApiKey.trim() && pmiCooldownSeconds > 0

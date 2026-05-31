@@ -12,7 +12,7 @@ import type { RentSearchInput } from "../types/rent";
 import type { EvidenceMode } from "../types/rentCheckResult";
 
 const storageKey = "market-rent-check-last-check";
-const storageVersion = 5;
+const storageVersion = 6;
 const tenancyContexts: Array<RentSearchInput["tenancyContext"]> = [
   "current-rent-only",
   "informal-proposed-increase",
@@ -238,9 +238,12 @@ function isDeeperComparableEvidence(
   const evidence = value as Partial<DeeperComparableEvidenceResult>;
   return (
     evidence.evidenceKind === "licensed-comparables" &&
+    evidence.recordKind === "historical-rented-records" &&
     evidence.provider === "property-market-intel" &&
     typeof evidence.searchedAt === "string" &&
     typeof evidence.searchAreaDescription === "string" &&
+    typeof evidence.dateWindowStart === "string" &&
+    typeof evidence.dateWindowEnd === "string" &&
     isFiniteNumber(evidence.totalCount) &&
     isFiniteNumber(evidence.displayedCount) &&
     Array.isArray(evidence.comparables) &&

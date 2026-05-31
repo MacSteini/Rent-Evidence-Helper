@@ -89,32 +89,34 @@ export const liveEvidenceCopy = {
 };
 
 export const deeperComparableCopy = {
-  title: "Optional deeper PMI comparable check",
+  title: "Recent PMI rented records",
   summary:
-    "Property Market Intel can return rental comparable records for the postcode sector. This is additional context and does not replace the ONS benchmark result.",
+    "Property Market Intel can return recent rented records for the postcode sector. This is historical record context and does not replace the ONS benchmark result.",
   creditWarning:
     "This check may cost 5 PMI credits each time it is run.",
-  button: "Run deeper comparable check",
-  loading: "Running deeper comparable check...",
+  button: "Run recent rented-record check",
+  loading: "Running recent rented-record check...",
   wait: (seconds: number) =>
     `Wait ${seconds}s before running PMI again`,
   noKey:
-    "Enter a Property Market Intel API key to run the deeper comparable check.",
+    "Enter a Property Market Intel API key to run the recent rented-record check.",
   caption:
-    "Selected Property Market Intel comparable records. Exact addresses, UPRNs and full postcodes are not shown.",
-  sourceLabel: "Property Market Intel comparables",
-  available: "Deeper PMI comparables available",
+    "Recent Property Market Intel rented records from the last 12 months. Exact addresses, UPRNs and full postcodes are not shown.",
+  sourceLabel: "Property Market Intel rented records",
+  available: "Recent PMI rented records available",
   status:
-    "Treat these records as rental evidence context, not achieved-rent certainty, legal advice or a tribunal decision.",
+    "These are historical rented records, not current live adverts. Use them as context when asking for evidence, not as proof that the rent is lawful or unlawful.",
+  liveEmptyWithRecords:
+    "Historical rented records are shown separately below. They are not current live listings.",
   disagreement:
-    "Live listings and deeper comparables point to different rent levels. Treat PMI as context only.",
+    "Live listings and recent rented records point to different rent levels. Treat PMI as context only.",
   quality: {
     limited:
-      "Limited comparable context. A small sample, broad range or missing dates means you should not lean on this alone.",
+      "Limited recent record context. A small sample, broad range or missing dates means you should not lean on this alone.",
     useful:
-      "Useful comparable context. Check the records and compare them with your own evidence.",
+      "Usable recent record context. Check the records and compare them with your own evidence.",
     strong:
-      "Stronger comparable context. It is still context only, not a rent decision."
+      "Broader recent record context. It is still context only, not a rent decision."
   }
 };
 
@@ -124,7 +126,7 @@ export const evidenceSummaryCopy = {
     "The official benchmark remains the main result. Live listings add context when available.",
   onsLabel: "ONS benchmark status",
   pmiLabel: "PMI context status",
-  deeperLabel: "Deeper PMI check",
+  deeperLabel: "Recent PMI records",
   actionLabel: "Recommended action",
   pmiOnly: "ONS benchmark only",
   pmiWarning:
@@ -180,7 +182,7 @@ export const disputeSupportCopy = {
   options: {
     includeOnsBenchmark: "Include ONS benchmark summary",
     includePmiLive: "Include PMI live-listings context",
-    includePmiDeeper: "Include deeper PMI comparable context",
+    includePmiDeeper: "Include recent PMI rented-record context",
     requestWrittenEvidence: "Ask for written evidence",
     askForInformalResolution: "Ask to resolve this informally",
     includeFormalNoticeDetails: "Mention recorded notice details",
@@ -225,17 +227,17 @@ export const methodologyCopy = [
   "Weekly rent is converted to monthly rent using weekly rent multiplied by 52 and divided by 12.",
   "The result compares your monthly rent with the latest ingested ONS private-rent benchmark for the Local Authority you choose.",
   "If you provide a Property Market Intel API key, the app also requests live rental listings directly from Property Market Intel and treats those listing prices as asking rents.",
-  "The optional deeper PMI comparable check is user-triggered, may cost 5 PMI credits, and uses only the postcode sector derived in the browser. Property Market Intel free-tier use may require short waits between requests; the app does not retry automatically.",
+    "The optional recent PMI rented-record check is user-triggered, may cost 5 PMI credits, and uses only the postcode sector derived in the browser. It requests records from the last 12 months only. Property Market Intel free-tier use may require short waits between requests; the app does not retry automatically.",
   "Bedroom count is used first to select the ONS benchmark field. If bedrooms are not usable, flats and maisonettes use the flat or maisonette benchmark; other cases use the all-property benchmark.",
   "Status uses the difference from the selected ONS benchmark: near is within 10%, above is more than 10%, and well above is more than 20%. Live listings add context but do not change the ONS-based status or tribunal rules.",
   "The PMI quality labels look at usable row count, rent spread and whether dates are present. A range spread above 60% forces a limited context label even when there are 10 rows.",
-  "If live listings and deeper comparables point to materially different rent levels, the app warns you to treat PMI as context only.",
-  "The ONS benchmark is an area-level estimate. Live listings and deeper PMI comparables are context only. None of these sources is a tribunal decision or legal advice.",
+  "If current live listings and recent rented records point to materially different rent levels, the app warns you to treat PMI as context only.",
+  "The ONS benchmark is an area-level estimate. Live listings and recent PMI rented records are context only. None of these sources is a tribunal decision or legal advice.",
   "Dispute support templates are generated locally from the result and your selected options. They do not send data to AI services and do not calculate or satisfy tribunal deadlines."
 ];
 
 export const privacyCopy =
-  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional deeper comparable check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
+  "This app does not create an account, send inputs to third-party AI services, or use analytics. To keep a completed result available after refresh, it saves the latest completed check in this browser only. Dispute support templates are generated in this browser from the result and selected options. If you enter a Property Market Intel API key, requests go directly from this browser to Property Market Intel and may require short waits between requests. The optional recent rented-record check sends the postcode sector, not the full postcode. The key stays in the current tab unless you choose to remember it on this device. Local Authority is selected manually and is used for the official ONS area benchmark.";
 
 export const resultCopy: Record<OfficialBenchmarkStatus, ResultCopy> = {
   below_benchmark: {

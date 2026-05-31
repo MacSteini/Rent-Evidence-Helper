@@ -45,9 +45,12 @@ describe("dispute support templates", () => {
       },
       deeperComparableEvidence: {
         evidenceKind: "licensed-comparables",
+        recordKind: "historical-rented-records",
         provider: "property-market-intel",
         searchedAt: "2026-05-30T00:00:00Z",
         searchAreaDescription: "SW12 8 postcode sector",
+        dateWindowStart: "2025-05-30",
+        dateWindowEnd: "2026-05-30",
         totalCount: 1,
         displayedCount: 1,
         medianMonthly: 2300,
@@ -64,7 +67,9 @@ describe("dispute support templates", () => {
     );
 
     expect(message).toContain("live asking-rent listings through Property Market Intel");
-    expect(message).toContain("optional Property Market Intel comparable check");
+    expect(message).toContain("recent Property Market Intel rented records");
+    expect(message).toContain("30 May 2025 to 30 May 2026");
+    expect(message).toContain("not current live listings or a legal decision");
     expect(message).toContain("£2,500 per month");
     expect(message).toContain("£2,300 per month");
 

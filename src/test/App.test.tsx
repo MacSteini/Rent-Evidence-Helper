@@ -257,7 +257,7 @@ describe("App", () => {
       screen.queryByRole("heading", { name: /comparable homes/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /run deeper comparable check/i })
+      screen.queryByRole("button", { name: /run recent rented-record check/i })
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/median comparable/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Comparables$/i)).not.toBeInTheDocument();
@@ -360,7 +360,7 @@ describe("App", () => {
     });
     expect(deeperRunButton).toBeDisabled();
     const deeperPanel = screen.getByRole("region", {
-      name: /optional deeper PMI comparable check/i
+      name: /recent PMI rented records/i
     });
     expect(within(deeperPanel).getByText(/may cost 5 PMI credits/i))
       .toBeInTheDocument();
@@ -368,7 +368,7 @@ describe("App", () => {
     expect(screen.queryByText(/manual evidence/i)).not.toBeInTheDocument();
   });
 
-  it("runs the optional deeper PMI comparable check only after explicit click", async () => {
+  it("runs the recent PMI rented records only after explicit click", async () => {
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockImplementation((url: URL) => {
@@ -409,22 +409,27 @@ describe("App", () => {
     await forceAppRerender(user);
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: /run deeper comparable check/i })
+        screen.getByRole("button", { name: /run recent rented-record check/i })
       ).toBeEnabled()
     );
 
     await user.click(
-      screen.getByRole("button", { name: /run deeper comparable check/i })
+      screen.getByRole("button", { name: /run recent rented-record check/i })
     );
 
     expect(
-      await screen.findByText(/deeper PMI comparables available/i)
+      await screen.findByText(/recent PMI rented records available/i)
     ).toBeInTheDocument();
     const deeperPanel = screen.getByRole("region", {
-      name: /optional deeper PMI comparable check/i
+      name: /recent PMI rented records/i
     });
-    expect(within(deeperPanel).getByText(/median comparable rent/i))
+    expect(within(deeperPanel).getByText(/median record rent/i))
       .toBeInTheDocument();
+    expect(within(deeperPanel).getAllByText(/record date/i).length)
+      .toBeGreaterThan(0);
+    expect(
+      within(deeperPanel).getByText(/historical rented records, not current live adverts/i)
+    ).toBeInTheDocument();
     expect(within(deeperPanel).getAllByText(/^£2,400$/i).length)
       .toBeGreaterThan(0);
     expect(screen.queryByText(/Hidden Comparable Address/i)).not.toBeInTheDocument();
@@ -439,7 +444,60 @@ describe("App", () => {
     expect(comparableUrl).toContain("/v1/prices/comparables");
     expect(comparableUrl).toContain("type=rented");
     expect(comparableUrl).toContain("postcode=SW12+8");
+    expect(comparableUrl).toContain("min_date=");
+    expect(comparableUrl).toContain("max_date=");
     expect(comparableUrl).not.toContain("SW12+8AA");
+  });
+
+  it("separates empty current listings from recent rented records", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockImplementation((url: URL) => {
+      if (String(url).includes("/prices/comparables")) {
+        return Promise.resolve(
+          new Response(JSON.stringify(pmiComparablesResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ total_count: 0, listings: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+
+    expect(
+      await screen.findByText(/no current live rental listings for this outcode/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /live rental listings/i }))
+      .not.toBeInTheDocument();
+
+    nowSpy.mockReturnValue(1_010_000);
+    await forceAppRerender(user);
+    await user.click(
+      screen.getByRole("button", { name: /run recent rented-record check/i })
+    );
+
+    expect(
+      await screen.findByText(/recent PMI rented records available/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/historical rented records are shown separately below/i)
+    ).toBeInTheDocument();
   });
 
   it("shows a deeper comparable warning without breaking ONS and live evidence", async () => {
@@ -477,12 +535,12 @@ describe("App", () => {
     await forceAppRerender(user);
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: /run deeper comparable check/i })
+        screen.getByRole("button", { name: /run recent rented-record check/i })
       ).toBeEnabled()
     );
 
     await user.click(
-      screen.getByRole("button", { name: /run deeper comparable check/i })
+      screen.getByRole("button", { name: /run recent rented-record check/i })
     );
 
     expect(await screen.findByText(/quota or rate limit/i)).toBeInTheDocument();
@@ -791,14 +849,14 @@ describe("App", () => {
     await forceAppRerender(user);
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: /run deeper comparable check/i })
+        screen.getByRole("button", { name: /run recent rented-record check/i })
       ).toBeEnabled()
     );
     await user.click(
-      screen.getByRole("button", { name: /run deeper comparable check/i })
+      screen.getByRole("button", { name: /run recent rented-record check/i })
     );
     expect(
-      await screen.findByText(/deeper PMI comparables available/i)
+      await screen.findByText(/recent PMI rented records available/i)
     ).toBeInTheDocument();
 
     window.sessionStorage.clear();
@@ -806,15 +864,15 @@ describe("App", () => {
     render(<App />);
 
     expect(
-      screen.getByText(/deeper PMI comparables available/i)
+      screen.getByText(/recent PMI rented records available/i)
     ).toBeInTheDocument();
     const deeperPanel = screen.getByRole("region", {
-      name: /optional deeper PMI comparable check/i
+      name: /recent PMI rented records/i
     });
     expect(within(deeperPanel).getAllByText(/^£2,400$/i).length)
       .toBeGreaterThan(0);
     expect(
-      screen.queryByRole("button", { name: /run deeper comparable check/i })
+      screen.queryByRole("button", { name: /run recent rented-record check/i })
     ).not.toBeInTheDocument();
   });
 

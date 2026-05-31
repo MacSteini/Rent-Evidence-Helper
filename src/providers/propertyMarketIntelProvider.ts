@@ -1,4 +1,5 @@
 import { median, sortNumbers } from "../lib/statistics";
+import { parseEvidenceDate } from "../lib/evidenceDates";
 import { parsePostcode } from "../lib/postcode";
 import type {
   DeeperComparableEvidenceResult,
@@ -12,6 +13,7 @@ import type { PropertyType, RentSearchInput } from "../types/rent";
 const baseUrl = "https://api.propertymarketintel.com/v1";
 const providerName = "Property Market Intel";
 const perPage = 10;
+const recentComparableMonths = 12;
 
 type FetchLike = typeof fetch;
 
@@ -75,20 +77,47 @@ export function buildPmiListingsUrl(input: RentSearchInput): URL {
   return url;
 }
 
-export function buildPmiComparablesUrl(input: RentSearchInput): URL {
+export type PmiComparableDateWindow = {
+  start: string;
+  end: string;
+};
+
+export function buildPmiComparableDateWindow(
+  now: Date = new Date()
+): PmiComparableDateWindow {
+  const safeNow = Number.isNaN(now.getTime()) ? new Date() : now;
+  const end = new Date(
+    Date.UTC(safeNow.getUTCFullYear(), safeNow.getUTCMonth(), safeNow.getUTCDate())
+  );
+  const start = new Date(end);
+  start.setUTCMonth(start.getUTCMonth() - recentComparableMonths);
+
+  return {
+    start: formatDateParam(start),
+    end: formatDateParam(end)
+  };
+}
+
+export function buildPmiComparablesUrl(
+  input: RentSearchInput,
+  now: Date = new Date()
+): URL {
   const postcodeSector = getSearchPostcodeSector(input);
   if (!postcodeSector) {
     throw new PmiEvidenceError(
       "malformed-response",
-      "A valid postcode sector is required for the deeper comparable check."
+      "A valid postcode sector is required for the recent rented-record check."
     );
   }
 
   const url = new URL(`${baseUrl}/prices/comparables`);
+  const dateWindow = buildPmiComparableDateWindow(now);
   url.searchParams.set("type", "rented");
   url.searchParams.set("postcode", postcodeSector);
   url.searchParams.set("bedrooms", String(input.bedrooms));
   url.searchParams.set("per_page", String(perPage));
+  url.searchParams.set("min_date", dateWindow.start);
+  url.searchParams.set("max_date", dateWindow.end);
 
   return url;
 }
@@ -164,7 +193,8 @@ export async function searchPmiDeeperComparables(
 
   let response: Response;
   try {
-    response = await fetchImpl(buildPmiComparablesUrl(input), {
+    const requestedAt = new Date();
+    response = await fetchImpl(buildPmiComparablesUrl(input, requestedAt), {
       headers: {
         Authorization: `Bearer ${trimmedKey}`,
         Accept: "application/json"
@@ -173,7 +203,7 @@ export async function searchPmiDeeperComparables(
   } catch {
     throw new PmiEvidenceError(
       "network-or-cors",
-      "The deeper comparable request could not reach Property Market Intel."
+      "The recent rented-record request could not reach Property Market Intel."
     );
   }
 
@@ -202,8 +232,8 @@ export async function searchPmiDeeperComparables(
     throw new PmiEvidenceError(
       "network-or-cors",
       providerMessage
-        ? `Property Market Intel could not return deeper comparable evidence: ${providerMessage}`
-        : "Property Market Intel could not return deeper comparable evidence."
+        ? `Property Market Intel could not return recent rented-record evidence: ${providerMessage}`
+        : "Property Market Intel could not return recent rented-record evidence."
     );
   }
 
@@ -261,7 +291,7 @@ export function normalisePmiListingsResponse(
       "no-listings",
       returnedCount > 0
         ? `Property Market Intel returned ${returnedCount} listing records, but none included a usable monthly asking rent.`
-        : "Property Market Intel returned no rental listings for this outcode search."
+        : "PMI returned no current live rental listings for this outcode. This does not rule out older rented records or official benchmark evidence."
     );
   }
 
@@ -306,19 +336,23 @@ export function normalisePmiComparablesResponse(
   }
 
   const postcodeSector = getSearchPostcodeSector(input);
+  const dateWindow = buildPmiComparableDateWindow(new Date(searchedAt));
   const comparables = response.comparables
     .map((comparable, index) =>
       normaliseComparable(comparable, input, searchedAt, postcodeSector, index)
     )
-    .filter((comparable): comparable is DeeperComparableRent => comparable !== null);
+    .filter((comparable): comparable is DeeperComparableRent => comparable !== null)
+    .filter((comparable) =>
+      isComparableInsideDateWindow(comparable, dateWindow)
+    );
 
   if (comparables.length === 0) {
     const returnedCount = response.comparables.length;
     throw new PmiEvidenceError(
       "no-listings",
       returnedCount > 0
-        ? `Property Market Intel returned ${returnedCount} comparable records, but none included a usable monthly rent.`
-        : "Property Market Intel returned no comparable rental records for this postcode sector."
+        ? "PMI returned no recent rented records for this postcode sector in the last 12 months. Use the ONS benchmark and evidence you collect yourself."
+        : "Property Market Intel returned no recent rented records for this postcode sector in the last 12 months. Use the ONS benchmark and evidence you collect yourself."
     );
   }
 
@@ -332,11 +366,14 @@ export function normalisePmiComparablesResponse(
 
   return {
     evidenceKind: "licensed-comparables",
+    recordKind: "historical-rented-records",
     provider: "property-market-intel",
     searchedAt,
     searchAreaDescription: postcodeSector
       ? `${postcodeSector} postcode sector`
       : "selected postcode sector",
+    dateWindowStart: dateWindow.start,
+    dateWindowEnd: dateWindow.end,
     totalCount,
     displayedCount: comparables.length,
     medianMonthly: median(rents),
@@ -344,8 +381,8 @@ export function normalisePmiComparablesResponse(
     maximumMonthly: rents[rents.length - 1],
     comparables,
     warnings: [
-      "Property Market Intel comparable prices are treated as rental evidence context, not a market-rent decision.",
-      "The deeper comparable check may cost 5 PMI credits each time it is run."
+      "Property Market Intel recent rented records are historical rented-record context, not current live listings or a market-rent decision.",
+      "The recent rented-record check may cost 5 PMI credits each time it is run."
     ]
   };
 }
@@ -365,7 +402,7 @@ export function liveEvidenceErrorMessage(error: unknown): string {
 
 export function deeperComparableErrorMessage(error: unknown): string {
   if (error instanceof PmiEvidenceError) return error.message;
-  return "Deeper comparable evidence is unavailable. The ONS benchmark still applies.";
+  return "Recent rented-record evidence is unavailable. The ONS benchmark still applies.";
 }
 
 function normaliseListing(
@@ -432,6 +469,31 @@ function normaliseComparable(
     evidenceDate: firstString(row.date),
     distanceMeters: toFiniteNumber(row.distance_m)
   };
+}
+
+function isComparableInsideDateWindow(
+  comparable: DeeperComparableRent,
+  dateWindow: PmiComparableDateWindow
+): boolean {
+  const parsed = parseEvidenceDate(comparable.evidenceDate);
+  if (!parsed) return false;
+
+  const start = parseEvidenceDate(dateWindow.start);
+  const end = parseEvidenceDate(dateWindow.end);
+  if (!start || !end) return false;
+
+  return (
+    parsed.date.getTime() >= start.date.getTime() &&
+    parsed.date.getTime() <= end.date.getTime()
+  );
+}
+
+function formatDateParam(date: Date): string {
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, "0"),
+    String(date.getUTCDate()).padStart(2, "0")
+  ].join("-");
 }
 
 function mapPmiPropertyType(value: unknown): PropertyType | undefined {

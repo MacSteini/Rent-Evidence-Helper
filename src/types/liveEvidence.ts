@@ -3,6 +3,7 @@ import type { PropertyType, RentPeriod, RentSearchInput } from "./rent";
 export type LiveEvidenceKind = "licensed-live";
 
 export type DeeperComparableEvidenceKind = "licensed-comparables";
+export type DeeperComparableRecordKind = "historical-rented-records";
 
 export type LiveEvidenceProvider = "property-market-intel";
 
@@ -75,9 +76,12 @@ export type LiveRentalEvidenceResult = {
 
 export type DeeperComparableEvidenceResult = {
   evidenceKind: DeeperComparableEvidenceKind;
+  recordKind: DeeperComparableRecordKind;
   provider: LiveEvidenceProvider;
   searchedAt: string;
   searchAreaDescription: string;
+  dateWindowStart: string;
+  dateWindowEnd: string;
   totalCount: number;
   displayedCount: number;
   medianMonthly?: number;

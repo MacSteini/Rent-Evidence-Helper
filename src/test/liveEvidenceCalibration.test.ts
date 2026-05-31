@@ -155,7 +155,7 @@ describe("live evidence calibration", () => {
     expect(calibration.spreadPercent).toBeCloseTo(140, 1);
     expect(calibration.medianDifferencePercent).toBeCloseTo(22.5, 1);
     expect(calibration.reasons).toContain(
-      "Wide range: comparable rents vary by more than 60% around the median."
+      "Wide range: recent rented records vary by more than 60% around the median."
     );
   });
 
@@ -240,9 +240,12 @@ function deeperEvidenceWithRents(rents: number[]): DeeperComparableEvidenceResul
 
   return {
     evidenceKind: "licensed-comparables",
+    recordKind: "historical-rented-records",
     provider: "property-market-intel",
     searchedAt: "2026-05-30T00:00:00Z",
     searchAreaDescription: "SW12 8 postcode sector",
+    dateWindowStart: "2025-05-30",
+    dateWindowEnd: "2026-05-30",
     totalCount: rents.length,
     displayedCount: rents.length,
     medianMonthly,
@@ -250,7 +253,7 @@ function deeperEvidenceWithRents(rents: number[]): DeeperComparableEvidenceResul
     maximumMonthly: sorted[sorted.length - 1],
     comparables,
     warnings: [
-      "Property Market Intel comparable prices are treated as rental evidence context, not a market-rent decision."
+      "Property Market Intel recent rented records are historical rented-record context, not current live listings or a market-rent decision."
     ]
   };
 }

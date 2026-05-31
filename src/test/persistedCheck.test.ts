@@ -55,7 +55,7 @@ describe("persisted check", () => {
 
     const storedCheck = readStoredCheck(sourceSha256);
 
-    expect(storedCheck?.version).toBe(5);
+    expect(storedCheck?.version).toBe(6);
     expect(storedCheck?.officialBenchmarkComparison.userRentMonthly).toBe(2450);
     expect(storedCheck?.evidenceMode).toBe("official-only");
     expect(storedCheck?.sourceSha256).toBe(sourceSha256);
@@ -80,8 +80,8 @@ describe("persisted check", () => {
     expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
   });
 
-  it("clears old version 1, 2, 3 and 4 checks instead of restoring them", () => {
-    for (const version of [1, 2, 3, 4]) {
+  it("clears old version 1, 2, 3, 4 and 5 checks instead of restoring them", () => {
+    for (const version of [1, 2, 3, 4, 5]) {
       window.localStorage.setItem(
         "market-rent-check-last-check",
         JSON.stringify({
@@ -106,9 +106,12 @@ describe("persisted check", () => {
         evidenceMode: "official-only",
         deeperComparableEvidence: {
           evidenceKind: "licensed-comparables",
+          recordKind: "historical-rented-records",
           provider: "property-market-intel",
           searchedAt: "2026-05-30T00:00:00Z",
           searchAreaDescription: "SW12 8 postcode sector",
+          dateWindowStart: "2025-05-30",
+          dateWindowEnd: "2026-05-30",
           totalCount: 1,
           displayedCount: 1,
           medianMonthly: 2300,

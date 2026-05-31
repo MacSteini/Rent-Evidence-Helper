@@ -1,4 +1,5 @@
 import { formatCurrency } from "./rentMath";
+import { formatEvidenceDateRange } from "./evidenceDates";
 import type { RentCheckResult } from "../types/rentCheckResult";
 import type {
   DisputeSupportSelection,
@@ -74,8 +75,12 @@ export function buildDisputeMessageTemplate(
     selection.includePmiDeeper &&
     result.deeperComparableEvidence?.medianMonthly
   ) {
+    const recordWindow = formatEvidenceDateRange(
+      result.deeperComparableEvidence.dateWindowStart,
+      result.deeperComparableEvidence.dateWindowEnd
+    );
     paragraphs.push(
-      `I also ran the optional Property Market Intel comparable check for the postcode sector. The median rent in that comparable context is ${formatCurrency(result.deeperComparableEvidence.medianMonthly)} per month.`
+      `I also checked recent Property Market Intel rented records for the postcode sector from ${recordWindow}. The median rent in that historical rented-record context is ${formatCurrency(result.deeperComparableEvidence.medianMonthly)} per month. This is not current live listings or a legal decision.`
     );
   }
 
