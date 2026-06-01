@@ -1030,6 +1030,12 @@ describe("App", () => {
     expect(window.localStorage.getItem("market-rent-check-pmi-api-key")).toBe(
       "pmi_live_test"
     );
+    expect(
+      screen.getByLabelText(/local authority/i, { selector: "input" })
+    ).toHaveValue("");
+    expect(
+      screen.getByLabelText(/current rent/i, { selector: "input" })
+    ).toHaveValue("2450");
   });
 
   it("restores saved deeper comparable evidence after refresh without requiring a key", async () => {

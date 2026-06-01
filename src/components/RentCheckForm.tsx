@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 import { InfoButton } from "./InfoButton";
 import { fieldCopy, fieldHelpCopy } from "../content/uiCopy";
@@ -28,6 +28,7 @@ type LocalAuthorityOption = {
 
 type RentCheckFormProps = {
   initialInput: RentSearchInput;
+  resetKey?: number;
   localAuthorityOptions: LocalAuthorityOption[];
   pmiApiKey: string;
   rememberPmiApiKey: boolean;
@@ -45,6 +46,7 @@ type FormErrors = Partial<Record<keyof RentSearchInput, string>>;
 
 export function RentCheckForm({
   initialInput,
+  resetKey = 0,
   localAuthorityOptions,
   pmiApiKey,
   rememberPmiApiKey,
@@ -74,6 +76,22 @@ export function RentCheckForm({
   const [submitGuardMessage, setSubmitGuardMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const submitGuardRef = useRef(initialSubmitGuardState);
+
+  useEffect(() => {
+    setInput(initialInput);
+    setRentAmountText(String(initialInput.rentAmount));
+    setCurrentRentBeforeIncreaseText(
+      initialInput.currentRentBeforeIncrease
+        ? String(initialInput.currentRentBeforeIncrease)
+        : ""
+    );
+    setLocalAuthorityText(
+      getLocalAuthorityLabel(initialInput.localAuthorityCode, localAuthorityOptions)
+    );
+    setErrors({});
+    setSubmitGuardMessage(null);
+    submitGuardRef.current = initialSubmitGuardState;
+  }, [initialInput, localAuthorityOptions, resetKey]);
 
   function update<K extends keyof RentSearchInput>(key: K, value: RentSearchInput[K]) {
     setInput((current) => ({ ...current, [key]: value }));

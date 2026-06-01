@@ -68,7 +68,7 @@ const initialInput: RentSearchInput = {
 };
 
 export default function App() {
-  const [storedCheck] = useState(() =>
+  const [storedCheck, setStoredCheck] = useState(() =>
     readStoredCheck(officialBenchmarkDataset.sourceSha256)
   );
   const [storedPmiKey] = useState(() => readStoredPmiApiKey());
@@ -96,6 +96,7 @@ export default function App() {
   );
   const [lastPmiAttemptAt, setLastPmiAttemptAt] = useState<number | null>(null);
   const [, setPmiCooldownTick] = useState(0);
+  const [formResetKey, setFormResetKey] = useState(0);
   const [hasStartedCheck, setHasStartedCheck] = useState(Boolean(storedCheck));
   const [hasClearedStaleResult, setHasClearedStaleResult] = useState(false);
   const [activeDialog, setActiveDialog] = useState<
@@ -245,11 +246,13 @@ export default function App() {
 
   function handleClearSavedResult() {
     clearStoredCheck();
+    setStoredCheck(null);
     setResult(null);
     setHasStartedCheck(false);
     setHasClearedStaleResult(false);
     setError(null);
     setDeeperComparableError(null);
+    setFormResetKey((key) => key + 1);
   }
 
   async function handleRunDeeperComparables() {
@@ -447,6 +450,7 @@ export default function App() {
 
           <RentCheckForm
             initialInput={storedCheck?.input ?? initialInput}
+            resetKey={formResetKey}
             localAuthorityOptions={localAuthorityOptions}
             pmiApiKey={pmiApiKey}
             rememberPmiApiKey={rememberPmiApiKey}
