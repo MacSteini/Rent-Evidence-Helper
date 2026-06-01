@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "./",
+  base: "/Rent-Evidence-Helper/",
   cacheDir: "../node_modules/.vite/uk-rent-checker",
   test: {
     environment: "jsdom",

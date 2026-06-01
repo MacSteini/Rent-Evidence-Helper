@@ -12,19 +12,21 @@ describe("public SEO metadata", () => {
     expect(html).toContain("editable dispute-support message templates");
     expect(html).toContain("calm rent-increase response in England");
     expect(html).toContain(
-      '<meta property="og:url" content="https://MacSteini.github.io/Rent-Evidence-Helper/" />'
+      '<meta property="og:url" content="https://macsteini.github.io/Rent-Evidence-Helper/" />'
     );
     expect(html).toContain(
-      '<link rel="canonical" href="https://MacSteini.github.io/Rent-Evidence-Helper/" />'
+      '<link rel="canonical" href="https://macsteini.github.io/Rent-Evidence-Helper/" />'
     );
     expect(html).toContain('<meta name="robots" content="index, follow" />');
+    expect(html).toContain("Compare a rent or proposed rent increase in England");
+    expect(html).toContain("It does not provide legal advice");
   });
 
   it("keeps sitemap and robots aligned with the planned GitHub Pages URL", () => {
-    expect(sitemap).toContain("<loc>https://MacSteini.github.io/Rent-Evidence-Helper/</loc>");
+    expect(sitemap).toContain("<loc>https://macsteini.github.io/Rent-Evidence-Helper/</loc>");
     expect(sitemap).toContain("<lastmod>2026-06-01</lastmod>");
     expect(robots).toContain(
-      "Sitemap: https://MacSteini.github.io/Rent-Evidence-Helper/sitemap.xml"
+      "Sitemap: https://macsteini.github.io/Rent-Evidence-Helper/sitemap.xml"
     );
   });
 });

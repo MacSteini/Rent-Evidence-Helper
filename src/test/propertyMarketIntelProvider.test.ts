@@ -199,6 +199,28 @@ describe("Property Market Intel provider", () => {
     ).toThrow(PmiEvidenceError);
   });
 
+  it("maps malformed successful listing responses to a controlled PMI error", async () => {
+    await expect(
+      searchPmiLiveRentalListings(input, "pmi_live_test", malformedJsonFetch())
+    ).rejects.toMatchObject({
+      code: "malformed-response",
+      message: "Property Market Intel returned a malformed live listing response."
+    });
+  });
+
+  it("maps malformed successful listing response shapes to a controlled PMI error", async () => {
+    await expect(
+      searchPmiLiveRentalListings(
+        input,
+        "pmi_live_test",
+        responseFetch(200, { total_count: 1, listings: "not-an-array" })
+      )
+    ).rejects.toMatchObject({
+      code: "malformed-response",
+      message: "PMI response did not include a listings array."
+    });
+  });
+
   it("normalises deeper comparables without exposing address, UPRN or full postcode", () => {
     const evidence = normalisePmiComparablesResponse(
       pmiComparablesResponse,
@@ -347,6 +369,28 @@ describe("Property Market Intel provider", () => {
     expect(evidence.displayedCount).toBe(2);
   });
 
+  it("maps malformed successful recent rented-record responses to a controlled PMI error", async () => {
+    await expect(
+      searchPmiDeeperComparables(input, "pmi_live_test", malformedJsonFetch())
+    ).rejects.toMatchObject({
+      code: "malformed-response",
+      message: "Property Market Intel returned a malformed recent rented-record response."
+    });
+  });
+
+  it("maps malformed successful recent rented-record response shapes to a controlled PMI error", async () => {
+    await expect(
+      searchPmiDeeperComparables(
+        input,
+        "pmi_live_test",
+        responseFetch(200, { total_count: 1, comparables: "not-an-array" })
+      )
+    ).rejects.toMatchObject({
+      code: "malformed-response",
+      message: "PMI response did not include a comparables array."
+    });
+  });
+
   it("accepts a raw key, bearer value or copied authorization header", () => {
     expect(normalisePmiApiKey(" pmi_live_test ")).toBe("pmi_live_test");
     expect(normalisePmiApiKey("Bearer pmi_live_test")).toBe("pmi_live_test");
@@ -402,6 +446,15 @@ function responseFetch(status: number, body: unknown) {
     new Response(JSON.stringify(body), {
       status,
       headers: { "Content-Type": "application/json" }
+    })
+  );
+}
+
+function malformedJsonFetch() {
+  return vi.fn().mockResolvedValue(
+    new Response("<html>Not JSON</html>", {
+      status: 200,
+      headers: { "Content-Type": "text/html" }
     })
   );
 }

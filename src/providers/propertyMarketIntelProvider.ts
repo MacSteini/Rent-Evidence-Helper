@@ -177,7 +177,10 @@ export async function searchPmiLiveRentalListings(
     );
   }
 
-  const value = await response.json();
+  const value = await readSuccessfulProviderJson(
+    response,
+    "Property Market Intel returned a malformed live listing response."
+  );
   return normalisePmiListingsResponse(value, input, new Date().toISOString());
 }
 
@@ -237,7 +240,10 @@ export async function searchPmiDeeperComparables(
     );
   }
 
-  const value = await response.json();
+  const value = await readSuccessfulProviderJson(
+    response,
+    "Property Market Intel returned a malformed recent rented-record response."
+  );
   return normalisePmiComparablesResponse(value, input, new Date().toISOString());
 }
 
@@ -261,6 +267,17 @@ async function readProviderErrorMessage(response: Response): Promise<string | nu
     return [title, detail].filter(Boolean).join(" – ") || null;
   } catch {
     return null;
+  }
+}
+
+async function readSuccessfulProviderJson(
+  response: Response,
+  failureMessage: string
+): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new PmiEvidenceError("malformed-response", failureMessage);
   }
 }
 

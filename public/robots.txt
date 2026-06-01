@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://MacSteini.github.io/Rent-Evidence-Helper/sitemap.xml
+Sitemap: https://macsteini.github.io/Rent-Evidence-Helper/sitemap.xml
