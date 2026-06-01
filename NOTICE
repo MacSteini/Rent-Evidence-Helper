@@ -1,0 +1,22 @@
+Rent Evidence Helper
+Copyright (c) 2026 MacSteini
+
+This project is licensed under the GNU Affero General Public License
+version 3 only (AGPL-3.0-only). See LICENCE for the full licence text.
+
+The project name, branding, visual identity and public presentation of
+"Rent Evidence Helper" are not granted as trade marks, endorsements or
+official approval by the software licence.
+
+This application uses, displays, links to or can request information from
+external sources including the Office for National Statistics, GOV.UK and
+Property Market Intel. Those sources, datasets, APIs, names and services
+remain subject to their own terms, licences and attribution requirements.
+
+Property Market Intel API keys are user-owned. This project does not provide
+a shared API key and does not grant rights to Property Market Intel data.
+
+The application provides general information, evidence organisation and
+editable message templates. It is not legal advice, does not determine legal
+market rent and does not pause, extend or satisfy tribunal or statutory
+deadlines.
