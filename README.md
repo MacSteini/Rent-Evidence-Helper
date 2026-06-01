@@ -12,7 +12,7 @@ does not provide legal advice or decide the legal market rent.
 
 This repository contains the source for the GitHub Pages version of the app.
 
-Public app changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md) for public app changes.
 
 ## What it does
 
@@ -42,7 +42,7 @@ Public app changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## How to use it
 
-1. Enter the rental property's postcode.
+1. Enter the rental property’s postcode.
 2. Select the Local Authority manually.
 3. Enter the current rent or, for rent-increase situations, the proposed new
    rent.

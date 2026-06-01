@@ -163,7 +163,7 @@ export function RentCheckForm({
         (option) => option.areaCode === input.localAuthorityCode
       )
     ) {
-      nextErrors.localAuthorityCode = "Select the rental property's Local Authority.";
+      nextErrors.localAuthorityCode = "Select the rental property’s Local Authority.";
     }
     if (!Number.isFinite(input.rentAmount) || input.rentAmount <= 0) {
       nextErrors.rentAmount = "Enter a rent amount greater than zero.";

@@ -372,7 +372,7 @@ describe("Property Market Intel provider", () => {
     ).rejects.toMatchObject({
       code: "invalid-key",
       message:
-        "Property Market Intel rejected the API key: Invalid API key - The provided API key is not recognised."
+        "Property Market Intel rejected the API key: Invalid API key – The provided API key is not recognised."
     });
   });
 

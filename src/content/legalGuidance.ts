@@ -11,7 +11,7 @@ export const legalContent: LegalContentItem[] = [
       "https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases"
     ],
     sourceTitles: [
-      "Renters' Rights Act information sheet",
+      "Renters’ Rights Act information sheet",
       "Assured periodic tenancies: rent increases"
     ],
     lastCheckedAt: "2026-05-31",

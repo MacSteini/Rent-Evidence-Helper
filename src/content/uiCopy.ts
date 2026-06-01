@@ -9,7 +9,7 @@ type ResultCopy = {
 
 export const fieldCopy = {
   postcodeHint:
-    "Use the rental property's UK postcode.",
+    "Use the rental property’s UK postcode.",
   localAuthorityHint:
     "This is used only for the ONS area benchmark.",
   currentRentHint: "Enter the rent currently being paid.",
@@ -257,11 +257,11 @@ export const disputeSupportCopy = {
       label: "Apply for an open market rent determination"
     },
     {
-      title: "Renters' Rights Act information",
+      title: "Renters’ Rights Act information",
       description:
         "Use this for official context on reforms. It does not decide an individual rent dispute.",
       href: "https://www.gov.uk/government/publications/the-renters-rights-act-information-sheet-2026",
-      label: "Renters' Rights Act information sheet"
+      label: "Renters’ Rights Act information sheet"
     }
   ]
 };

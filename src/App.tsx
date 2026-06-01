@@ -502,19 +502,19 @@ export default function App() {
         <nav className="official-source-links" aria-label="Official scope sources">
           <a
             href="https://www.gov.uk/government/publications/the-renters-rights-act-information-sheet-2026"
-            aria-label="GOV.UK Renters' Rights Act information sheet (opens in a new tab)"
+            aria-label="GOV.UK Renters’ Rights Act information sheet (opens in a new tab)"
             rel="noreferrer"
             target="_blank"
           >
-            GOV.UK Renters' Rights Act information sheet
+            GOV.UK Renters’ Rights Act information sheet
           </a>
           <a
             href="https://rentsmart.gov.wales/en/rentersrights/"
-            aria-label="Rent Smart Wales: Renters' Rights Act (opens in a new tab)"
+            aria-label="Rent Smart Wales: Renters’ Rights Act (opens in a new tab)"
             rel="noreferrer"
             target="_blank"
           >
-            Rent Smart Wales: Renters' Rights Act
+            Rent Smart Wales: Renters’ Rights Act
           </a>
           <a
             href="https://www.gov.scot/publications/rental-discrimination-guidance-for-scotland/"

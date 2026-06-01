@@ -258,7 +258,7 @@ async function readProviderErrorMessage(response: Response): Promise<string | nu
     if (!isObject(value)) return null;
     const title = typeof value.title === "string" ? value.title.trim() : "";
     const detail = typeof value.detail === "string" ? value.detail.trim() : "";
-    return [title, detail].filter(Boolean).join(" - ") || null;
+    return [title, detail].filter(Boolean).join(" – ") || null;
   } catch {
     return null;
   }

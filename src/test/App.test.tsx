@@ -326,7 +326,7 @@ describe("App", () => {
       screen.getByText(/timing rules before any proposed start date/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /renters' rights act information/i })
+      screen.getByRole("heading", { name: /renters’ rights act information/i })
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /manual evidence/i })
@@ -762,7 +762,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     expect(
-      await screen.findByText(/select the rental property's local authority/i)
+      await screen.findByText(/select the rental property’s local authority/i)
     ).toBeInTheDocument();
     expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
     await waitFor(() => expect(localAuthority).toHaveFocus());
@@ -888,7 +888,7 @@ describe("App", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
-  it("warns when a generated dispute message may weaken the user's position", async () => {
+  it("warns when a generated dispute message may weaken the user’s position", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(
       "fetch",
