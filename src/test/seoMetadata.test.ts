@@ -22,7 +22,7 @@ describe("public SEO metadata", () => {
 
   it("keeps sitemap and robots aligned with the planned GitHub Pages URL", () => {
     expect(sitemap).toContain("<loc>https://steini.github.io/uk-rent-checker/</loc>");
-    expect(sitemap).toContain("<lastmod>2026-05-31</lastmod>");
+    expect(sitemap).toContain("<lastmod>2026-06-01</lastmod>");
     expect(robots).toContain(
       "Sitemap: https://steini.github.io/uk-rent-checker/sitemap.xml"
     );
