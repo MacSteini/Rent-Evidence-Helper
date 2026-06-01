@@ -44,6 +44,10 @@ type RentCheckFormProps = {
 
 type FormErrors = Partial<Record<keyof RentSearchInput, string>>;
 
+function formatInitialRentAmount(value: number) {
+  return Number.isFinite(value) ? String(value) : "";
+}
+
 export function RentCheckForm({
   initialInput,
   resetKey = 0,
@@ -61,7 +65,7 @@ export function RentCheckForm({
 }: RentCheckFormProps) {
   const [input, setInput] = useState<RentSearchInput>(initialInput);
   const [rentAmountText, setRentAmountText] = useState(
-    String(initialInput.rentAmount)
+    formatInitialRentAmount(initialInput.rentAmount)
   );
   const [currentRentBeforeIncreaseText, setCurrentRentBeforeIncreaseText] =
     useState(
@@ -79,7 +83,7 @@ export function RentCheckForm({
 
   useEffect(() => {
     setInput(initialInput);
-    setRentAmountText(String(initialInput.rentAmount));
+    setRentAmountText(formatInitialRentAmount(initialInput.rentAmount));
     setCurrentRentBeforeIncreaseText(
       initialInput.currentRentBeforeIncrease
         ? String(initialInput.currentRentBeforeIncrease)

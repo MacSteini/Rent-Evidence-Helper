@@ -54,9 +54,9 @@ validateOfficialRentBenchmarkDataset(officialBenchmarkDataset);
 const localAuthorityOptions = listOfficialBenchmarkAreas(officialBenchmarkDataset);
 
 const initialInput: RentSearchInput = {
-  postcode: "SW12 8AA",
+  postcode: "",
   localAuthorityCode: "",
-  rentAmount: 2450,
+  rentAmount: Number.NaN,
   rentPeriod: "month",
   propertyType: "unknown",
   bedrooms: 1,

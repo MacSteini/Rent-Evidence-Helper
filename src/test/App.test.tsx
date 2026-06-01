@@ -90,6 +90,19 @@ async function selectLocalAuthority(
   user: ReturnType<typeof userEvent.setup>,
   areaCode = "E09000022"
 ) {
+  const postcode = screen.getByLabelText(/postcode/i);
+  if (postcode instanceof HTMLInputElement && postcode.value === "") {
+    await user.type(postcode, areaCode === "E09000009" ? "W2 5BQ" : "SW12 8AA");
+  }
+
+  const rentAmount = screen.getByLabelText(
+    /^(current rent(?! before)|proposed new rent)/i,
+    { selector: "input" }
+  );
+  if (rentAmount instanceof HTMLInputElement && rentAmount.value === "") {
+    await user.type(rentAmount, "2450");
+  }
+
   const localAuthority = screen.getByLabelText(/local authority/i, {
     selector: "input"
   });
@@ -209,6 +222,13 @@ describe("App", () => {
     expect(
       screen.getByRole("complementary", { name: /scope and legal note/i })
     ).toHaveTextContent(/England only/i);
+    expect(screen.getByLabelText(/postcode/i)).toHaveValue("");
+    expect(
+      screen.getByLabelText(/local authority/i, { selector: "input" })
+    ).toHaveValue("");
+    expect(
+      screen.getByLabelText(/current rent/i, { selector: "input" })
+    ).toHaveValue("");
 
     expect(
       screen.queryByRole("heading", { name: /your result will appear here/i })
@@ -759,6 +779,11 @@ describe("App", () => {
       document.querySelector('datalist option[value="Oxford (South East)"]')
     ).toBeInTheDocument();
 
+    await user.type(screen.getByLabelText(/postcode/i), "SW12 8AA");
+    await user.type(
+      screen.getByLabelText(/current rent/i, { selector: "input" }),
+      "2450"
+    );
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     expect(
@@ -1044,9 +1069,10 @@ describe("App", () => {
     expect(
       screen.getByLabelText(/local authority/i, { selector: "input" })
     ).toHaveValue("");
+    expect(screen.getByLabelText(/postcode/i)).toHaveValue("");
     expect(
       screen.getByLabelText(/current rent/i, { selector: "input" })
-    ).toHaveValue("2450");
+    ).toHaveValue("");
   });
 
   it("restores saved deeper comparable evidence after refresh without requiring a key", async () => {
