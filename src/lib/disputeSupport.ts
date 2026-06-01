@@ -335,7 +335,7 @@ function getOnsAdvisory(result: RentCheckResult): DisputeEvidenceOptionAdvisory 
       option: "includeOnsBenchmark",
       allowed: false,
       reason:
-        "The ONS Local Authority benchmark is more than 10% higher than the rent entered, so including it may weaken the message."
+        "The ONS Local Authority benchmark is more than 10% higher than the rent entered, so including it may weaken this message."
     };
   }
 
@@ -368,7 +368,7 @@ function getLivePmiAdvisory(
       option: "includePmiLive",
       allowed: false,
       reason:
-        "PMI live-listing context is limited, so it is not added to the message automatically."
+        "PMI live-listing context is limited, so it is left out of this template."
     };
   }
 
@@ -410,7 +410,7 @@ function getDeeperPmiAdvisory(
       option: "includePmiDeeper",
       allowed: false,
       reason:
-        "Recent PMI rented-record context is limited, so it is not added to the message automatically."
+        "Recent PMI rented-record context is limited, so it is left out of this template."
     };
   }
 

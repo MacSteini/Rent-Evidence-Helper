@@ -229,8 +229,7 @@ export const disputeSupportCopy = {
     use_with_caution: "Use with caution",
     not_recommended: "Not recommended",
     reasonsTitle: "Why this matters",
-    recommendationTitle: "Better next step",
-    disabledOptionPrefix: "Not added automatically"
+    recommendationTitle: "Better next step"
   },
   officialRoutesTitle: "Official routes to check",
   officialRoutesSummary:

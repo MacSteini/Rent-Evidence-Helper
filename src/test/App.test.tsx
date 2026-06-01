@@ -920,6 +920,11 @@ describe("App", () => {
         .length
     ).toBeGreaterThan(0);
     expect(
+      screen.getByText(
+        /left out because it may weaken this message: the ONS Local Authority benchmark is more than 10% higher/i
+      )
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("checkbox", { name: /include ons benchmark summary/i })
     ).toBeDisabled();
     expect(

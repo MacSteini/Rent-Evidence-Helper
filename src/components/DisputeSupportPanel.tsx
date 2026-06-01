@@ -214,12 +214,32 @@ function OptionCheckbox({
       </label>
       {disabled && advisory && (
         <p className="option-advisory">
-          <strong>{disputeSupportCopy.advisor.disabledOptionPrefix}:</strong>{" "}
-          {advisory.reason}
+          {formatDisabledOptionReason(advisory.reason)}
         </p>
       )}
     </div>
   );
+}
+
+function formatDisabledOptionReason(reason: string): string {
+  const trimmedReason = reason.trim();
+  const weakenSuffix = ", so including it may weaken this message.";
+  if (trimmedReason.endsWith(weakenSuffix)) {
+    const evidenceReason = lowerFirst(trimmedReason.slice(0, -weakenSuffix.length));
+    return `Left out because it may weaken this message: ${evidenceReason}.`;
+  }
+
+  const leftOutSuffix = ", so it is left out of this template.";
+  if (trimmedReason.endsWith(leftOutSuffix)) {
+    const evidenceReason = lowerFirst(trimmedReason.slice(0, -leftOutSuffix.length));
+    return `Left out because ${evidenceReason}.`;
+  }
+
+  return `Left out: ${trimmedReason}`;
+}
+
+function lowerFirst(value: string): string {
+  return value.charAt(0).toLowerCase() + value.slice(1);
 }
 
 function AdvisorNotice({

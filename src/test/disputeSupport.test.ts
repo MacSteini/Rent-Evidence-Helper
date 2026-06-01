@@ -286,7 +286,7 @@ describe("dispute support templates", () => {
     ).toContain("notice received: 2026-06-01");
   });
 
-  it("explains why weak evidence options are not added automatically", () => {
+  it("explains why weak evidence options are left out", () => {
     const result = buildResult({
       liveEvidence: {
         evidenceKind: "licensed-live",
