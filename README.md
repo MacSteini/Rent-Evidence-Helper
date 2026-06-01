@@ -8,7 +8,7 @@ It combines an official area-level benchmark, optional user-owned Property Marke
 
 This repository contains the source for the GitHub Pages version of the app.
 
-See [CHANGELOG.md](changelog) for public app changes.
+See [changelog](CHANGELOG.md) for public app changes.
 
 ## What it does
 
@@ -81,6 +81,6 @@ Please report security or privacy issues privately instead of publishing exploit
 
 ## Licence
 
-This project uses the [GNU Affero General Public License version 3 only](LICENCE)(`AGPL-3.0-only`). You may use, change and distribute it under the licence terms.
+This project uses the [GNU Affero General Public License version 3 only](LICENCE "GNU Affero General Public License version 3 only"). You may use, change and distribute it under the licence terms.
 
-The project name, branding and public presentation are not granted as trade marks or endorsements by the software licence. See [notice](NOTICE) for project notices, external-source boundaries and data-source notes.
+The project name, branding and public presentation are not granted as trade marks or endorsements by the software licence. See [notice](NOTICE "AGPLv3 Notice") for project notices, external-source boundaries and data-source notes.
