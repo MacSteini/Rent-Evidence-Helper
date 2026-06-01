@@ -12,6 +12,8 @@ does not provide legal advice or decide the legal market rent.
 
 This repository contains the source for the GitHub Pages version of the app.
 
+Public app changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+
 ## What it does
 
 - Compares the entered rent with the ONS monthly private-rent estimate for the

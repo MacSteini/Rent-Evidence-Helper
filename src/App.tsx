@@ -528,7 +528,9 @@ export default function App() {
       </InfoDialog>
 
       <footer className="site-footer">
-        <span>{appConfig.productName}</span>
+        <a className="footer-version" href={appConfig.changelogUrl} rel="noreferrer" target="_blank">
+          v{appConfig.version}
+        </a>
         <span>England rent benchmark and dispute support</span>
       </footer>
     </div>

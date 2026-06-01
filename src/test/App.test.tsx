@@ -198,6 +198,12 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/England rent benchmark and dispute support/i))
       .toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "v1.0.0" })
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/MacSteini/Rent-Evidence-Helper/blob/main/CHANGELOG.md"
+    );
     expect(screen.queryByText(/England official rent benchmark/i))
       .not.toBeInTheDocument();
     expect(

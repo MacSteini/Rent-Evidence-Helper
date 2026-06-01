@@ -1510,6 +1510,15 @@ th {
   color: var(--muted);
 }
 
+.footer-version {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.footer-version:hover {
+  color: var(--teal-dark);
+}
+
 @media (min-width: 640px) {
   main {
     padding: 1.25rem 1.25rem 2.5rem;
