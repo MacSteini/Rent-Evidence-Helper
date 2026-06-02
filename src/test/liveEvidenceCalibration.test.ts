@@ -204,7 +204,7 @@ function evidenceWithRents(
     evidenceKind: "licensed-live",
     provider: "property-market-intel",
     searchedAt: "2026-05-30T00:00:00Z",
-    searchAreaDescription: "SW12 outcode",
+    searchAreaDescription: "SW12 postcode district",
     totalCount: rents.length,
     displayedCount: rents.length,
     medianMonthly,

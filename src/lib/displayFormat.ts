@@ -48,13 +48,15 @@ export function formatRecentRecordQualityLabel(
 
 export function formatPropertyTypeLabel(value: string | undefined): string {
   if (!value || value === "unknown") return "Unknown";
+  if (value === "house") return "House/Bungalow";
   return capitaliseFirst(value.replace(/-/g, " "));
 }
 
 export function formatSearchAreaLabel(value: string): string {
   return value
     .replace(/\bpostcode sector\b/g, "Postcode sector")
-    .replace(/\boutcode\b/g, "Outcode");
+    .replace(/\bpostcode district\b/g, "Postcode district")
+    .replace(/\boutcode\b/g, "Postcode district");
 }
 
 export function formatDistance(value: number | undefined): string {

@@ -37,7 +37,11 @@ describe("display formatters", () => {
     expect(formatSearchAreaLabel("SW12 8 postcode sector")).toBe(
       "SW12 8 Postcode sector"
     );
-    expect(formatSearchAreaLabel("SW12 outcode")).toBe("SW12 Outcode");
+    expect(formatSearchAreaLabel("SW12 outcode")).toBe("SW12 Postcode district");
+    expect(formatSearchAreaLabel("SW12 postcode district")).toBe(
+      "SW12 Postcode district"
+    );
+    expect(formatPropertyTypeLabel("house")).toBe("House/Bungalow");
     expect(formatDistance(980)).toBe("980 m");
     expect(formatDistance(1420)).toBe("1.4 km");
     expect(formatDistance(undefined)).toBe("Unknown");

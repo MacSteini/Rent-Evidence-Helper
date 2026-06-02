@@ -170,7 +170,7 @@ describe("Property Market Intel provider", () => {
     );
 
     expect(evidence.totalCount).toBe(117);
-    expect(evidence.searchAreaDescription).toBe("SW12 outcode");
+    expect(evidence.searchAreaDescription).toBe("SW12 postcode district");
     expect(evidence.listings[0]).toMatchObject({
       postcodeSector: "SW12 9",
       rentMonthly: 2350,
@@ -194,9 +194,21 @@ describe("Property Market Intel provider", () => {
       searchPmiLiveRentalListings(input, "rate-limited", responseFetch(429, {}))
     ).rejects.toMatchObject({ code: "quota-or-rate-limit" });
 
-    await expect(() =>
+    expect(() =>
       normalisePmiListingsResponse({ total_count: 0, listings: [] }, input, "now")
-    ).toThrow(PmiEvidenceError);
+    ).toThrow(
+      "PMI returned no current live rental listings for the wider postcode district, such as SW12."
+    );
+
+    expect(() =>
+      normalisePmiListingsResponse(
+        { total_count: 0, listings: [] },
+        { ...input, postcode: "BN26DN" },
+        "now"
+      )
+    ).toThrow(
+      "PMI returned no current live rental listings for the wider postcode district, such as BN2."
+    );
   });
 
   it("maps malformed successful listing responses to a controlled PMI error", async () => {

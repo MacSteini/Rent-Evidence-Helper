@@ -308,7 +308,7 @@ export function normalisePmiListingsResponse(
       "no-listings",
       returnedCount > 0
         ? `Property Market Intel returned ${returnedCount} listing records, but none included a usable monthly asking rent.`
-        : "PMI returned no current live rental listings for this outcode. This does not rule out older rented records or official benchmark evidence."
+        : buildNoCurrentListingsMessage(input)
     );
   }
 
@@ -322,7 +322,7 @@ export function normalisePmiListingsResponse(
     evidenceKind: "licensed-live",
     provider: "property-market-intel",
     searchedAt,
-    searchAreaDescription: `${getSearchOutcode(input)} outcode`,
+    searchAreaDescription: `${getSearchOutcode(input)} postcode district`,
     totalCount,
     displayedCount: listings.length,
     medianMonthly: median(rents),
@@ -408,6 +408,15 @@ export function normalisePmiComparablesResponse(
 
 function getSearchOutcode(input: RentSearchInput): string {
   return parsePostcode(input.postcode)?.outwardCode ?? input.postcode.trim().toUpperCase();
+}
+
+function buildNoCurrentListingsMessage(input: RentSearchInput): string {
+  const district = parsePostcode(input.postcode)?.outwardCode;
+  if (!district) {
+    return "PMI returned no current live rental listings for the wider postcode district. This does not rule out recent rented records or official benchmark evidence.";
+  }
+
+  return `PMI returned no current live rental listings for the wider postcode district, such as ${district}. This does not rule out recent rented records or official benchmark evidence.`;
 }
 
 function getSearchPostcodeSector(input: RentSearchInput): string | undefined {

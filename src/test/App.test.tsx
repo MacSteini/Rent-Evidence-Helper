@@ -562,7 +562,9 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: /start check/i }));
 
     expect(
-      await screen.findByText(/no current live rental listings for this outcode/i)
+      await screen.findByText(
+        /no current live rental listings for the wider postcode district, such as SW12/i
+      )
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /live rental listings/i }))
       .not.toBeInTheDocument();

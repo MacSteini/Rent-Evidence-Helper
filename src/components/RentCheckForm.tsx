@@ -340,7 +340,7 @@ export function RentCheckForm({
           value={input.propertyType}
           options={[
             ["flat", "Flat"],
-            ["house", "House"],
+            ["house", "House/Bungalow"],
             ["studio", "Studio"],
             ["room", "Room"],
             ["maisonette", "Maisonette"],
