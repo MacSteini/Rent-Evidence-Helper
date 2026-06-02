@@ -25,8 +25,8 @@ describe("display formatters", () => {
   it("formats ranges, spread and labels without panel-specific drift", () => {
     expect(formatCurrencyRange(1450, 1800)).toBe("£1,450 to £1,800");
     expect(formatCurrencyRange(undefined, 1800)).toBe("Unavailable");
-    expect(formatSpread(32.25)).toBe("Range spread is 32.3% around the median");
-    expect(formatSpread(undefined)).toBe("Range spread unavailable");
+    expect(formatSpread(32.25)).toBe("Range spread is 32.3% around the median.");
+    expect(formatSpread(undefined)).toBe("Range spread unavailable.");
     expect(formatRecentRecordQualityLabel("strong")).toBe("Broader");
     expect(formatRecentRecordQualityLabel(undefined)).toBe("Unavailable");
   });

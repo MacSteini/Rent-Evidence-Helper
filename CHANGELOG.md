@@ -15,6 +15,10 @@ This project uses semantic versioning for public app updates.
 - Added the dynamically derived postcode district to the PMI no-listings message
   when the app can parse the entered postcode.
 
+### Fixed
+
+- Added missing full stops to live-evidence range-spread helper text.
+
 ## [1.0.0] – 2026-06-01
 
 ### Added

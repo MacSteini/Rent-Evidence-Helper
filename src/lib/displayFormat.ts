@@ -27,8 +27,8 @@ export function formatCurrencyRange(
 }
 
 export function formatSpread(value: number | undefined): string {
-  if (value === undefined) return "Range spread unavailable";
-  return `Range spread is ${value.toFixed(1)}% around the median`;
+  if (value === undefined) return "Range spread unavailable.";
+  return `Range spread is ${value.toFixed(1)}% around the median.`;
 }
 
 export function formatLiveQualityLabel(value: LiveEvidenceQualityLevel): string {
