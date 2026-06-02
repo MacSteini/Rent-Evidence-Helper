@@ -4,6 +4,17 @@ This changelog records notable user-facing changes to Rent Evidence Helper.
 
 This project uses semantic versioning for public app updates.
 
+## [1.0.1] – 2026-06-02
+
+### Changed
+
+- Changed the property-type option from `House` to `House/Bungalow` so bungalow
+  users do not need to guess which category to use.
+- Reworded empty Property Market Intel live-listing messages to use
+  `postcode district` instead of the technical term `outcode`.
+- Added the dynamically derived postcode district to the PMI no-listings message
+  when the app can parse the entered postcode.
+
 ## [1.0.0] – 2026-06-01
 
 ### Added

@@ -212,7 +212,7 @@ describe("App", () => {
     expect(screen.getByText(/England rent benchmark and dispute support/i))
       .toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "v1.0.0" })
+      screen.getByRole("link", { name: "v1.0.1" })
     ).toHaveAttribute(
       "href",
       "https://github.com/MacSteini/Rent-Evidence-Helper/blob/main/CHANGELOG.md"
