@@ -35,6 +35,20 @@ TABLE_SHEET_NAME = "Table 1"
 ENGLAND_LOCAL_AUTHORITY_PREFIXES = ("E06", "E07", "E08", "E09")
 MIN_ENGLAND_LOCAL_AUTHORITIES = 250
 SAMPLE_AREAS = {"Lambeth", "Manchester", "Bristol, City of", "Oxford"}
+ENGLISH_MONTH_SLUGS = (
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+)
 XML_NS = {
     "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
     "rel": "http://schemas.openxmlformats.org/package/2006/relationships",
@@ -159,14 +173,18 @@ def main() -> int:
             next_release=args.next_release,
         )
         source_path, downloaded = resolve_source(args.input, source_metadata.source_file_url)
-        source_bytes = source_path.read_bytes()
-        artifact = build_artifact(
-            source_path=source_path,
-            source_sha256=hashlib.sha256(source_bytes).hexdigest(),
-            source_metadata=source_metadata,
-            source_file_url=source_metadata.source_file_url if downloaded else None,
-            existing_artifact=read_existing_artifact(args.output),
-        )
+        try:
+            source_bytes = source_path.read_bytes()
+            artifact = build_artifact(
+                source_path=source_path,
+                source_sha256=hashlib.sha256(source_bytes).hexdigest(),
+                source_metadata=source_metadata,
+                source_file_url=source_metadata.source_file_url if downloaded else None,
+                existing_artifact=read_existing_artifact(args.output),
+            )
+        finally:
+            if downloaded:
+                source_path.unlink(missing_ok=True)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         changed = write_json_if_changed(args.output, artifact)
         if changed and args.update_release_metadata:
@@ -206,6 +224,7 @@ def resolve_source_metadata(
 
     if source_url:
         page_metadata = discover_current_source(dataset_page_url)
+        assert_source_url_matches_release(source_url, page_metadata.release_date)
         return OnsSourceMetadata(
             dataset_page_url=dataset_page_url,
             source_file_url=source_url,
@@ -224,10 +243,11 @@ def parse_dataset_page(html: str, dataset_page_url: str = DATASET_PAGE_URL) -> O
     parser = DatasetPageParser()
     parser.feed(html)
     page_text = normalise_space(" ".join(parser.text_parts))
+    release_date = extract_date_after_label(page_text, "Release date")
     return OnsSourceMetadata(
         dataset_page_url=dataset_page_url,
-        source_file_url=first_xlsx_link(parser.links, dataset_page_url),
-        release_date=extract_date_after_label(page_text, "Release date"),
+        source_file_url=xlsx_link_for_release(parser.links, dataset_page_url, release_date),
+        release_date=release_date,
         next_release=extract_date_after_label(page_text, "Next release"),
     )
 
@@ -248,13 +268,42 @@ def extract_date_after_label(page_text: str, label: str) -> str:
     return ons_text_date_to_iso(match.group(1))
 
 
-def first_xlsx_link(links: List[tuple[str, str]], dataset_page_url: str) -> str:
+def xlsx_link_for_release(
+    links: List[tuple[str, str]], dataset_page_url: str, release_date: str
+) -> str:
+    release_slug = release_date_to_ons_slug(release_date)
     for href, text in links:
         candidate = href.lower()
         label = text.lower()
-        if ".xlsx" in candidate or ".xlsx" in label or "xlsx" in label:
+        is_xlsx = ".xlsx" in candidate or ".xlsx" in label or "xlsx" in label
+        if is_xlsx and text_contains_release_slug(candidate, release_slug):
             return urljoin(dataset_page_url, href)
-    raise IngestError("could not find an ONS XLSX download link on dataset page")
+    raise IngestError(
+        "could not find an ONS XLSX download link matching release date "
+        f"{release_date}"
+    )
+
+
+def assert_source_url_matches_release(source_url: str, release_date: str) -> None:
+    release_slug = release_date_to_ons_slug(release_date)
+    if not text_contains_release_slug(source_url.lower(), release_slug):
+        raise IngestError(
+            "--source-url does not match the discovered ONS release date. "
+            "Use --input with --release-date and --next-release for historical or "
+            "manual sources."
+        )
+
+
+def text_contains_release_slug(value: str, release_slug: str) -> bool:
+    return bool(re.search(rf"(?<![a-z0-9]){re.escape(release_slug)}(?![a-z0-9])", value))
+
+
+def release_date_to_ons_slug(value: str) -> str:
+    try:
+        date = datetime.strptime(value, "%Y-%m-%d")
+    except ValueError as error:
+        raise IngestError(f"invalid release date: {value}") from error
+    return f"{date.day}{ENGLISH_MONTH_SLUGS[date.month - 1]}{date.year}"
 
 
 def ons_text_date_to_iso(value: str) -> str:
@@ -403,14 +452,19 @@ def update_changelog(path: Path, artifact: Dict[str, object]) -> None:
 
     section_heading = "## Data updates"
     if section_heading in content:
-        content = content.replace(section_heading, f"{section_heading}\n\n{bullet}", 1)
+        updated = content.replace(section_heading, f"{section_heading}\n\n{bullet}", 1)
     else:
-        content = content.replace(
-            "This project uses semantic versioning for public app updates.\n",
-            "This project uses semantic versioning for public app updates.\n\n"
-            f"{section_heading}\n\n{bullet}\n",
+        anchor = "This project uses semantic versioning for public app updates.\n"
+        if anchor not in content:
+            raise IngestError("changelog data-update insertion point not found")
+        updated = content.replace(
+            anchor,
+            f"{anchor}\n{section_heading}\n\n{bullet}\n",
             1,
         )
+    if updated == content:
+        raise IngestError("changelog was not updated")
+    content = updated
     path.write_text(content, encoding="utf-8")
 
 

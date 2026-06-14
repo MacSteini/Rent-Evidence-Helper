@@ -3,4 +3,6 @@ dist/
 coverage/
 .vite/
 *.tsbuildinfo
+__pycache__/
+source-freshness-report.md
 .DS_Store
