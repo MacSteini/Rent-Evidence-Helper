@@ -1,0 +1,44 @@
+name: Check source freshness
+
+on:
+  schedule:
+    - cron: "37 8 18-24 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: source-freshness
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Build review-only source report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Write source freshness report
+        id: report
+        run: |
+          if python3 scripts/check_source_freshness.py --output source-freshness-report.md; then
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload source freshness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-freshness-report
+          path: source-freshness-report.md
+
+      - name: Fail on broken or changed sources
+        if: steps.report.outputs.status == 'failed'
+        run: exit 1

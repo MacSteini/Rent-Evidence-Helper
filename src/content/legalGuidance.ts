@@ -14,7 +14,7 @@ export const legalContent: LegalContentItem[] = [
       "Renters’ Rights Act information sheet",
       "Assured periodic tenancies: rent increases"
     ],
-    lastCheckedAt: "2026-05-31",
+    lastCheckedAt: "2026-06-14",
     jurisdiction: "england",
     status: "active"
   },
@@ -31,7 +31,7 @@ export const legalContent: LegalContentItem[] = [
       "Apply for an open market rent determination",
       "Assured tenancy forms"
     ],
-    lastCheckedAt: "2026-05-31",
+    lastCheckedAt: "2026-06-14",
     jurisdiction: "england",
     status: "active"
   },
@@ -48,7 +48,7 @@ export const legalContent: LegalContentItem[] = [
       "Assured tenancy forms",
       "Assured periodic tenancies: rent increases"
     ],
-    lastCheckedAt: "2026-05-31",
+    lastCheckedAt: "2026-06-14",
     jurisdiction: "england",
     status: "active"
   },
@@ -58,7 +58,7 @@ export const legalContent: LegalContentItem[] = [
     body:
       "Use this result as a market-evidence check only. Compare it with evidence you collect and check official guidance before acting or sending any formal challenge. It is not legal advice and does not decide the legal market rent.",
     sourceUrls: [],
-    lastCheckedAt: "2026-05-31",
+    lastCheckedAt: "2026-06-14",
     jurisdiction: "england",
     status: "active"
   }
