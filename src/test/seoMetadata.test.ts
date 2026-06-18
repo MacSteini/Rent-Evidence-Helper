@@ -24,7 +24,9 @@ describe("public SEO metadata", () => {
 
   it("keeps sitemap and robots aligned with the planned GitHub Pages URL", () => {
     expect(sitemap).toContain("<loc>https://macsteini.github.io/Rent-Evidence-Helper/</loc>");
-    expect(sitemap).toContain("<lastmod>2026-06-01</lastmod>");
+    const lastmod = sitemap.match(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/)?.[1];
+    expect(lastmod).toBeDefined();
+    expect(Number.isNaN(Date.parse(`${lastmod}T00:00:00Z`))).toBe(false);
     expect(robots).toContain(
       "Sitemap: https://macsteini.github.io/Rent-Evidence-Helper/sitemap.xml"
     );

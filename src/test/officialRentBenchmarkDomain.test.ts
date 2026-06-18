@@ -15,6 +15,18 @@ import type { RentSearchInput } from "../types/rent";
 
 const dataset = benchmarkDataset as OfficialRentBenchmarkDataset;
 const lambeth = findRequiredBenchmark("E09000022");
+const fieldSelectionBenchmark: OfficialRentBenchmark = {
+  areaCode: "E09000022",
+  areaName: "Lambeth",
+  regionOrCountryName: "London",
+  period: "2026-05-01",
+  monthlyRentAll: 2000,
+  monthlyRentOneBed: 1100,
+  monthlyRentTwoBed: 2200,
+  monthlyRentThreeBed: 3300,
+  monthlyRentFourOrMoreBed: 4400,
+  monthlyRentFlatMaisonette: 1500
+};
 
 function input(overrides: Partial<RentSearchInput> = {}): RentSearchInput {
   return {
@@ -88,25 +100,35 @@ describe("official rent benchmark domain", () => {
   });
 
   it("selects bedroom-specific benchmark fields first", () => {
-    expect(selectOfficialBenchmarkField(input({ bedrooms: 1 }), lambeth)).toMatchObject({
+    expect(
+      selectOfficialBenchmarkField(input({ bedrooms: 1 }), fieldSelectionBenchmark)
+    ).toMatchObject({
       field: "monthlyRentOneBed",
-      monthlyRent: 1883
+      monthlyRent: 1100
     });
-    expect(selectOfficialBenchmarkField(input({ bedrooms: 2 }), lambeth)).toMatchObject({
+    expect(
+      selectOfficialBenchmarkField(input({ bedrooms: 2 }), fieldSelectionBenchmark)
+    ).toMatchObject({
       field: "monthlyRentTwoBed",
-      monthlyRent: 2345
+      monthlyRent: 2200
     });
-    expect(selectOfficialBenchmarkField(input({ bedrooms: 3 }), lambeth)).toMatchObject({
+    expect(
+      selectOfficialBenchmarkField(input({ bedrooms: 3 }), fieldSelectionBenchmark)
+    ).toMatchObject({
       field: "monthlyRentThreeBed",
-      monthlyRent: 2684
+      monthlyRent: 3300
     });
-    expect(selectOfficialBenchmarkField(input({ bedrooms: 4 }), lambeth)).toMatchObject({
+    expect(
+      selectOfficialBenchmarkField(input({ bedrooms: 4 }), fieldSelectionBenchmark)
+    ).toMatchObject({
       field: "monthlyRentFourOrMoreBed",
-      monthlyRent: 3732
+      monthlyRent: 4400
     });
-    expect(selectOfficialBenchmarkField(input({ bedrooms: 7 }), lambeth)).toMatchObject({
+    expect(
+      selectOfficialBenchmarkField(input({ bedrooms: 7 }), fieldSelectionBenchmark)
+    ).toMatchObject({
       field: "monthlyRentFourOrMoreBed",
-      monthlyRent: 3732
+      monthlyRent: 4400
     });
   });
 
@@ -114,31 +136,31 @@ describe("official rent benchmark domain", () => {
     expect(
       selectOfficialBenchmarkField(
         input({ bedrooms: 0, propertyType: "flat" }),
-        lambeth
+        fieldSelectionBenchmark
       )
     ).toMatchObject({
       field: "monthlyRentFlatMaisonette",
-      monthlyRent: 2189
+      monthlyRent: 1500
     });
 
     expect(
       selectOfficialBenchmarkField(
         input({ bedrooms: 0, propertyType: "maisonette" }),
-        lambeth
+        fieldSelectionBenchmark
       )
     ).toMatchObject({
       field: "monthlyRentFlatMaisonette",
-      monthlyRent: 2189
+      monthlyRent: 1500
     });
 
     expect(
       selectOfficialBenchmarkField(
         input({ bedrooms: 0, propertyType: "unknown" }),
-        lambeth
+        fieldSelectionBenchmark
       )
     ).toMatchObject({
       field: "monthlyRentAll",
-      monthlyRent: 2529
+      monthlyRent: 2000
     });
   });
 

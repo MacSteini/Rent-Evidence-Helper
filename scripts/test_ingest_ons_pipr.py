@@ -100,6 +100,10 @@ class IngestOnsPiprTests(unittest.TestCase):
     def test_release_date_slug_uses_english_month_names(self) -> None:
         self.assertEqual(ingest.release_date_to_ons_slug("2026-03-03"), "3march2026")
 
+    def test_excel_serial_to_iso_supports_1900_and_1904_workbook_dates(self) -> None:
+        self.assertEqual(ingest.excel_serial_to_iso("44681"), "2022-04-30")
+        self.assertEqual(ingest.excel_serial_to_iso("44681", True), "2026-05-01")
+
     def test_write_json_if_changed_avoids_unnecessary_diff(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "artifact.json"
@@ -159,6 +163,18 @@ class IngestOnsPiprTests(unittest.TestCase):
 
             self.assertIn("## Data updates", changelog.read_text(encoding="utf-8"))
             self.assertIn("ONS PIPR edition (period 2026-05-01)", changelog.read_text(encoding="utf-8"))
+            self.assertIn("<lastmod>2026-06-18</lastmod>", sitemap.read_text(encoding="utf-8"))
+
+    def test_sitemap_lastmod_update_allows_existing_target_date(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            sitemap = Path(directory) / "sitemap.xml"
+            sitemap.write_text(
+                "<urlset><url><lastmod>2026-06-18</lastmod></url></urlset>",
+                encoding="utf-8",
+            )
+
+            ingest.update_sitemap_lastmod(sitemap, "2026-06-18")
+
             self.assertIn("<lastmod>2026-06-18</lastmod>", sitemap.read_text(encoding="utf-8"))
 
     def test_changelog_update_fails_when_insert_anchor_is_missing(self) -> None:

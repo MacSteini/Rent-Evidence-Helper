@@ -358,13 +358,16 @@ def build_artifact(
     with zipfile.ZipFile(source_path) as workbook:
         shared_strings = read_shared_strings(workbook)
         sheet_path = resolve_sheet_path(workbook, TABLE_SHEET_NAME)
+        use_1904_dates = workbook_uses_1904_dates(workbook)
         rows = list(read_rows(workbook, sheet_path, shared_strings))
 
     headers = find_header_row(rows)
     column_indexes = map_required_columns(headers)
     data_rows = rows[headers["_row_index"] + 1 :]
-    latest_period = find_latest_period(data_rows, column_indexes)
-    benchmarks = build_benchmarks(data_rows, column_indexes, latest_period)
+    latest_period = find_latest_period(data_rows, column_indexes, use_1904_dates)
+    benchmarks = build_benchmarks(
+        data_rows, column_indexes, latest_period, use_1904_dates
+    )
     validate_benchmarks(benchmarks, latest_period)
 
     artifact: Dict[str, object] = {
@@ -473,9 +476,12 @@ def update_sitemap_lastmod(path: Path, lastmod: str) -> None:
         raise IngestError(f"sitemap not found: {path}")
     validate_iso_date(lastmod, "sitemap lastmod")
     content = path.read_text(encoding="utf-8")
-    updated = re.sub(r"<lastmod>\d{4}-\d{2}-\d{2}</lastmod>", f"<lastmod>{lastmod}</lastmod>", content)
-    if updated == content:
+    lastmod_pattern = re.compile(r"<lastmod>\d{4}-\d{2}-\d{2}</lastmod>")
+    if not lastmod_pattern.search(content):
         raise IngestError("sitemap lastmod element not found")
+    updated = lastmod_pattern.sub(f"<lastmod>{lastmod}</lastmod>", content)
+    if updated == content:
+        return
     path.write_text(updated, encoding="utf-8")
 
 
@@ -508,6 +514,20 @@ def resolve_sheet_path(workbook: zipfile.ZipFile, sheet_name: str) -> str:
         return "xl/" + target.lstrip("/")
 
     raise IngestError(f"worksheet not found: {sheet_name}")
+
+
+def workbook_uses_1904_dates(workbook: zipfile.ZipFile) -> bool:
+    try:
+        workbook_root = ET.fromstring(workbook.read("xl/workbook.xml"))
+    except KeyError as error:
+        raise IngestError("workbook metadata not found") from error
+
+    workbook_properties = workbook_root.find("main:workbookPr", XML_NS)
+    return workbook_properties is not None and workbook_properties.attrib.get("date1904") in {
+        "1",
+        "true",
+        "True",
+    }
 
 
 def read_rows(
@@ -571,10 +591,10 @@ def map_required_columns(header_row: Dict[str, object]) -> Dict[str, str]:
 
 
 def find_latest_period(
-    rows: List[Dict[str, object]], column_indexes: Dict[str, str]
+    rows: List[Dict[str, object]], column_indexes: Dict[str, str], use_1904_dates: bool
 ) -> str:
     periods = [
-        excel_serial_to_iso(row[column_indexes["period"]])
+        excel_serial_to_iso(row[column_indexes["period"]], use_1904_dates)
         for row in rows
         if column_indexes["period"] in row
     ]
@@ -584,13 +604,16 @@ def find_latest_period(
 
 
 def build_benchmarks(
-    rows: List[Dict[str, object]], column_indexes: Dict[str, str], latest_period: str
+    rows: List[Dict[str, object]],
+    column_indexes: Dict[str, str],
+    latest_period: str,
+    use_1904_dates: bool,
 ) -> List[Dict[str, object]]:
     benchmarks: List[Dict[str, object]] = []
     for row in rows:
         if column_indexes["period"] not in row:
             continue
-        period = excel_serial_to_iso(row[column_indexes["period"]])
+        period = excel_serial_to_iso(row[column_indexes["period"]], use_1904_dates)
         area_code = str(row.get(column_indexes["areaCode"], ""))
         if period != latest_period or not area_code.startswith(ENGLAND_LOCAL_AUTHORITY_PREFIXES):
             continue
@@ -668,14 +691,15 @@ def required_int(
     return int(round(value))
 
 
-def excel_serial_to_iso(value: object) -> str:
+def excel_serial_to_iso(value: object, use_1904_dates: bool = False) -> str:
     if isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
         return value
     try:
         serial = int(float(str(value)))
     except (TypeError, ValueError) as error:
         raise IngestError(f"invalid Excel date serial: {value}") from error
-    return (datetime(1899, 12, 30) + timedelta(days=serial)).date().isoformat()
+    base_date = datetime(1904, 1, 1) if use_1904_dates else datetime(1899, 12, 30)
+    return (base_date + timedelta(days=serial)).date().isoformat()
 
 
 if __name__ == "__main__":
