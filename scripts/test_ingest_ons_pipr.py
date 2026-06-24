@@ -1,4 +1,3 @@
-import json
 import sys
 import tempfile
 import unittest
@@ -14,7 +13,9 @@ DATASET_URL = "https://www.ons.gov.uk/example/dataset"
 
 
 class IngestOnsPiprTests(unittest.TestCase):
-    def test_ons_refresh_workflow_has_required_permissions_and_deploy_path(self) -> None:
+    def test_ons_refresh_workflow_has_required_permissions_and_deploy_path(
+        self,
+    ) -> None:
         workflow = (
             Path(__file__).resolve().parents[1]
             / ".github/workflows/ons-data-refresh.yml"
@@ -35,7 +36,10 @@ class IngestOnsPiprTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("Enforce allowed data-refresh diff scope", workflow)
-        self.assertIn("CHANGELOG.md|public/sitemap.xml|src/data/official-rent-benchmarks.json", workflow)
+        self.assertIn(
+            "CHANGELOG.md|public/sitemap.xml|src/data/official-rent-benchmarks.json",
+            workflow,
+        )
         self.assertIn("Unexpected data-refresh files changed", workflow)
 
     def test_parse_dataset_page_discovers_current_source_metadata(self) -> None:
@@ -114,7 +118,9 @@ class IngestOnsPiprTests(unittest.TestCase):
             self.assertFalse(ingest.write_json_if_changed(output, artifact))
             self.assertEqual(output.read_text(encoding="utf-8"), first_content)
 
-    def test_current_ingest_timestamp_preserves_existing_timestamp_for_same_source(self) -> None:
+    def test_current_ingest_timestamp_preserves_existing_timestamp_for_same_source(
+        self,
+    ) -> None:
         existing = {
             "sourceSha256": "abc",
             "releaseDate": "2026-05-20",
@@ -162,8 +168,13 @@ class IngestOnsPiprTests(unittest.TestCase):
             ingest.update_sitemap_lastmod(sitemap, "2026-06-18")
 
             self.assertIn("## Data updates", changelog.read_text(encoding="utf-8"))
-            self.assertIn("ONS PIPR edition (period 2026-05-01)", changelog.read_text(encoding="utf-8"))
-            self.assertIn("<lastmod>2026-06-18</lastmod>", sitemap.read_text(encoding="utf-8"))
+            self.assertIn(
+                "ONS PIPR edition (period 2026-05-01)",
+                changelog.read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "<lastmod>2026-06-18</lastmod>", sitemap.read_text(encoding="utf-8")
+            )
 
     def test_sitemap_lastmod_update_allows_existing_target_date(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -175,7 +186,9 @@ class IngestOnsPiprTests(unittest.TestCase):
 
             ingest.update_sitemap_lastmod(sitemap, "2026-06-18")
 
-            self.assertIn("<lastmod>2026-06-18</lastmod>", sitemap.read_text(encoding="utf-8"))
+            self.assertIn(
+                "<lastmod>2026-06-18</lastmod>", sitemap.read_text(encoding="utf-8")
+            )
 
     def test_changelog_update_fails_when_insert_anchor_is_missing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

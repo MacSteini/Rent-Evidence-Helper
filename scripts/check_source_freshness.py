@@ -7,7 +7,7 @@ import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 import re
 import urllib.error
 import urllib.request
@@ -138,7 +138,9 @@ def check_source(source: Source) -> dict[str, str]:
 
 
 def check_ons_source() -> dict[str, str]:
-    request = urllib.request.Request(DATASET_PAGE_URL, headers={"User-Agent": USER_AGENT})
+    request = urllib.request.Request(
+        DATASET_PAGE_URL, headers={"User-Agent": USER_AGENT}
+    )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             body = response.read().decode("utf-8", errors="replace")

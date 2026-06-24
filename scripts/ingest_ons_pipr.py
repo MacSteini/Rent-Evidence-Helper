@@ -172,7 +172,9 @@ def main() -> int:
             release_date=args.release_date,
             next_release=args.next_release,
         )
-        source_path, downloaded = resolve_source(args.input, source_metadata.source_file_url)
+        source_path, downloaded = resolve_source(
+            args.input, source_metadata.source_file_url
+        )
         try:
             source_bytes = source_path.read_bytes()
             artifact = build_artifact(
@@ -193,8 +195,8 @@ def main() -> int:
                 args.sitemap, datetime.now(timezone.utc).date().isoformat()
             )
         print(
-            ("Wrote " if changed else "No changes for ") +
-            f"{len(artifact['benchmarks'])} official rent benchmarks for "
+            ("Wrote " if changed else "No changes for ")
+            + f"{len(artifact['benchmarks'])} official rent benchmarks for "
             f"{artifact['period']} to {args.output}"
         )
         return 0
@@ -212,7 +214,9 @@ def resolve_source_metadata(
 ) -> OnsSourceMetadata:
     if input_path:
         if not release_date or not next_release:
-            raise IngestError("--release-date and --next-release are required with --input")
+            raise IngestError(
+                "--release-date and --next-release are required with --input"
+            )
         validate_iso_date(release_date, "--release-date")
         validate_iso_date(next_release, "--next-release")
         return OnsSourceMetadata(
@@ -239,14 +243,18 @@ def discover_current_source(dataset_page_url: str) -> OnsSourceMetadata:
     return parse_dataset_page(fetch_text(dataset_page_url), dataset_page_url)
 
 
-def parse_dataset_page(html: str, dataset_page_url: str = DATASET_PAGE_URL) -> OnsSourceMetadata:
+def parse_dataset_page(
+    html: str, dataset_page_url: str = DATASET_PAGE_URL
+) -> OnsSourceMetadata:
     parser = DatasetPageParser()
     parser.feed(html)
     page_text = normalise_space(" ".join(parser.text_parts))
     release_date = extract_date_after_label(page_text, "Release date")
     return OnsSourceMetadata(
         dataset_page_url=dataset_page_url,
-        source_file_url=xlsx_link_for_release(parser.links, dataset_page_url, release_date),
+        source_file_url=xlsx_link_for_release(
+            parser.links, dataset_page_url, release_date
+        ),
         release_date=release_date,
         next_release=extract_date_after_label(page_text, "Next release"),
     )
@@ -279,8 +287,7 @@ def xlsx_link_for_release(
         if is_xlsx and text_contains_release_slug(candidate, release_slug):
             return urljoin(dataset_page_url, href)
     raise IngestError(
-        "could not find an ONS XLSX download link matching release date "
-        f"{release_date}"
+        f"could not find an ONS XLSX download link matching release date {release_date}"
     )
 
 
@@ -295,7 +302,9 @@ def assert_source_url_matches_release(source_url: str, release_date: str) -> Non
 
 
 def text_contains_release_slug(value: str, release_slug: str) -> bool:
-    return bool(re.search(rf"(?<![a-z0-9]){re.escape(release_slug)}(?![a-z0-9])", value))
+    return bool(
+        re.search(rf"(?<![a-z0-9]){re.escape(release_slug)}(?![a-z0-9])", value)
+    )
 
 
 def release_date_to_ons_slug(value: str) -> str:
@@ -492,7 +501,9 @@ def read_shared_strings(workbook: zipfile.ZipFile) -> List[str]:
     root = ET.fromstring(workbook.read("xl/sharedStrings.xml"))
     strings: List[str] = []
     for item in root.findall("main:si", XML_NS):
-        strings.append("".join(text.text or "" for text in item.iterfind(".//main:t", XML_NS)))
+        strings.append(
+            "".join(text.text or "" for text in item.iterfind(".//main:t", XML_NS))
+        )
     return strings
 
 
@@ -523,7 +534,9 @@ def workbook_uses_1904_dates(workbook: zipfile.ZipFile) -> bool:
         raise IngestError("workbook metadata not found") from error
 
     workbook_properties = workbook_root.find("main:workbookPr", XML_NS)
-    return workbook_properties is not None and workbook_properties.attrib.get("date1904") in {
+    return workbook_properties is not None and workbook_properties.attrib.get(
+        "date1904"
+    ) in {
         "1",
         "true",
         "True",
@@ -537,7 +550,9 @@ def read_rows(
         for _event, element in ET.iterparse(sheet_file, events=("end",)):
             if element.tag != f"{{{XML_NS['main']}}}row":
                 continue
-            row: Dict[str, object] = {"_row_index": int(element.attrib.get("r", "0")) - 1}
+            row: Dict[str, object] = {
+                "_row_index": int(element.attrib.get("r", "0")) - 1
+            }
             for cell in element.findall("main:c", XML_NS):
                 cell_ref = cell.attrib.get("r", "")
                 column = column_name(cell_ref)
@@ -615,7 +630,9 @@ def build_benchmarks(
             continue
         period = excel_serial_to_iso(row[column_indexes["period"]], use_1904_dates)
         area_code = str(row.get(column_indexes["areaCode"], ""))
-        if period != latest_period or not area_code.startswith(ENGLAND_LOCAL_AUTHORITY_PREFIXES):
+        if period != latest_period or not area_code.startswith(
+            ENGLAND_LOCAL_AUTHORITY_PREFIXES
+        ):
             continue
 
         benchmarks.append(
@@ -645,10 +662,14 @@ def build_benchmarks(
             }
         )
 
-    return sorted(benchmarks, key=lambda item: (str(item["areaName"]), str(item["areaCode"])))
+    return sorted(
+        benchmarks, key=lambda item: (str(item["areaName"]), str(item["areaCode"]))
+    )
 
 
-def validate_benchmarks(benchmarks: List[Dict[str, object]], latest_period: str) -> None:
+def validate_benchmarks(
+    benchmarks: List[Dict[str, object]], latest_period: str
+) -> None:
     if len(benchmarks) < MIN_ENGLAND_LOCAL_AUTHORITIES:
         raise IngestError(
             "too few England Local Authority rows exported: "
@@ -662,7 +683,9 @@ def validate_benchmarks(benchmarks: List[Dict[str, object]], latest_period: str)
 
     for item in benchmarks:
         for key, value in item.items():
-            if key.startswith("monthlyRent") and (not isinstance(value, int) or value <= 0):
+            if key.startswith("monthlyRent") and (
+                not isinstance(value, int) or value <= 0
+            ):
                 raise IngestError(
                     f"invalid benchmark rent for {item['areaName']} {key}: {value}"
                 )
