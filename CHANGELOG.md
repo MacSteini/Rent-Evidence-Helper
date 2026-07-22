@@ -6,6 +6,8 @@ This project uses semantic versioning for public app updates.
 
 ## Data updates
 
+- 2026-07-22: Refreshed ONS benchmark data to the 2026-07-22 ONS PIPR edition (period 2026-06-01).
+
 - 2026-06-18: Refreshed ONS benchmark data to the 2026-06-17 ONS PIPR edition (period 2026-05-01).
 
 ## [1.0.1] – 2026-06-02
