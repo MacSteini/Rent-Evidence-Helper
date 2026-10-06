@@ -4,6 +4,13 @@ This changelog records notable user-facing changes to Rent Evidence Helper.
 
 This project uses semantic versioning for public app updates.
 
+## Unreleased
+
+- Prevented late PMI responses from restoring results after form edits or clearing a saved result.
+- Clarified that the current Form 4A / section 13 guidance covers private assured tenancies in England; other tenancy types and older notices may follow different rules.
+- Rechecked the linked official guidance on 6 October 2026.
+- Updated development tooling to Vite 8 and Vitest 5. Contributors should use Node.js 24.
+
 ## Data updates
 
 - 2026-09-18: Refreshed ONS benchmark data to the 2026-09-16 ONS PIPR edition (period 2026-08-01).

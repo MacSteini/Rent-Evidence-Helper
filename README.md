@@ -75,6 +75,18 @@ The browser generates dispute-support messages from the result and selected opti
 
 Bug reports, focused fixes and documentation improvements are welcome.
 
+Use Node.js 24 and npm. From the repository root, install the locked dependencies and run the checks:
+
+```sh
+npm ci
+npm test
+npm run test:ingest
+npm run typecheck
+npm run build
+```
+
+The ingest tests require Python 3. `npm run lint` runs the same TypeScript check as `npm run typecheck`. To inspect the static build locally, run `npm run preview -- --host localhost --port 4173 --strictPort` and open `http://localhost:4173/Rent-Evidence-Helper/`. The build is generated in `dist/`; do not commit it. The Pages and ONS refresh workflows use Node.js 24. Pushing to `main` triggers the Pages workflow.
+
 Keep changes narrow, test the flow you changed, and include the checks or manual verification that match the touched area. Do not include API keys, raw Property Market Intel responses, full addresses, UPRNs, private tenant notes or other personal data in issues, commits, fixtures or screenshots.
 
 Please report security or privacy issues privately instead of publishing exploit details.

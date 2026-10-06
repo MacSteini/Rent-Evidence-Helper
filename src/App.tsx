@@ -103,6 +103,7 @@ export default function App() {
     "methodology" | "privacy" | "scope" | null
   >(null);
   const resultSectionRef = useRef<HTMLElement>(null);
+  const requestGenerationRef = useRef(0);
   const pmiCooldownSeconds = getPmiCooldownSeconds(lastPmiAttemptAt);
 
   useEffect(() => {
@@ -140,7 +141,16 @@ export default function App() {
     setLastPmiAttemptAt(Date.now());
   }
 
+  function invalidatePendingChecks() {
+    // Late PMI completions must not restore edited or cleared results.
+    requestGenerationRef.current += 1;
+    setIsChecking(false);
+    setIsRunningDeeperCheck(false);
+    return requestGenerationRef.current;
+  }
+
   async function handleSubmit(input: RentSearchInput) {
+    const requestGeneration = invalidatePendingChecks();
     const hadVisibleWorkspace = hasStartedCheck;
     setHasStartedCheck(true);
     setHasClearedStaleResult(false);
@@ -179,6 +189,8 @@ export default function App() {
         }
       }
 
+      if (requestGeneration !== requestGenerationRef.current) return;
+
       const nextResult: RentCheckResult = {
         input,
         officialBenchmarkComparison,
@@ -204,17 +216,21 @@ export default function App() {
         officialBenchmarkDataset.sourceSha256
       );
     } catch (caught) {
+      if (requestGeneration !== requestGenerationRef.current) return;
       setResult(null);
       if (!hadVisibleWorkspace) {
         setHasStartedCheck(false);
       }
       setError(caught instanceof Error ? caught.message : "The rent check failed.");
     } finally {
-      setIsChecking(false);
+      if (requestGeneration === requestGenerationRef.current) {
+        setIsChecking(false);
+      }
     }
   }
 
   function handleInvalidSubmit() {
+    invalidatePendingChecks();
     setHasClearedStaleResult(false);
     setResult(null);
     setError(null);
@@ -222,6 +238,7 @@ export default function App() {
   }
 
   function handleInputChange() {
+    invalidatePendingChecks();
     setHasClearedStaleResult(hasStartedCheck || Boolean(result));
     setResult(null);
     setError(null);
@@ -245,6 +262,7 @@ export default function App() {
   }
 
   function handleClearSavedResult() {
+    invalidatePendingChecks();
     clearStoredCheck();
     setStoredCheck(null);
     setResult(null);
@@ -264,6 +282,7 @@ export default function App() {
       return;
     }
 
+    const requestGeneration = invalidatePendingChecks();
     setIsRunningDeeperCheck(true);
     setDeeperComparableError(null);
     try {
@@ -272,6 +291,8 @@ export default function App() {
         result.input,
         pmiApiKey
       );
+      if (requestGeneration !== requestGenerationRef.current) return;
+
       const nextResult: RentCheckResult = {
         ...result,
         deeperComparableEvidence
@@ -290,9 +311,13 @@ export default function App() {
         officialBenchmarkDataset.sourceSha256
       );
     } catch (caught) {
-      setDeeperComparableError(deeperComparableErrorMessage(caught));
+      if (requestGeneration === requestGenerationRef.current) {
+        setDeeperComparableError(deeperComparableErrorMessage(caught));
+      }
     } finally {
-      setIsRunningDeeperCheck(false);
+      if (requestGeneration === requestGenerationRef.current) {
+        setIsRunningDeeperCheck(false);
+      }
     }
   }
 

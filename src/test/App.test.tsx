@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
@@ -79,6 +79,23 @@ const highPmiListingsResponse = {
     url: `https://provider.example/high-${index}`
   }))
 };
+
+function deferredResponse() {
+  let resolve!: (response: Response) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<Response>((resolveResponse, rejectResponse) => {
+    resolve = resolveResponse;
+    reject = rejectResponse;
+  });
+  return { promise, resolve, reject };
+}
+
+function listingResponse() {
+  return new Response(JSON.stringify(pmiListingsResponse), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -1288,6 +1305,118 @@ describe("App", () => {
     expect(
       screen.queryByRole("heading", { name: /manual evidence/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("ignores a late listing response after the form changes", async () => {
+    const pending = deferredResponse();
+    const user = userEvent.setup();
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(pending.promise));
+    render(<App />);
+    await user.type(screen.getByLabelText(/property market intel api key/i), "pmi_live_test");
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await user.clear(screen.getByLabelText(/postcode/i));
+    await user.type(screen.getByLabelText(/postcode/i), "BN252D");
+
+    await act(async () => pending.resolve(listingResponse()));
+
+    expect(screen.getByLabelText(/postcode/i)).toHaveValue("BN252D");
+    expect(screen.getByText(/result cleared/i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^official area benchmark$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /live rental listings/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+    expect(screen.getByRole("button", { name: /start check/i })).toBeEnabled();
+  });
+
+  it("ignores a late listing failure after an invalid resubmission", async () => {
+    const pending = deferredResponse();
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockReturnValue(pending.promise);
+    vi.stubGlobal("fetch", fetchMock);
+    render(<App />);
+    await user.type(
+      screen.getByLabelText(/property market intel api key/i),
+      "pmi_live_test"
+    );
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await user.clear(screen.getByLabelText(/postcode/i));
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    expect(screen.getByLabelText(/postcode/i)).toHaveAttribute("aria-invalid", "true");
+
+    await act(async () => pending.reject(new Error("Synthetic late provider failure")));
+
+    expect(screen.getByLabelText(/postcode/i)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByText(/Synthetic late provider failure/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^official area benchmark$/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: /start check/i })).toBeEnabled();
+  });
+
+  it.each(["success", "failure"])("ignores a late rented-record %s after clearing the saved result", async (outcome) => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    const pending = deferredResponse();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(listingResponse())
+      .mockReturnValueOnce(pending.promise);
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(screen.getByLabelText(/property market intel api key/i), "pmi_live_test");
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await screen.findByRole("heading", { name: /live rental listings/i });
+    nowSpy.mockReturnValue(1_010_000);
+    await forceAppRerender(user);
+    await user.click(screen.getByRole("button", { name: /run recent rented-record check/i }));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await user.click(screen.getByRole("button", { name: /clear saved result/i }));
+
+    await act(async () => {
+      if (outcome === "failure") pending.reject(new Error("Synthetic late provider failure"));
+      else pending.resolve(new Response(JSON.stringify(pmiComparablesResponse), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      }));
+    });
+
+    expect(screen.queryByLabelText(/rent check result/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Synthetic late provider failure/i)).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+    expect(screen.getByLabelText(/postcode/i)).toHaveValue("");
+    expect(screen.getByLabelText(/property market intel api key/i)).toHaveValue("pmi_live_test");
+    expect(screen.getByRole("button", { name: /start check/i })).toBeEnabled();
+  });
+
+  it("keeps a newer check loading when an older listing request completes", async () => {
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    const older = deferredResponse();
+    const newer = deferredResponse();
+    const fetchMock = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.type(screen.getByLabelText(/property market intel api key/i), "pmi_live_test");
+    await selectLocalAuthority(user);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    await user.clear(screen.getByLabelText(/current rent/i, { selector: "input" }));
+    await user.type(screen.getByLabelText(/current rent/i, { selector: "input" }), "1800");
+    nowSpy.mockReturnValue(1_010_000);
+    await user.click(screen.getByRole("button", { name: /start check/i }));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await act(async () => older.resolve(listingResponse()));
+
+    expect(screen.getByRole("button", { name: /checking/i })).toBeDisabled();
+    expect(screen.queryByRole("heading", { name: /^official area benchmark$/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("market-rent-check-last-check")).toBeNull();
+
+    await act(async () => newer.resolve(listingResponse()));
+
+    expect(screen.getByRole("heading", { name: /^official area benchmark$/i })).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem("market-rent-check-last-check")!).input.rentAmount).toBe(1800);
+    expect(screen.getByRole("button", { name: /start check/i })).toBeEnabled();
   });
 
   it("clears stale result panels as soon as form input changes", async () => {
