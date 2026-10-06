@@ -29,9 +29,9 @@ export const jurisdictionCopy = {
     "The postcode stays in the browser. It is used for local validation and to block postcode areas that are clearly outside the supported England scope.",
   scopeTitle: "Why this is England only",
   scopeSummary:
-    "The rent-increase and First-tier Tribunal guidance used here belongs to the England assured-tenancy framework. Wales, Scotland and Northern Ireland have different rented-housing regimes and different rent-increase routes.",
+    "The rent-increase and First-tier Tribunal guidance used here covers private assured tenancies in England. Other tenancy types and older notices may follow different rules. Wales, Scotland and Northern Ireland have different rented-housing regimes and different rent-increase routes.",
   scopePoints: [
-    "England: the current rent-increase, Form 4A / section 13 and First-tier Tribunal flow is the scope this tool supports.",
+    "England: this tool supports the current rent-increase, Form 4A / section 13 and First-tier Tribunal flow for private assured tenancies.",
     "Wales: official Welsh guidance says the main English tenancy reforms do not apply in the same way; Wales uses occupation contracts and different rent rules.",
     "Scotland: official Scottish guidance identifies rental-discrimination provisions, not the English assured-tenancy rent-increase process.",
     "Northern Ireland: the reviewed official sources do not show the English rent-increase and tribunal flow applying there."

@@ -14,7 +14,7 @@ export const legalContent: LegalContentItem[] = [
       "Renters’ Rights Act information sheet",
       "Assured periodic tenancies: rent increases"
     ],
-    lastCheckedAt: "2026-06-14",
+    lastCheckedAt: "2026-10-06",
     jurisdiction: "england",
     status: "active"
   },
@@ -31,7 +31,7 @@ export const legalContent: LegalContentItem[] = [
       "Apply for an open market rent determination",
       "Assured tenancy forms"
     ],
-    lastCheckedAt: "2026-06-14",
+    lastCheckedAt: "2026-10-06",
     jurisdiction: "england",
     status: "active"
   },
@@ -39,7 +39,7 @@ export const legalContent: LegalContentItem[] = [
     id: "form-4a-section-13",
     title: "Form 4A and section 13",
     body:
-      "Where the statutory rent-increase process applies, GOV.UK says landlords must follow the correct rules and use Form 4A for the section 13 process. Use the official assured tenancy forms page to find current prescribed forms.",
+      "For private assured tenancies in England under the current statutory rent-increase process, GOV.UK says landlords must use Form 4A for the section 13 process. Other tenancy types and older notices may follow different rules. Check the official assured tenancy forms and rent-increase guidance for the rules that apply to you.",
     sourceUrls: [
       "https://www.gov.uk/guidance/assured-tenancy-forms",
       "https://www.gov.uk/assured-periodic-tenancies-tenants/rent-increases"
@@ -48,7 +48,7 @@ export const legalContent: LegalContentItem[] = [
       "Assured tenancy forms",
       "Assured periodic tenancies: rent increases"
     ],
-    lastCheckedAt: "2026-06-14",
+    lastCheckedAt: "2026-10-06",
     jurisdiction: "england",
     status: "active"
   },
@@ -58,7 +58,7 @@ export const legalContent: LegalContentItem[] = [
     body:
       "Use this result as a market-evidence check only. Compare it with evidence you collect and check official guidance before acting or sending any formal challenge. It is not legal advice and does not decide the legal market rent.",
     sourceUrls: [],
-    lastCheckedAt: "2026-06-14",
+    lastCheckedAt: "2026-10-06",
     jurisdiction: "england",
     status: "active"
   }
