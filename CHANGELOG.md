@@ -4,7 +4,7 @@ This changelog records notable user-facing changes to Rent Evidence Helper.
 
 This project uses semantic versioning for public app updates.
 
-## Unreleased
+## [1.0.2] – 2026-10-06
 
 - Prevented late PMI responses from restoring results after form edits or clearing a saved result.
 - Clarified that the current Form 4A / section 13 guidance covers private assured tenancies in England; other tenancy types and older notices may follow different rules.
